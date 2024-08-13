@@ -41,7 +41,7 @@ import Greet from "./components/GreetComponent.vue";
       </a>
     </div>
 
-    <p>Click on the Tauri, Vite, and Vue logos to learn more.</p>
+    <p>Click on the Tauri, Vite, and Vue logos to learn more. (test)</p>
 
     <Greet />
   </div>
