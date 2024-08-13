@@ -1,6 +1,9 @@
 name: "Vue Checker and Coverage"
 on:
     pull_request:
+    push:
+        branches:
+            - main
 
 jobs:
     changes:
@@ -21,7 +24,7 @@ jobs:
         runs-on: ubuntu-latest
         needs: changes
 
-        if: ${{ needs.changes.outputs.vue == 'true' }}
+        if: ${{ needs.changes.outputs.vue == 'true' || github.ref_name == 'main' }}
 
         steps:
             - uses: actions/checkout@v4
@@ -43,7 +46,7 @@ jobs:
         runs-on: ubuntu-latest
         needs: lint-build
 
-        if: ${{ needs.changes.outputs.vue == 'true' }}
+        if: ${{ needs.changes.outputs.vue == 'true' || github.ref_name == 'main' }}
 
         steps:
             - uses: actions/checkout@v4
