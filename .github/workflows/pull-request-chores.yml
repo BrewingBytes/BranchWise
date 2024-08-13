@@ -1,0 +1,19 @@
+name: 'Pull Request Chores'
+on:
+  pull_request:
+
+jobs:
+  labeler:
+    name: 'Labeler'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/labeler@v4
+
+  auto-assign:
+    name: 'Auto Assign'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: kentaro-m/auto-assign-action@v2.0.0
+        with:
+          configuration-path: '.github/auto-assign.yml'
