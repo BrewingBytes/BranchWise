@@ -44,10 +44,9 @@ jobs:
                 yarn
                 yarn build
 
-            - name: Run vitest and report issues
-              uses: roerohan/vitest-github-action@v1
-              env:
-                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              with:
-                config: ./src/vitest.config.ts
-                coverage: true
+            - name: "Generate Coverage"
+              run: yarn coverage
+
+            - name: 'Report Coverage'
+              if: always() 
+              uses:  davelosert/vitest-coverage-report-action@v2
