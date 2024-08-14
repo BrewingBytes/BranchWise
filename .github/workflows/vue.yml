@@ -49,5 +49,5 @@ jobs:
               env:
                 GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               with:
-                config: ./vitest.config.ts
+                config: ./src/vitest.config.ts
                 coverage: true
