@@ -13,3 +13,24 @@ fn main() {
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_greet() {
+        assert_eq!(greet("World"), "Hello, World! You've been greeted from Rust! (test)");
+    }
+
+    #[test]
+    fn test_greet_empty() {
+        assert_eq!(greet(""), "Hello, ! You've been greeted from Rust! (test)");
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_application_main() {
+        main();
+    }
+}
