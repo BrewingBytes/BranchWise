@@ -52,6 +52,12 @@ jobs:
             - uses: actions/setup-node@v4
               with:
                 node-version: 20
+          
+            - uses: actions-rs/toolchain@v1
+              with:
+                profile: minimal
+                toolchain: nightly
+                components: llvm-tools-preview
 
             - name: "Install Dependencies"
               run: |
@@ -66,17 +72,9 @@ jobs:
                   libayatana-appindicator3-dev \
                   librsvg2-dev
 
-                curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sh -s -- -y
-
                 npm install --global yarn
                 yarn
                 yarn build
-
-            - uses: actions-rs/toolchain@v1
-              with:
-                profile: minimal
-                toolchain: nightly
-                components: llvm-tools-preview
 
             - uses: Swatinem/fucov@v1
 
