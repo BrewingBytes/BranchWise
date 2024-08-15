@@ -9,11 +9,12 @@ jobs:
     lint-build:
         name: "Lint And Build"
         runs-on: ubuntu-latest
-        if: contains(github.event.pull_request.labels.*.name, 'Tauri') || contains(github.event.pull_request.labels.*.name, 'Workflow') || github.event.base_ref == 'main'
+        if: contains(github.event.pull_request.labels.*.name, 'UI') || contains(github.event.pull_request.labels.*.name, 'Workflow') || github.ref_name == 'main'
 
         steps:
             - name: Wait on Labeler
               uses: lucasssvaz/wait-on-workflow@v1
+              if: github.ref_name != 'main'
               with:
                 workflow: pull-request-chores.yml
                 max-wait: 10
