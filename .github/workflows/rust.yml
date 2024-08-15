@@ -11,7 +11,8 @@ jobs:
       runs-on: ubuntu-latest
 
       steps:
-        - name: Wait on Labeler
+        - if: github.event_name == 'pull_request'
+          name: Wait on Labeler
           uses: lucasssvaz/wait-on-workflow@v1
           with:
             workflow: pull-request-chores.yml
