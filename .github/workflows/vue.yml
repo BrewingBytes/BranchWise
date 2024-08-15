@@ -45,7 +45,9 @@ jobs:
                 yarn build
 
             - name: "Generate Coverage"
-              run: yarn coverage
+              run: |
+                yarn coverage
+      
 
             - name: 'Report Coverage'
               if: always() 

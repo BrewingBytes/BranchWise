@@ -8,7 +8,7 @@
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "vitest",
-    "coverage": "vitest run --coverage --reporter=json",
+    "coverage": "npx vitest --coverage.enabled true",
     "lint": "eslint \"src/**/*.{js,vue,ts}\"",
     "tauri": "tauri"
   },
@@ -23,7 +23,6 @@
     "@vitest/coverage-v8": "^2.0.5",
     "eslint": "^9.9.0",
     "eslint-plugin-vue": "^9.27.0",
-    "nyc": "^17.0.0",
     "typescript": "^5.5.4",
     "typescript-eslint": "^8.1.0",
     "vite": "^5.3.1",
