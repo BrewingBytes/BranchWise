@@ -1,0 +1,11 @@
+component_management:
+  individual_components:
+    - component_id: "rust"
+      paths:
+        - "src-tauri/"
+    - component_id: "vue"
+      paths:
+        - "src/"
+
+comment:
+  layout: "header, diff, flags, components"
