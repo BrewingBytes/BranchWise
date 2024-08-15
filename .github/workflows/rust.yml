@@ -12,6 +12,15 @@ jobs:
         if: contains(github.event.pull_request.labels.*.name, 'Tauri') || contains(github.event.pull_request.labels.*.name, 'Workflow') || github.event.base_ref == 'main'
 
         steps:
+            - name: Wait on Labeler
+              uses: lucasssvaz/wait-on-workflow@v1
+              with:
+                workflow: pull-request-chores.yml
+                max-wait: 10
+                interval: 5
+                timeout: 60
+                sha: ${{ github.event.pull_request.head.sha || github.sha }}
+
             - uses: actions/checkout@v4
             - uses: actions/setup-node@v4
               with:
