@@ -9,6 +9,7 @@ jobs:
     lint-build:
         name: "Lint And Build"
         runs-on: ubuntu-latest
+        if: contains(github.event.pull_request.labels.*.name, 'Tauri') || github.event.base_ref == 'main'
 
         steps:
             - uses: actions/checkout@v4
@@ -67,21 +68,21 @@ jobs:
                   librsvg2-dev
 
                 curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sh -s -- -y
-                rustup toolchain install nightly
-                rustup default nightly
+                rustup update stable
 
                 npm install --global yarn
                 yarn
                 yarn build
 
-            - uses: actions-rs/toolchain@v1
-              with:
-                profile: minimal
-                toolchain: nightly
-                components: llvm-tools-preview
+            - name: Install cargo-llvm-cov
+              uses: taiki-e/install-action@cargo-llvm-cov
 
-            - uses: Swatinem/fucov@v1
+            - name: Generate code coverage
+              working-directory: src-tauri
+              run: cargo llvm-cov --all-features --workspace --lcov --output-path lcov.info
 
-            - uses: codecov/codecov-action@v1
+            - name: Upload coverage to Codecov
+              uses: codecov/codecov-action@v3
               with:
-                directory: coverage
+                files: lcov.info
+                fail_ci_if_error: false
