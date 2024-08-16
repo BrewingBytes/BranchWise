@@ -17,3 +17,19 @@ impl fmt::Display for GitFolders {
         }
     }
 }
+
+pub enum GitRefs {
+    HEADS,
+    REMOTES,
+    TAGS
+}
+
+impl fmt::Display for GitRefs {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            GitRefs::HEADS => write!(f, "heads"),
+            GitRefs::REMOTES => write!(f, "remotes"),
+            GitRefs::TAGS => write!(f, "tags"),
+        }
+    }
+}

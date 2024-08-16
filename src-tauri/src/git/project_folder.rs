@@ -66,26 +66,25 @@ pub fn open_git_project(directory: &str) -> Result<GitProject, GitError> {
             let git_folder_entries = fs::read_dir(git_folder).unwrap();
 
             for entry in git_folder_entries {
-                match entry {
-                    Ok(entry) => {
-                        let path = entry.path();
-                        if path.is_dir() {
+                entry
+                    .map(|x| {
+                        if x.path().is_dir() {
                             let folder_name =
-                                path.file_name().unwrap().to_str().unwrap().to_string();
+                                x.path().file_name().unwrap().to_str().unwrap().to_string();
 
                             if required_git_folders.contains(&folder_name) {
                                 required_git_folders.retain(|x| *x != folder_name);
                             }
                         } else {
-                            let file_name = path.file_name().unwrap().to_str().unwrap().to_string();
+                            let file_name =
+                                x.path().file_name().unwrap().to_str().unwrap().to_string();
 
                             if required_git_files.contains(&file_name) {
                                 required_git_files.retain(|x| *x != file_name);
                             }
                         }
-                    }
-                    Err(_) => return Err(GitError::InvalidGitFolder),
-                }
+                    })
+                    .map_err(|_| GitError::InvalidGitFolder)?;
             }
 
             if !required_git_files.is_empty() || !required_git_folders.is_empty() {

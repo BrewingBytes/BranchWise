@@ -3,4 +3,5 @@ pub enum GitError {
     InvalidGitFolder,
     CannotOpenFolder,
     NoGitFolder,
+    NoLocalBranches
 }
