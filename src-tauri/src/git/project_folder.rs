@@ -29,6 +29,44 @@ impl GitProject<'_> {
             remote_branches: Vec::new(),
         }
     }
+
+    pub fn has_required_files(&self) -> Result<(), GitError> {
+        let mut required_git_files: Vec<String> =
+            GitFiles::iter().map(|file| file.to_string()).collect();
+
+        let mut required_git_folders: Vec<String> = GitFolders::iter()
+            .map(|folder| folder.to_string())
+            .collect();
+
+        let git_folder_entries = fs::read_dir(format!("{}/.git", self.directory)).unwrap();
+
+        for entry in git_folder_entries {
+            entry
+                .map(|x| {
+                    if x.path().is_dir() {
+                        let folder_name =
+                            x.path().file_name().unwrap().to_str().unwrap().to_string();
+
+                        if required_git_folders.contains(&folder_name) {
+                            required_git_folders.retain(|x| *x != folder_name);
+                        }
+                    } else {
+                        let file_name = x.path().file_name().unwrap().to_str().unwrap().to_string();
+
+                        if required_git_files.contains(&file_name) {
+                            required_git_files.retain(|x| *x != file_name);
+                        }
+                    }
+                })
+                .map_err(|_| GitError::InvalidGitFolder)?;
+        }
+
+        if !required_git_files.is_empty() || !required_git_folders.is_empty() {
+            return Err(GitError::InvalidGitFolder);
+        }
+
+        Ok(())
+    }
 }
 
 pub fn check_valid_git_project(directory: &str) -> Result<GitProject, GitError> {
@@ -55,44 +93,11 @@ pub fn check_valid_git_project(directory: &str) -> Result<GitProject, GitError> 
 pub fn open_git_project(directory: &str) -> Result<GitProject, GitError> {
     match check_valid_git_project(directory) {
         Ok(mut git_project) => {
-            let mut required_git_files: Vec<String> =
-                GitFiles::iter().map(|file| file.to_string()).collect();
-
-            let mut required_git_folders: Vec<String> = GitFolders::iter()
-                .map(|folder| folder.to_string())
-                .collect();
-
-            let git_folder: &str = &format!("{}/.git", git_project.directory);
-            let git_folder_entries = fs::read_dir(git_folder).unwrap();
-
-            for entry in git_folder_entries {
-                entry
-                    .map(|x| {
-                        if x.path().is_dir() {
-                            let folder_name =
-                                x.path().file_name().unwrap().to_str().unwrap().to_string();
-
-                            if required_git_folders.contains(&folder_name) {
-                                required_git_folders.retain(|x| *x != folder_name);
-                            }
-                        } else {
-                            let file_name =
-                                x.path().file_name().unwrap().to_str().unwrap().to_string();
-
-                            if required_git_files.contains(&file_name) {
-                                required_git_files.retain(|x| *x != file_name);
-                            }
-                        }
-                    })
-                    .map_err(|_| GitError::InvalidGitFolder)?;
-            }
-
-            if !required_git_files.is_empty() || !required_git_folders.is_empty() {
+            if (git_project.has_required_files()).is_err() {
                 return Err(GitError::InvalidGitFolder);
             }
 
             git_project.state = GitProjectState::Valid;
-
             Ok(git_project)
         }
         Err(e) => Err(e),
