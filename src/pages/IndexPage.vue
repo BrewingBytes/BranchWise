@@ -1,10 +1,17 @@
 <template>
   <v-container>
-    <v-btn @click="openGitFolder">Open Git Project</v-btn>
+    <v-btn @click="openGitFolder">
+      Open Git Project
+    </v-btn>
 
     <v-container v-if="gitProject.state === 'valid'">
-        <p>Branches in {{ gitProject.directory }}</p>
-        <p v-for="branch in gitProject.localBranches">{{ branch }}</p>
+      <p>Branches in {{ gitProject.directory }}</p>
+      <p 
+        v-for="branch in gitProject.localBranches" 
+        :key="branch"
+      >
+        {{ branch }}
+      </p>
     </v-container>
   </v-container>
 </template>
