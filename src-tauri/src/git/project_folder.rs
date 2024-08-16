@@ -1,6 +1,6 @@
 use strum::IntoEnumIterator;
 
-use crate::errors::errors::GitError;
+use crate::errors::git_error::GitError;
 use crate::git::git_files::GitFiles;
 use crate::git::git_folders::GitFolders;
 use std::fs;
@@ -23,7 +23,7 @@ pub struct GitProject<'a> {
 impl GitProject<'_> {
     pub fn new(directory: &str) -> GitProject {
         GitProject {
-            directory: directory,
+            directory,
             state: GitProjectState::Invalid,
             local_branches: Vec::new(),
             remote_branches: Vec::new(),
@@ -38,10 +38,8 @@ pub fn check_valid_git_project(directory: &str) -> Result<GitProject, GitError> 
                 match entry {
                     Ok(entry) => {
                         let path = entry.path();
-                        if path.is_dir() {
-                            if path.ends_with(".git") {
-                                return Ok(GitProject::new(directory));
-                            }
+                        if path.is_dir() && path.ends_with(".git") {
+                            return Ok(GitProject::new(directory));
                         }
                     }
                     Err(_) => return Err(GitError::CannotOpenFolder),
@@ -90,7 +88,7 @@ pub fn open_git_project(directory: &str) -> Result<GitProject, GitError> {
                 }
             }
 
-            if required_git_files.len() > 0 || required_git_folders.len() > 0 {
+            if !required_git_files.is_empty() || !required_git_folders.is_empty() {
                 return Err(GitError::InvalidGitFolder);
             }
 
