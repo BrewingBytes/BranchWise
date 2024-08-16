@@ -20,6 +20,7 @@ impl fmt::Display for GitFolders {
     }
 }
 
+#[derive(EnumIter)]
 pub enum GitRefs {
     HEADS,
     REMOTES,

@@ -38,28 +38,41 @@ impl GitProject<'_> {
             return Err(GitError::InvalidGitFolder);
         }
 
-        let refs_entries = fs::read_dir(format!(
+        let mut dirs_to_check: Vec<String> = vec![format!(
             "{}/{}/{}/{}",
             self.directory,
             GIT_FOLDER,
             GitFolders::REFS,
             GitRefs::HEADS
-        ))
-        .map_err(|_| {
-            self.state = GitProjectState::Invalid;
+        )];
 
-            GitError::InvalidGitFolder
-        })?;
-
-        for entry in refs_entries {
-            let _ = entry.map(|x| {
-                if x.path().is_file() {
-                    let branch_name = x.path().file_name().unwrap().to_str().unwrap().to_string();
-                    self.local_branches.push(branch_name);
-                } else if x.path().is_dir() {
-                    // TODO: Implement reading branches from subdirectories
+        while let Some(current_dir) = dirs_to_check.pop() {
+            match fs::read_dir(current_dir) {
+                Ok(entries) => {
+                    for entry in entries {
+                        match entry {
+                            Ok(entry) => {
+                                let path = entry.path();
+                                if path.is_dir() {
+                                    dirs_to_check.push(path.to_str().unwrap().to_string());
+                                } else {
+                                    let branch_name =
+                                        path.file_name().unwrap().to_str().unwrap().to_string();
+                                    self.local_branches.push(branch_name);
+                                }
+                            }
+                            Err(_) => {
+                                self.state = GitProjectState::Invalid;
+                                return Err(GitError::CannotOpenFolder);
+                            }
+                        }
+                    }
                 }
-            });
+                Err(_) => {
+                    self.state = GitProjectState::Invalid;
+                    return Err(GitError::CannotOpenFolder);
+                }
+            }
         }
 
         Ok(())
