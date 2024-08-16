@@ -1,4 +1,5 @@
 use std::fs;
+use serde::{Deserialize, Serialize};
 use strum::IntoEnumIterator;
 
 use super::{
@@ -7,13 +8,15 @@ use super::{
 };
 use crate::errors::git_error::GitError;
 
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Clone, Copy, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub enum GitProjectState {
     Valid,
     Invalid,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GitProject<'a> {
     directory: &'a str,
     state: GitProjectState,
@@ -82,7 +85,6 @@ impl GitProject<'_> {
                                         branch_name
                                     };
 
-                                    println!("Branch: {}", full_branch_name);
                                     self.local_branches.push(full_branch_name);
                                 }
                             }

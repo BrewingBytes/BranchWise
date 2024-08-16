@@ -32,6 +32,7 @@ pub fn open_git_project(directory: &str) -> Result<GitProject, GitError> {
             }
 
             git_project.set_state(GitProjectState::Valid);
+            let _ = git_project.fetch_local_branches();
             Ok(git_project)
         }
         Err(e) => Err(e),
