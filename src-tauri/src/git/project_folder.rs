@@ -107,7 +107,7 @@ mod tests {
 
     #[test]
     fn git_project_get_local_main_branch() {
-        let test_git_folder = "git_project_get_local_main_branch";
+        let test_git_folder = "test_git_project_get_local_main_branch";
         create_sample_git_folder(&test_git_folder);
         create_local_branch(&test_git_folder, "main");
 
@@ -122,7 +122,7 @@ mod tests {
 
     #[test]
     fn git_project_get_local_branch_from_subfolder() {
-        let test_git_folder = "git_project_get_local_branch_from_subfolder";
+        let test_git_folder = "test_git_project_get_local_branch_from_subfolder";
         create_sample_git_folder(&test_git_folder);
         create_local_branch(&test_git_folder, "feature/test");
 
@@ -137,7 +137,7 @@ mod tests {
 
     #[test]
     fn git_project_no_local_branches_folder() {
-        let test_git_folder = "git_project_no_local_branches_folder";
+        let test_git_folder = "test_git_project_no_local_branches_folder";
         create_sample_git_folder(&test_git_folder);
         fs::remove_dir(format!(
             "{}/{}/{}/{}",
@@ -158,7 +158,12 @@ mod tests {
 
     #[test]
     fn test_git_folder_exists() {
-        assert_eq!(check_valid_git_project(".."), Ok(GitProject::new("..")));
+        let test_git_folder = "test_git_folder_exists";
+        create_sample_git_folder(&test_git_folder);
+        
+        assert_eq!(check_valid_git_project(&test_git_folder).is_ok(), true);
+
+        fs::remove_dir_all(test_git_folder).unwrap();
     }
 
     #[test]
@@ -171,6 +176,11 @@ mod tests {
 
     #[test]
     fn test_project_has_no_git_folder() {
-        assert_eq!(open_git_project("."), Err(GitError::NoGitFolder));
+        let test_git_folder = "test_project_has_no_git_folder";
+        fs::create_dir(test_git_folder).unwrap();
+
+        assert_eq!(open_git_project(&test_git_folder), Err(GitError::NoGitFolder));
+
+        fs::remove_dir_all(test_git_folder).unwrap();
     }
 }
