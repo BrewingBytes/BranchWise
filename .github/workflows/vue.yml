@@ -6,30 +6,9 @@ on:
             - main
 
 jobs:
-    wait-labeler:
-      name: "Wait on Labeler"
-      runs-on: ubuntu-latest
-
-      steps:
-        - if: github.event_name == 'pull_request'
-          name: Wait on Labeler
-          uses: lucasssvaz/wait-on-workflow@v1
-          with:
-            workflow: pull-request-chores.yml
-            max-wait: 10
-            interval: 5
-            timeout: 60
-            sha: ${{ github.event.pull_request.head.sha || github.sha }}
-
     lint-build:
         name: "Lint And Build"
         runs-on: ubuntu-latest
-        needs: wait-labeler
-
-        if: |
-          contains(github.event.pull_request.labels.*.name, 'UI') ||
-          contains(github.event.pull_request.labels.*.name, 'Workflow') ||
-          github.ref_name == 'main'
 
         steps:
             - uses: actions/checkout@v4
