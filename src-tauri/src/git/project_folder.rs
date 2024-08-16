@@ -48,6 +48,13 @@ mod tests {
     }
 
     #[test]
+    fn git_project_get_local_main_branch() {
+        let mut git_project = open_git_project("..").unwrap();
+        git_project.fetch_local_branches().unwrap();
+        assert_eq!(*git_project.get_local_branches(), vec!["main".to_string()]);
+    }
+
+    #[test]
     fn test_git_folder_exists() {
         assert_eq!(check_valid_git_project(".."), Ok(GitProject::new("..")));
     }

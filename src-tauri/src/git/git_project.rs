@@ -1,8 +1,11 @@
-use strum::IntoEnumIterator;
 use std::fs;
+use strum::IntoEnumIterator;
 
+use super::{
+    git_files::GitFiles,
+    git_folders::{GitFolders, GitRefs, GIT_FOLDER},
+};
 use crate::errors::git_error::GitError;
-use super::{git_folders::GitFolders, git_files::GitFiles};
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum GitProjectState {
@@ -28,6 +31,40 @@ impl GitProject<'_> {
         }
     }
 
+    pub fn fetch_local_branches(&mut self) -> Result<(), GitError> {
+        if self.has_required_files().is_err() {
+            self.state = GitProjectState::Invalid;
+
+            return Err(GitError::InvalidGitFolder);
+        }
+
+        let refs_entries = fs::read_dir(format!(
+            "{}/{}/{}/{}",
+            self.directory,
+            GIT_FOLDER,
+            GitFolders::REFS,
+            GitRefs::HEADS
+        ))
+        .map_err(|_| {
+            self.state = GitProjectState::Invalid;
+
+            GitError::InvalidGitFolder
+        })?;
+
+        for entry in refs_entries {
+            let _ = entry.map(|x| {
+                if x.path().is_file() {
+                    let branch_name = x.path().file_name().unwrap().to_str().unwrap().to_string();
+                    self.local_branches.push(branch_name);
+                } else if x.path().is_dir() {
+                    // TODO: Implement reading branches from subdirectories
+                }
+            });
+        }
+
+        Ok(())
+    }
+
     pub fn has_required_files(&self) -> Result<(), GitError> {
         let mut required_git_files: Vec<String> =
             GitFiles::iter().map(|file| file.to_string()).collect();
@@ -36,7 +73,8 @@ impl GitProject<'_> {
             .map(|folder| folder.to_string())
             .collect();
 
-        let git_folder_entries = fs::read_dir(format!("{}/.git", self.directory)).unwrap();
+        let git_folder_entries =
+            fs::read_dir(format!("{}/{}", self.directory, GIT_FOLDER)).unwrap();
 
         for entry in git_folder_entries {
             entry
@@ -72,5 +110,9 @@ impl GitProject<'_> {
 
     pub fn get_state(&self) -> GitProjectState {
         self.state
+    }
+
+    pub fn get_local_branches(&self) -> &Vec<String> {
+        &self.local_branches
     }
 }

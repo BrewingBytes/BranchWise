@@ -1,6 +1,8 @@
 use std::fmt;
 use strum_macros::EnumIter;
 
+pub const GIT_FOLDER: &str = ".git";
+
 #[derive(EnumIter)]
 pub enum GitFolders {
     REFS,
