@@ -23,6 +23,7 @@ pub fn check_valid_git_project(directory: &str) -> Result<GitProject, GitError> 
     }
 }
 
+#[tauri::command]
 pub fn open_git_project(directory: &str) -> Result<GitProject, GitError> {
     match check_valid_git_project(directory) {
         Ok(mut git_project) => {
