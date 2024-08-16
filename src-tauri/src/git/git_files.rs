@@ -4,7 +4,7 @@ use strum_macros::EnumIter;
 #[derive(EnumIter)]
 pub enum GitFiles {
     HEAD,
-    CONFIG
+    CONFIG,
 }
 
 impl fmt::Display for GitFiles {
