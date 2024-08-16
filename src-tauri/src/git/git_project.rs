@@ -47,7 +47,7 @@ impl GitProject<'_> {
         )];
 
         while let Some(current_dir) = dirs_to_check.pop() {
-            match fs::read_dir(current_dir) {
+            match fs::read_dir(&current_dir) {
                 Ok(entries) => {
                     for entry in entries {
                         match entry {
@@ -58,7 +58,32 @@ impl GitProject<'_> {
                                 } else {
                                     let branch_name =
                                         path.file_name().unwrap().to_str().unwrap().to_string();
-                                    self.local_branches.push(branch_name);
+
+                                    let full_branch_name = if current_dir
+                                        != format!(
+                                            "{}/{}/{}/{}",
+                                            self.directory,
+                                            GIT_FOLDER,
+                                            GitFolders::REFS,
+                                            GitRefs::HEADS
+                                        ) {
+                                        current_dir.replace(
+                                            &format!(
+                                                "{}/{}/{}/{}/",
+                                                self.directory,
+                                                GIT_FOLDER,
+                                                GitFolders::REFS,
+                                                GitRefs::HEADS
+                                            ),
+                                            "",
+                                        ) + "/"
+                                            + &branch_name
+                                    } else {
+                                        branch_name
+                                    };
+
+                                    println!("Branch: {}", full_branch_name);
+                                    self.local_branches.push(full_branch_name);
                                 }
                             }
                             Err(_) => {

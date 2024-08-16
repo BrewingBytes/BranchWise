@@ -121,6 +121,21 @@ mod tests {
     }
 
     #[test]
+    fn git_project_get_local_branch_from_subfolder() {
+        let test_git_folder = "git_project_get_local_branch_from_subfolder";
+        create_sample_git_folder(&test_git_folder);
+        create_local_branch(&test_git_folder, "feature/test");
+
+        let mut git_project = open_git_project(&test_git_folder)
+            .unwrap();
+        let _ = git_project.fetch_local_branches();
+
+        assert_eq!(git_project.get_local_branches().contains(&"feature/test".to_string()), true);
+
+        fs::remove_dir_all(test_git_folder).unwrap();
+    }
+
+    #[test]
     fn git_project_no_local_branches_folder() {
         let test_git_folder = "git_project_no_local_branches_folder";
         create_sample_git_folder(&test_git_folder);
