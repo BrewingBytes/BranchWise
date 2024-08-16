@@ -36,16 +36,43 @@ impl GitProject<'_> {
         }
     }
 
-    pub fn fetch_local_remotes(&mut self) -> Result<(), GitError> {
+    pub fn fetch_remotes_directories(&mut self) -> Result<(), GitError> {
+        self.has_required_files().map_err(|_| {
+            self.state = GitProjectState::Invalid;
+            GitError::InvalidGitFolder
+        })?;
+
+        let remotes_dir = format!(
+            "{}/{}/{}/{}",
+            self.directory,
+            GIT_FOLDER,
+            GitFolders::REFS.to_string(),
+            GitRefs::REMOTES.to_string()
+        );
+
+        fs::read_dir(remotes_dir).map(|entries| {
+            for entry in entries {
+                if let Ok(entry) = entry {
+                    let path = entry.path();
+                    if path.is_dir() {
+                        let remote_name = path.file_name().unwrap().to_str().unwrap().to_string();
+                        self.remotes.push(remote_name);
+                    }
+                }
+            }
+        }).map_err(|_| {
+            self.state = GitProjectState::Invalid;
+            GitError::CannotOpenFolder
+        })?;
+
         Ok(())
     }
 
     pub fn fetch_branches(&mut self, branch_type: GitBranchType) -> Result<(), GitError> {
-        if self.has_required_files().is_err() {
+        self.has_required_files().map_err(|_| {
             self.state = GitProjectState::Invalid;
-
-            return Err(GitError::InvalidGitFolder);
-        }
+            GitError::InvalidGitFolder
+        })?;
 
         let branch_dir = match branch_type {
             GitBranchType::Local => GitRefs::HEADS.to_string(),
@@ -156,5 +183,9 @@ impl GitProject<'_> {
 
     pub fn get_local_branches(&self) -> &Vec<String> {
         &self.local_branches
+    }
+
+    pub fn get_remote_upstreams(&self) -> &Vec<String> {
+        &self.remotes
     }
 }

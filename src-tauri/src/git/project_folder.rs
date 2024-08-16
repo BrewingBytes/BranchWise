@@ -6,21 +6,23 @@ use crate::errors::git_error::GitError;
 use std::fs;
 
 pub fn check_valid_git_project(directory: &str) -> Result<GitProject, GitError> {
-    fs::read_dir(directory).map(|read_dir| {
-        for entry in read_dir {
-            match entry {
-                Ok(entry) => {
-                    let path = entry.path();
-                    if path.is_dir() && path.file_name().unwrap() == ".git" {
-                        return Ok(GitProject::new(directory));
+    fs::read_dir(directory)
+        .map(|read_dir| {
+            for entry in read_dir {
+                match entry {
+                    Ok(entry) => {
+                        let path = entry.path();
+                        if path.is_dir() && path.file_name().unwrap() == ".git" {
+                            return Ok(GitProject::new(directory));
+                        }
                     }
+                    Err(_) => return Err(GitError::CannotOpenFolder),
                 }
-                Err(_) => return Err(GitError::CannotOpenFolder),
             }
-        }
 
-        Err(GitError::NoGitFolder)
-    }).map_err(|_| GitError::CannotOpenFolder)?
+            Err(GitError::NoGitFolder)
+        })
+        .map_err(|_| GitError::CannotOpenFolder)?
 }
 
 #[tauri::command]
@@ -95,6 +97,63 @@ mod tests {
             branch
         ))
         .unwrap();
+    }
+
+    fn create_remote_branch(git_directory: &str, branch: &str) {
+        let branch_name = branch.split('/').last().unwrap();
+        let branch_directory = branch
+            .split('/')
+            .filter(|x| x != &branch_name)
+            .collect::<Vec<&str>>()
+            .join("/");
+
+        fs::create_dir_all(format!(
+            "{}/{}/{}/{}/{}",
+            git_directory,
+            GIT_FOLDER,
+            GitFolders::REFS,
+            GitRefs::REMOTES,
+            branch_directory
+        ))
+        .unwrap();
+
+        fs::File::create(format!(
+            "{}/{}/{}/{}/{}",
+            git_directory,
+            GIT_FOLDER,
+            GitFolders::REFS,
+            GitRefs::REMOTES,
+            branch
+        ))
+        .unwrap();
+    }
+
+    #[test]
+    fn test_get_remote_upstreams() {
+        let folder = TempDir::new("test_get_remote_upstreams").unwrap();
+        let test_git_folder = folder.path().to_str().unwrap();
+
+        create_sample_git_folder(&test_git_folder);
+        create_remote_branch(&test_git_folder, "origin/main");
+        create_remote_branch(&test_git_folder, "test/main");
+
+        let mut git_project = open_git_project(&test_git_folder).unwrap();
+        let _ = git_project.fetch_remotes_directories();
+
+        println!("{:?}", git_project.get_remote_upstreams());
+
+        assert_eq!(
+            git_project
+                .get_remote_upstreams()
+                .contains(&"origin".to_string()),
+            true
+        );
+        assert_eq!(
+            git_project
+                .get_remote_upstreams()
+                .contains(&"test".to_string()),
+            true
+        );
     }
 
     #[test]
