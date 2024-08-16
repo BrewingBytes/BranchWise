@@ -36,6 +36,10 @@ impl GitProject<'_> {
         }
     }
 
+    pub fn fetch_local_remotes(&mut self) -> Result<(), GitError> {
+        Ok(())
+    }
+
     pub fn fetch_branches(&mut self, branch_type: GitBranchType) -> Result<(), GitError> {
         if self.has_required_files().is_err() {
             self.state = GitProjectState::Invalid;
@@ -56,8 +60,6 @@ impl GitProject<'_> {
             GitFolders::REFS.to_string(),
             branch_dir
         )];
-
-        println!("{:?}", dirs_to_check);
 
         while let Some(current_dir) = dirs_to_check.pop() {
             if let Ok(entries) = fs::read_dir(&current_dir) {

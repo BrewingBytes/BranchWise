@@ -6,40 +6,32 @@ use crate::errors::git_error::GitError;
 use std::fs;
 
 pub fn check_valid_git_project(directory: &str) -> Result<GitProject, GitError> {
-    match fs::read_dir(directory) {
-        Ok(read_dir) => {
-            for entry in read_dir {
-                match entry {
-                    Ok(entry) => {
-                        let path = entry.path();
-                        if path.is_dir() && path.ends_with(".git") {
-                            return Ok(GitProject::new(directory));
-                        }
+    fs::read_dir(directory).map(|read_dir| {
+        for entry in read_dir {
+            match entry {
+                Ok(entry) => {
+                    let path = entry.path();
+                    if path.is_dir() && path.file_name().unwrap() == ".git" {
+                        return Ok(GitProject::new(directory));
                     }
-                    Err(_) => return Err(GitError::CannotOpenFolder),
                 }
+                Err(_) => return Err(GitError::CannotOpenFolder),
             }
-
-            Err(GitError::NoGitFolder)
         }
-        Err(_) => Err(GitError::CannotOpenFolder),
-    }
+
+        Err(GitError::NoGitFolder)
+    }).map_err(|_| GitError::CannotOpenFolder)?
 }
 
 #[tauri::command]
 pub fn open_git_project(directory: &str) -> Result<GitProject, GitError> {
-    match check_valid_git_project(directory) {
-        Ok(mut git_project) => {
-            if (git_project.has_required_files()).is_err() {
-                return Err(GitError::InvalidGitFolder);
-            }
+    check_valid_git_project(directory).map(|mut git_project| {
+        git_project.has_required_files()?;
 
-            git_project.set_state(GitProjectState::Valid);
-            let _ = git_project.fetch_branches(GitBranchType::Local);
-            Ok(git_project)
-        }
-        Err(e) => Err(e),
-    }
+        git_project.set_state(GitProjectState::Valid);
+        let _ = git_project.fetch_branches(GitBranchType::Local);
+        Ok(git_project)
+    })?
 }
 
 #[cfg(test)]
