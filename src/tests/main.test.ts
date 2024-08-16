@@ -28,3 +28,16 @@ test('Plugins are registered', () => {
         });
     });
 });
+
+test('Vuetify is registered', () => {
+    import('../plugins/vuetify').then(({ default: vuetify }) => {
+        const app = createApp(App);
+        vi.spyOn(app, 'use');
+
+        expect(vuetify).toBeTruthy();
+
+        expect(app.use).toHaveBeenCalledWith(vuetify);
+
+        expect(vuetify.icons.defaultSet).toBe('mdi');
+    });
+});
