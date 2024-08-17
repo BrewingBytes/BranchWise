@@ -23,6 +23,12 @@
         "message": false,
         "open": true,
         "save": false
+      },
+      "process": {
+        "all": false,
+        "exit": true,
+        "relaunch": false,
+        "relaunchDangerousAllowSymlinkMacos": false
       }
     },
     "windows": [
