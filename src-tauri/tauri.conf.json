@@ -35,7 +35,11 @@
       {
         "title": "BranchWise",
         "width": 800,
-        "height": 600
+        "height": 600,
+        "resizable": true,
+        "minWidth": 400,
+        "minHeight": 400,
+        "decorations": false
       }
     ],
     "security": {
