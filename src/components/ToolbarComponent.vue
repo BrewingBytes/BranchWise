@@ -5,12 +5,12 @@
   >
     <v-toolbar-title>
       <v-row
+        ref="title"
         fluid
         height="100%"
         no-gutters
         class="mr-6"
         align="center"
-        ref="title"
       >
         <v-tooltip
           text="Navigating with Precision and Wisdom"

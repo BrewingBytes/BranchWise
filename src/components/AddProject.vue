@@ -54,7 +54,7 @@ export default defineComponent({
             if (result) {
                 try {
                     await invoke("open_git_project", { directory: result });
-                } catch (error: any) {
+                } catch (error) {
                     this.showError(error as string);
                 }
             }
