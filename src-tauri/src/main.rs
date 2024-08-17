@@ -4,7 +4,6 @@ pub mod errors;
 pub mod git;
 
 use git::project_folder::open_git_project;
-use tauri::{Manager, Window};
 
 fn main() {
     tauri::Builder::default()

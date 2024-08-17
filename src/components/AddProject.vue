@@ -1,6 +1,9 @@
 <template>
   <v-container @click="openNewProject">
-    <v-col align="center" class="pa-0">
+    <v-col
+      align="center"
+      class="pa-0"
+    >
       <v-btn
         :ripple="false"
         flat
@@ -25,7 +28,7 @@ import { open } from "@tauri-apps/api/dialog";
 export default defineComponent({
     name: "AddProject",
     data() {
-        const showError: (event: any) => void = (e) => {
+        const showError: (event: string) => void = (e) => {
             console.error(e);
         };
 
@@ -34,7 +37,7 @@ export default defineComponent({
         }
     },
     mounted() {
-        const showError = inject<(event: any) => void>("showError");
+        const showError = inject<(event: string) => void>("showError");
         if (showError) {
             this.showError = showError;
         } else {
@@ -51,8 +54,8 @@ export default defineComponent({
             if (result) {
                 try {
                     await invoke("open_git_project", { directory: result });
-                } catch (error) {
-                    this.showError(error);
+                } catch (error: any) {
+                    this.showError(error as string);
                 }
             }
         }

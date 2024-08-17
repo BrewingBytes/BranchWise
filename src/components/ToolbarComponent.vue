@@ -10,6 +10,7 @@
         no-gutters
         class="mr-6"
         align="center"
+        ref="title"
       >
         <v-tooltip
           text="Navigating with Precision and Wisdom"
@@ -106,10 +107,11 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { CreateComponentPublicInstance, defineComponent } from "vue";
 import { useAppStore } from "../stores/app";
 import { mapState } from "pinia";
 import { exit } from "@tauri-apps/api/process";
+import { appWindow } from "@tauri-apps/api/window";
 
 type ClickCallback = (event: Event) => void;
 
@@ -123,17 +125,31 @@ export default defineComponent({
     data() {
         return {
             menuItems: [
+                { title: "Minimize", function: () => appWindow.minimize() },
+                { title: "Maximize", function: () => appWindow.maximize() },
                 { title: "Exit", function: () => this.switchExitDialog() },
             ] as IMenuItem[],
             showExitDialog: false,
+            x: 0,
+            y: 0,
         };
     },
     computed: {
         ...mapState(useAppStore, ["title", "user"]),
     },
+    mounted() {
+        console.log(this.$refs);
+        (this.$refs.title as CreateComponentPublicInstance).$el.addEventListener("mousedown", this.startDragging);
+    },
     methods: {
         switchExitDialog() {
             this.showExitDialog = true;
+        },
+        async startDragging(event: Event) {
+            if (event.target === (this.$refs.title as CreateComponentPublicInstance).$el) {
+                event.preventDefault();
+                await appWindow.startDragging();
+            }
         },
         exit() {
             exit();

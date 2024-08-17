@@ -24,9 +24,6 @@ export default defineComponent({
   components: {
     ToolbarComponent,
   },
-  mounted() {
-    provide("showError", this.showError);
-  },
   data() {
     return {
       snackbar: {
@@ -36,6 +33,9 @@ export default defineComponent({
         timeout: 5000,
       },
     };
+  },
+  mounted() {
+    provide("showError", this.showError);
   },
   methods: {
     showError(error: string) {
