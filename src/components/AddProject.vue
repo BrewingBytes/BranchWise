@@ -24,6 +24,8 @@
 import { defineComponent, inject } from "vue";
 import { invoke } from "@tauri-apps/api/tauri";
 import { open } from "@tauri-apps/api/dialog";
+import { IGitProject } from "../types/gitProject";
+import { useAppStore } from "../stores/app";
 
 export default defineComponent({
     name: "AddProject",
@@ -53,7 +55,8 @@ export default defineComponent({
 
             if (result) {
                 try {
-                    await invoke("open_git_project", { directory: result });
+                    const project: IGitProject = await invoke("open_git_project", { directory: result });
+                    useAppStore().addProject(project);
                 } catch (error) {
                     this.showError(error as string);
                 }
@@ -79,7 +82,7 @@ export default defineComponent({
 
 p {
     display: block;
-    width:50px;
+    width: 100px;
     word-wrap:break-word;
     text-align: center;
     font-size: 12px;

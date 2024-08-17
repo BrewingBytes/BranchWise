@@ -13,7 +13,7 @@ export interface IGitProject {
 }
 
 export const DEFAULT_GIT_PROJECT: IGitProject = {
-    directory: "",
+    directory: "DEFAULT",
     state: GitProjectState.INVALID,
     localBranches: [],
     remotes: [],
