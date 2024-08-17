@@ -1,19 +1,24 @@
 <template>
-  <v-container>
-    <v-btn @click="openGitFolder">
-      Open Git Project
-    </v-btn>
+    <v-container>
+        <v-btn @click="openGitFolder">
+            Open Git Project
+        </v-btn>
 
-    <v-container v-if="gitProject.state === 'valid'">
-      <p>Branches in {{ gitProject.directory }}</p>
-      <p 
-        v-for="branch in gitProject.localBranches" 
-        :key="branch"
-      >
-        {{ branch }}
-      </p>
+        <v-container v-if="gitProject.state === 'valid'">
+            <p>Local branches in {{ gitProject.directory }}</p>
+            <p v-for="branch in gitProject.localBranches" :key="branch">
+                {{ branch }}
+            </p>
+            <p>Upstream branches:</p>
+            <p v-for="branch in gitProject.remoteBranches" :key="branch">
+                {{ branch }}
+            </p>
+            <p>Tags:</p>
+            <p v-for="tag in gitProject.tags" :key="tag">
+                {{ tag }}
+            </p>
+        </v-container>
     </v-container>
-  </v-container>
 </template>
 
 <script lang="ts">

@@ -7,7 +7,7 @@ pub const GIT_FOLDER: &str = ".git";
 pub enum GitFolders {
     REFS,
     OBJECTS,
-    HOOKS
+    HOOKS,
 }
 
 impl fmt::Display for GitFolders {
@@ -24,7 +24,7 @@ impl fmt::Display for GitFolders {
 pub enum GitRefs {
     HEADS,
     REMOTES,
-    TAGS
+    TAGS,
 }
 
 impl fmt::Display for GitRefs {
@@ -35,4 +35,10 @@ impl fmt::Display for GitRefs {
             GitRefs::TAGS => write!(f, "tags"),
         }
     }
+}
+
+pub enum GitBranchType {
+    Local,
+    Remote(String),
+    Tags,
 }
