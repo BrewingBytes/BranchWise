@@ -7,12 +7,16 @@ export interface IGitProject {
     directory: string,
     state: GitProjectState,
     localBranches: string[],
-    remoteBranches: string[]
+    remotes: string[],
+    remoteBranches: string[],
+    tags: string[],
 }
 
 export const DEFAULT_GIT_PROJECT: IGitProject = {
     directory: "",
     state: GitProjectState.INVALID,
     localBranches: [],
-    remoteBranches: []
+    remotes: [],
+    remoteBranches: [],
+    tags: []
 }
