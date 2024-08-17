@@ -40,5 +40,5 @@ impl fmt::Display for GitRefs {
 pub enum GitBranchType {
     Local,
     Remote(String),
-    Tags
+    Tags,
 }

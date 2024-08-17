@@ -34,7 +34,7 @@ pub fn open_git_project(directory: &str) -> Result<GitProject, GitError> {
         let _ = git_project.fetch_branches(GitBranchType::Local);
         let _ = git_project.fetch_branches(GitBranchType::Tags);
         let _ = git_project.fetch_remotes_directories();
-        
+
         for remote in git_project.get_remote_upstreams().clone() {
             let _ = git_project.fetch_branches(GitBranchType::Remote(remote));
         }
@@ -180,7 +180,7 @@ mod tests {
 
         create_sample_git_folder(&test_git_folder);
         create_remote_branch(&test_git_folder, "origin/main");
-        
+
         let mut git_project = open_git_project(&test_git_folder).unwrap();
         let _ = git_project.fetch_branches(GitBranchType::Remote("origin".to_string()));
 
@@ -203,7 +203,10 @@ mod tests {
         let mut git_project = open_git_project(&test_git_folder).unwrap();
         let _ = git_project.fetch_branches(GitBranchType::Tags);
 
-        assert_eq!(git_project.get_tags().contains(&"tags/tag1".to_string()), true);
+        assert_eq!(
+            git_project.get_tags().contains(&"tags/tag1".to_string()),
+            true
+        );
     }
 
     #[test]

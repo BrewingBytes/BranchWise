@@ -48,20 +48,17 @@ impl GitProject<'_> {
             "{}/{}/{}/{}",
             self.directory,
             GIT_FOLDER,
-            GitFolders::REFS.to_string(),
-            GitRefs::REMOTES.to_string()
+            GitFolders::REFS,
+            GitRefs::REMOTES
         );
 
         fs::read_dir(remotes_dir)
             .map(|entries| {
-                for entry in entries {
-                    if let Ok(entry) = entry {
-                        let path = entry.path();
-                        if path.is_dir() {
-                            let remote_name =
-                                path.file_name().unwrap().to_str().unwrap().to_string();
-                            self.remotes.push(remote_name);
-                        }
+                for entry in entries.flatten() {
+                    let path = entry.path();
+                    if path.is_dir() {
+                        let remote_name = path.file_name().unwrap().to_str().unwrap().to_string();
+                        self.remotes.push(remote_name);
                     }
                 }
             })
@@ -81,7 +78,7 @@ impl GitProject<'_> {
 
         let branch_dir = match &branch_type {
             GitBranchType::Local => GitRefs::HEADS.to_string(),
-            GitBranchType::Remote(remote_dir) => GitRefs::REMOTES.to_string() + "/" + &remote_dir,
+            GitBranchType::Remote(remote_dir) => GitRefs::REMOTES.to_string() + "/" + remote_dir,
             GitBranchType::Tags => GitRefs::TAGS.to_string(),
         };
 
@@ -109,7 +106,7 @@ impl GitProject<'_> {
                                 "{}/{}/{}/{}",
                                 self.directory,
                                 GIT_FOLDER,
-                                GitFolders::REFS.to_string(),
+                                GitFolders::REFS,
                                 branch_dir
                             ) {
                             current_dir.replace(
@@ -117,7 +114,7 @@ impl GitProject<'_> {
                                     "{}/{}/{}/{}/",
                                     self.directory,
                                     GIT_FOLDER,
-                                    GitFolders::REFS.to_string(),
+                                    GitFolders::REFS,
                                     branch_dir
                                 ),
                                 "",
