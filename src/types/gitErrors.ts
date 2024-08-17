@@ -1,0 +1,6 @@
+export enum GitError {
+    invalidGitFolder = "Error: Git folder is invalid",
+    cannotOpenFolder = "Error: Cannot open folder",
+    noGitFolder = "Error: Project is not a git repository",
+    noLocalBranches = "Error: No local branches found",
+};
