@@ -32,6 +32,13 @@ pub fn open_git_project(directory: &str) -> Result<GitProject, GitError> {
 
         git_project.set_state(GitProjectState::Valid);
         let _ = git_project.fetch_branches(GitBranchType::Local);
+        let _ = git_project.fetch_branches(GitBranchType::Tags);
+        let _ = git_project.fetch_remotes_directories();
+        
+        for remote in git_project.get_remote_upstreams().clone() {
+            let _ = git_project.fetch_branches(GitBranchType::Remote(remote));
+        }
+
         Ok(git_project)
     })?
 }
@@ -128,6 +135,18 @@ mod tests {
         .unwrap();
     }
 
+    fn create_tag(git_directory: &str, tag: &str) {
+        fs::File::create(format!(
+            "{}/{}/{}/{}/{}",
+            git_directory,
+            GIT_FOLDER,
+            GitFolders::REFS,
+            GitRefs::TAGS,
+            tag
+        ))
+        .unwrap();
+    }
+
     #[test]
     fn test_get_remote_upstreams() {
         let folder = TempDir::new("test_get_remote_upstreams").unwrap();
@@ -139,8 +158,6 @@ mod tests {
 
         let mut git_project = open_git_project(&test_git_folder).unwrap();
         let _ = git_project.fetch_remotes_directories();
-
-        println!("{:?}", git_project.get_remote_upstreams());
 
         assert_eq!(
             git_project
@@ -154,6 +171,39 @@ mod tests {
                 .contains(&"test".to_string()),
             true
         );
+    }
+
+    #[test]
+    fn test_get_remote_origin_branches() {
+        let folder = TempDir::new("test_get_remote_upstreams").unwrap();
+        let test_git_folder = folder.path().to_str().unwrap();
+
+        create_sample_git_folder(&test_git_folder);
+        create_remote_branch(&test_git_folder, "origin/main");
+        
+        let mut git_project = open_git_project(&test_git_folder).unwrap();
+        let _ = git_project.fetch_branches(GitBranchType::Remote("origin".to_string()));
+
+        assert_eq!(
+            git_project
+                .get_remote_branches()
+                .contains(&"origin/main".to_string()),
+            true
+        );
+    }
+
+    #[test]
+    fn test_get_tags() {
+        let folder = TempDir::new("test_get_tags").unwrap();
+        let test_git_folder = folder.path().to_str().unwrap();
+
+        create_sample_git_folder(&test_git_folder);
+        create_tag(&test_git_folder, "tag1");
+
+        let mut git_project = open_git_project(&test_git_folder).unwrap();
+        let _ = git_project.fetch_branches(GitBranchType::Tags);
+
+        assert_eq!(git_project.get_tags().contains(&"tags/tag1".to_string()), true);
     }
 
     #[test]

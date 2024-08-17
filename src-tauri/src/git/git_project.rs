@@ -23,6 +23,7 @@ pub struct GitProject<'a> {
     local_branches: Vec<String>,
     remotes: Vec<String>,
     remote_branches: Vec<String>,
+    tags: Vec<String>,
 }
 
 impl GitProject<'_> {
@@ -33,6 +34,7 @@ impl GitProject<'_> {
             local_branches: Vec::new(),
             remotes: Vec::new(),
             remote_branches: Vec::new(),
+            tags: Vec::new(),
         }
     }
 
@@ -50,20 +52,23 @@ impl GitProject<'_> {
             GitRefs::REMOTES.to_string()
         );
 
-        fs::read_dir(remotes_dir).map(|entries| {
-            for entry in entries {
-                if let Ok(entry) = entry {
-                    let path = entry.path();
-                    if path.is_dir() {
-                        let remote_name = path.file_name().unwrap().to_str().unwrap().to_string();
-                        self.remotes.push(remote_name);
+        fs::read_dir(remotes_dir)
+            .map(|entries| {
+                for entry in entries {
+                    if let Ok(entry) = entry {
+                        let path = entry.path();
+                        if path.is_dir() {
+                            let remote_name =
+                                path.file_name().unwrap().to_str().unwrap().to_string();
+                            self.remotes.push(remote_name);
+                        }
                     }
                 }
-            }
-        }).map_err(|_| {
-            self.state = GitProjectState::Invalid;
-            GitError::CannotOpenFolder
-        })?;
+            })
+            .map_err(|_| {
+                self.state = GitProjectState::Invalid;
+                GitError::CannotOpenFolder
+            })?;
 
         Ok(())
     }
@@ -74,7 +79,7 @@ impl GitProject<'_> {
             GitError::InvalidGitFolder
         })?;
 
-        let branch_dir = match branch_type {
+        let branch_dir = match &branch_type {
             GitBranchType::Local => GitRefs::HEADS.to_string(),
             GitBranchType::Remote(remote_dir) => GitRefs::REMOTES.to_string() + "/" + &remote_dir,
             GitBranchType::Tags => GitRefs::TAGS.to_string(),
@@ -91,7 +96,7 @@ impl GitProject<'_> {
         while let Some(current_dir) = dirs_to_check.pop() {
             if let Ok(entries) = fs::read_dir(&current_dir) {
                 let mut entries_iter = entries.into_iter();
-                
+
                 while let Some(Ok(entry)) = entries_iter.next() {
                     let path = entry.path();
                     if path.is_dir() {
@@ -122,7 +127,15 @@ impl GitProject<'_> {
                             branch_name
                         };
 
-                        self.local_branches.push(full_branch_name);
+                        match &branch_type {
+                            GitBranchType::Local => self.local_branches.push(full_branch_name),
+                            GitBranchType::Remote(upstream) => self
+                                .remote_branches
+                                .push(format!("{}/{}", upstream, full_branch_name)),
+                            GitBranchType::Tags => {
+                                self.tags.push(format!("tags/{}", full_branch_name))
+                            }
+                        }
                     }
                 }
             } else {
@@ -187,5 +200,13 @@ impl GitProject<'_> {
 
     pub fn get_remote_upstreams(&self) -> &Vec<String> {
         &self.remotes
+    }
+
+    pub fn get_remote_branches(&self) -> &Vec<String> {
+        &self.remote_branches
+    }
+
+    pub fn get_tags(&self) -> &Vec<String> {
+        &self.tags
     }
 }
