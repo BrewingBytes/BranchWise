@@ -2,12 +2,14 @@
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 use std::fs::read_to_string;
+use std::sync::Mutex;
 use tauri::api::path::app_data_dir;
 
 use crate::git::git_project::GitProject;
 
 lazy_static! {
-    pub static ref DATABASE: Database = Database::load(&tauri::Config::default()).unwrap_or_else(|_| Database::new());
+    pub static ref DATABASE: Mutex<Database> =
+        Mutex::new(Database::load(&tauri::Config::default()).unwrap_or_else(|_| Database::new()));
 }
 
 pub type Result<T> = std::result::Result<T, LoadError>;
@@ -32,21 +34,27 @@ impl Database {
         }
     }
 
-    fn add_project<'b>(&mut self, project: GitProject) {
+    pub fn add_project(&mut self, project: GitProject) {
         self.projects.push(project);
     }
 
-    fn get_projects(&self) -> Vec<GitProject> {
+    pub fn remove_project(&mut self, project: GitProject) {
+        self.projects.retain(|p| p != &project);
+    }
+
+    pub fn get_projects(&self) -> Vec<GitProject> {
         self.projects.clone()
     }
 
-    fn save(&self, cfg: &tauri::Config) {
-        let data = serde_json::to_string(&self).unwrap();
+    pub fn save(&self, cfg: &tauri::Config) -> Result<()> {
+        let data = serde_json::to_string(&self)?;
         let path = app_data_dir(cfg).unwrap().join("database.json");
-        std::fs::write(path, data).unwrap();
+        std::fs::write(path, data)?;
+
+        Ok(())
     }
 
-    fn load(cfg: &tauri::Config) -> Result<Database> {
+    pub fn load(cfg: &tauri::Config) -> Result<Database> {
         let path = app_data_dir(cfg).unwrap().join("database.json");
         let data = &read_to_string(path)?;
 
@@ -56,7 +64,7 @@ impl Database {
 
 mod tests {
     use super::*;
-        
+
     #[test]
     fn test_database() {
         let mut db = Database::new();

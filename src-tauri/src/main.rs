@@ -4,15 +4,18 @@ pub mod database;
 pub mod errors;
 pub mod git;
 
-use git::project_folder::open_git_project;
+use std::fs;
+
+use git::project_folder::{open_git_project, save_database};
 
 fn main() {
     tauri::Builder::default()
         .setup(|app| {
-            app.handle().path_resolver().app_data_dir();
+            fs::create_dir_all(app.handle().path_resolver().app_data_dir().unwrap())
+                .expect("Failed to create app data directory");
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![open_git_project])
+        .invoke_handler(tauri::generate_handler![open_git_project, save_database])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
