@@ -18,6 +18,9 @@
 import { defineComponent, provide } from "vue";
 import ToolbarComponent from "./components/ToolbarComponent.vue";
 import { GitError } from "./types/gitErrors";
+import { invoke } from "@tauri-apps/api";
+import { IGitProject } from "./types/gitProject";
+import { useAppStore } from "./stores/app";
 
 export default defineComponent({
   name: "AppComponent",
@@ -34,8 +37,14 @@ export default defineComponent({
       },
     };
   },
-  mounted() {
+  async mounted() {
     provide("showError", this.showError);
+
+    try {
+      useAppStore().setProjects(await invoke("get_database_projects"));
+    } catch (error) {
+      console.error(error);
+    }
   },
   methods: {
     showError(error: string) {

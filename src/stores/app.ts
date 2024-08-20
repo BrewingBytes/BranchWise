@@ -20,6 +20,9 @@ export const useAppStore = defineStore('app', {
         },
         addProject(git: IGitProject) {
             this.projects.push(git);
+        },
+        setProjects(projects: IGitProject[]) {
+            this.projects = projects;
         }
     }
 });

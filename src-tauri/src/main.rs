@@ -6,7 +6,7 @@ pub mod git;
 
 use std::fs;
 
-use git::project_folder::{open_git_project, save_database};
+use git::project_folder::{open_git_project, save_database, get_database_projects};
 
 fn main() {
     tauri::Builder::default()
@@ -15,7 +15,7 @@ fn main() {
                 .expect("Failed to create app data directory");
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![open_git_project, save_database])
+        .invoke_handler(tauri::generate_handler![open_git_project, save_database, get_database_projects])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

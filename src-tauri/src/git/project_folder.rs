@@ -2,7 +2,7 @@ use super::{
     git_folders::GitBranchType,
     git_project::{GitProject, GitProjectState},
 };
-use crate::{database::database::{LoadError, DATABASE}, errors::git_error::GitError};
+use crate::{database::database::DATABASE, errors::git_error::GitError};
 use std::fs;
 
 pub fn check_valid_git_project(directory: &str) -> Result<GitProject, GitError> {
@@ -48,11 +48,14 @@ pub fn open_git_project(directory: &str) -> Result<GitProject, GitError> {
 
 #[tauri::command]
 pub fn save_database(app_handle: tauri::AppHandle) -> Result<(), GitError> {
-    println!("{}", &app_handle.config().as_ref().tauri.bundle.identifier);
-
     DATABASE.lock().unwrap().save(app_handle.config().as_ref()).map_err(|_| GitError::DatabaseSaveError)?;
 
     Ok(())
+}
+
+#[tauri::command]
+pub fn get_database_projects() -> Vec<GitProject> {
+    DATABASE.lock().unwrap().get_projects()
 }
 
 #[cfg(test)]
