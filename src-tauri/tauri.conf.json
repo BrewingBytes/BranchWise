@@ -23,13 +23,59 @@
         "message": false,
         "open": true,
         "save": false
+      },
+      "process": {
+        "all": false,
+        "exit": true,
+        "relaunch": false,
+        "relaunchDangerousAllowSymlinkMacos": false
+      },
+      "window": {
+        "all": false,
+        "center": false,
+        "close": false,
+        "create": false,
+        "hide": false,
+        "maximize": true,
+        "minimize": true,
+        "print": false,
+        "requestUserAttention": false,
+        "setAlwaysOnTop": false,
+        "setClosable": false,
+        "setContentProtected": false,
+        "setCursorGrab": false,
+        "setCursorIcon": false,
+        "setCursorPosition": false,
+        "setCursorVisible": false,
+        "setDecorations": false,
+        "setFocus": false,
+        "setFullscreen": false,
+        "setIcon": false,
+        "setIgnoreCursorEvents": false,
+        "setMaxSize": false,
+        "setMaximizable": false,
+        "setMinSize": false,
+        "setMinimizable": false,
+        "setPosition": false,
+        "setResizable": false,
+        "setSize": false,
+        "setSkipTaskbar": false,
+        "setTitle": false,
+        "show": false,
+        "startDragging": true,
+        "unmaximize": false,
+        "unminimize": false
       }
     },
     "windows": [
       {
         "title": "BranchWise",
         "width": 800,
-        "height": 600
+        "height": 600,
+        "resizable": true,
+        "minWidth": 400,
+        "minHeight": 400,
+        "decorations": false
       }
     ],
     "security": {

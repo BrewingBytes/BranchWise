@@ -1,58 +1,32 @@
 <template>
     <v-container>
-        <v-btn @click="openGitFolder">
-            Open Git Project
-        </v-btn>
-
-        <v-container v-if="gitProject.state === 'valid'">
-            <p>Local branches in {{ gitProject.directory }}</p>
-            <p v-for="branch in gitProject.localBranches" :key="branch">
-                {{ branch }}
-            </p>
-            <p>Upstream branches:</p>
-            <p v-for="branch in gitProject.remoteBranches" :key="branch">
-                {{ branch }}
-            </p>
-            <p>Tags:</p>
-            <p v-for="tag in gitProject.tags" :key="tag">
-                {{ tag }}
-            </p>
-        </v-container>
+        <v-row no-gutters>
+            <v-col class="mb-4" cols="6" sm="4" md="2" v-for="project in getProjects" :key="project.directory">
+                <Project :project="project" />
+            </v-col>
+            <v-col class="mb-4" cols="6" sm="4" md="2">
+                <AddProject />
+            </v-col>
+        </v-row>
     </v-container>
 </template>
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import { IGitProject, DEFAULT_GIT_PROJECT } from "../types/gitProject";
-import { open } from "@tauri-apps/api/dialog";
-import { invoke } from "@tauri-apps/api/tauri";
+
+import AddProject from "../components/AddProject.vue";
+import Project from "../components/Project.vue";
+import { mapState } from "pinia";
+import { useAppStore } from "../stores/app";
 
 export default defineComponent({
     name: "IndexPage",
-    data() {
-        const gitProject: IGitProject = DEFAULT_GIT_PROJECT;
-
-        return {
-            gitProject
-        };
+    components: {
+        AddProject,
+        Project
     },
-    methods: {
-        async openGitFolder() {
-            const result = await open({
-                directory: true,
-                multiple: false
-            });
-
-            if (result) {
-                try {
-                    this.gitProject = await invoke("open_git_project", { directory: result });
-
-                    console.log(this.gitProject);
-                } catch (error) {
-                    console.error(error);
-                }
-            }
-        }
+    computed: {
+        ...mapState(useAppStore, ["getProjects"])
     }
 });
 </script>
