@@ -15,10 +15,10 @@ pub enum GitProjectState {
     Invalid,
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct GitProject<'a> {
-    directory: &'a str,
+pub struct GitProject {
+    directory: String,
     state: GitProjectState,
     local_branches: Vec<String>,
     remotes: Vec<String>,
@@ -26,10 +26,10 @@ pub struct GitProject<'a> {
     tags: Vec<String>,
 }
 
-impl GitProject<'_> {
+impl GitProject{
     pub fn new(directory: &str) -> GitProject {
         GitProject {
-            directory,
+            directory: String::from(directory),
             state: GitProjectState::Invalid,
             local_branches: Vec::new(),
             remotes: Vec::new(),
