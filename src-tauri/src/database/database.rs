@@ -3,13 +3,11 @@ use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 use std::fs::read_to_string;
 use std::sync::Mutex;
-use tauri::api::path::app_data_dir;
 
 use crate::git::git_project::GitProject;
 
 lazy_static! {
-    pub static ref DATABASE: Mutex<Database> =
-        Mutex::new(Database::load(&tauri::Config::default()).unwrap_or_else(|_| Database::new()));
+    pub static ref DATABASE: Mutex<Database> = Mutex::new(Database::new());
 }
 
 pub type Result<T> = std::result::Result<T, LoadError>;
@@ -24,12 +22,14 @@ pub enum LoadError {
 
 #[derive(Serialize, Deserialize)]
 pub struct Database {
+    path: String,
     projects: Vec<GitProject>,
 }
 
 impl Database {
     fn new() -> Self {
         Database {
+            path: String::new(),
             projects: Vec::new(),
         }
     }
@@ -46,32 +46,48 @@ impl Database {
         self.projects.clone()
     }
 
-    pub fn save(&self, cfg: &tauri::Config) -> Result<()> {
+    pub fn save(&self) -> Result<()> {
         let data = serde_json::to_string(&self)?;
-        let path = app_data_dir(cfg).unwrap().join("database.json");
-        std::fs::write(path, data)?;
+        std::fs::write(self.path.clone(), data)?;
 
         Ok(())
     }
 
-    pub fn load(cfg: &tauri::Config) -> Result<Database> {
-        let path = app_data_dir(cfg).unwrap().join("database.json");
-        let data = &read_to_string(path)?;
+    pub fn load(&mut self) -> Result<()> {
+        let data = &read_to_string(self.path.clone())?;
 
-        Ok(serde_json::from_str(data)?)
+        let db: Database = serde_json::from_str(data)?;
+        self.projects = db.projects.clone();
+
+        Ok(())
+    }
+
+    pub fn set_path(&mut self, path: String) {
+        self.path = format!("{}/database.json", path);
+
+        dbg!(&self.path);
     }
 }
 
+#[cfg(test)]
 mod tests {
+    use tempdir::TempDir;
+
     use super::*;
 
     #[test]
     fn test_database() {
+        let dir = TempDir::new("test_database").expect("Failed to create temp dir");
+
         let mut db = Database::new();
+        db.set_path(dir.path().to_str().unwrap().to_string());
         let project = GitProject::new("test");
         db.add_project(project.clone());
-        db.save(&tauri::Config::default());
-        let db2 = Database::load(&tauri::Config::default()).expect("Failed to load database");
+        db.save().expect("Failed to save database");
+        let mut db2 = Database::new();
+        db2.set_path(dir.path().to_str().unwrap().to_string());
+        db2.load().expect("Failed to load database");
+
 
         assert_eq!(db.get_projects(), db2.get_projects());
     }

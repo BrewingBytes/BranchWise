@@ -47,8 +47,12 @@ pub fn open_git_project(directory: &str) -> Result<GitProject, GitError> {
 }
 
 #[tauri::command]
-pub fn save_database(app_handle: tauri::AppHandle) -> Result<(), GitError> {
-    DATABASE.lock().unwrap().save(app_handle.config().as_ref()).map_err(|_| GitError::DatabaseSaveError)?;
+pub fn save_database() -> Result<(), GitError> {
+    DATABASE
+        .lock()
+        .unwrap()
+        .save()
+        .map_err(|_| GitError::DatabaseSaveError)?;
 
     Ok(())
 }
