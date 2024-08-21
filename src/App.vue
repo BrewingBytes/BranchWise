@@ -1,5 +1,6 @@
 <template>
   <v-app>
+    <NavbarComponent :is-open="isNavbarOpen" />
     <ToolbarComponent />
     <v-main>
       <router-view />
@@ -17,14 +18,17 @@
 <script lang="ts">
 import { defineComponent, provide } from "vue";
 import ToolbarComponent from "./components/ToolbarComponent.vue";
+import NavbarComponent from "./components/NavbarComponent.vue";
 import { GitError } from "./types/gitErrors";
 import { invoke } from "@tauri-apps/api";
 import { useAppStore } from "./stores/app";
+import { mapState } from "pinia";
 
 export default defineComponent({
   name: "AppComponent",
   components: {
     ToolbarComponent,
+    NavbarComponent,
   },
   data() {
     return {
@@ -35,6 +39,9 @@ export default defineComponent({
         timeout: 5000,
       },
     };
+  },
+  computed: {
+    ...mapState(useAppStore, ["isNavbarOpen"]),
   },
   async mounted() {
     provide("showError", this.showError);

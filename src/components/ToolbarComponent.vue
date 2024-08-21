@@ -21,6 +21,7 @@
               class="mr-2"
               icon="mdi:mdi-source-branch"
               v-bind="props"
+              @click="toggleNavbar"
             />
             <p
               class="text-h5"
@@ -150,6 +151,9 @@ export default defineComponent({
                 event.preventDefault();
                 await appWindow.startDragging();
             }
+        },
+        toggleNavbar() {
+            useAppStore().toggleNavbar();
         },
         exit() {
             exit();

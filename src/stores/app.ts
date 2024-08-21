@@ -8,6 +8,7 @@ export const useAppStore = defineStore('app', {
         title: "BranchWise",
         user: DEFAULT_USER,
         projects: [] as IGitProject[],
+        isNavbarOpen: false
     }),
     getters: {
         getProjects(): IGitProject[] {
@@ -30,5 +31,8 @@ export const useAppStore = defineStore('app', {
                 this.projects.splice(index, 1);
             }
         },
+        toggleNavbar() {
+            this.isNavbarOpen = !this.isNavbarOpen;
+        }
     }
 });
