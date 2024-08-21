@@ -38,10 +38,10 @@ impl Database {
     }
 
     pub fn add_project(&mut self, project: GitProject) -> Result<()> {
-        if let Some(_) = self
+        if self
             .projects
             .iter()
-            .position(|p| p.get_directory() == project.get_directory())
+            .any(|p| p.get_directory() == project.get_directory())
         {
             Err(LoadError::ProjectExists)
         } else {

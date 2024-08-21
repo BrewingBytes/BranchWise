@@ -2,7 +2,7 @@ use super::{
     git_folders::GitBranchType,
     git_project::{GitProject, GitProjectState},
 };
-use crate::{database::database::DATABASE, errors::git_error::GitError};
+use crate::{database::storage::DATABASE, errors::git_error::GitError};
 use std::fs;
 
 pub fn check_valid_git_project(directory: &str) -> Result<GitProject, GitError> {
@@ -167,24 +167,22 @@ mod tests {
         let folder = TempDir::new("test_get_remote_upstreams").unwrap();
         let test_git_folder = folder.path().to_str().unwrap();
 
-        create_sample_git_folder(&test_git_folder);
-        create_remote_branch(&test_git_folder, "origin/main");
-        create_remote_branch(&test_git_folder, "test/main");
+        create_sample_git_folder(test_git_folder);
+        create_remote_branch(test_git_folder, "origin/main");
+        create_remote_branch(test_git_folder, "test/main");
 
-        let mut git_project = open_git_project(&test_git_folder).unwrap();
+        let mut git_project = open_git_project(test_git_folder).unwrap();
         let _ = git_project.fetch_remotes_directories();
 
-        assert_eq!(
+        assert!(
             git_project
                 .get_remote_upstreams()
-                .contains(&"origin".to_string()),
-            true
+                .contains(&"origin".to_string())
         );
-        assert_eq!(
+        assert!(
             git_project
                 .get_remote_upstreams()
-                .contains(&"test".to_string()),
-            true
+                .contains(&"test".to_string())
         );
     }
 
@@ -193,17 +191,16 @@ mod tests {
         let folder = TempDir::new("test_get_remote_upstreams").unwrap();
         let test_git_folder = folder.path().to_str().unwrap();
 
-        create_sample_git_folder(&test_git_folder);
-        create_remote_branch(&test_git_folder, "origin/main");
+        create_sample_git_folder(test_git_folder);
+        create_remote_branch(test_git_folder, "origin/main");
 
-        let mut git_project = open_git_project(&test_git_folder).unwrap();
+        let mut git_project = open_git_project(test_git_folder).unwrap();
         let _ = git_project.fetch_branches(GitBranchType::Remote("origin".to_string()));
 
-        assert_eq!(
+        assert!(
             git_project
                 .get_remote_branches()
-                .contains(&"origin/main".to_string()),
-            true
+                .contains(&"origin/main".to_string())
         );
     }
 
@@ -212,15 +209,14 @@ mod tests {
         let folder = TempDir::new("test_get_tags").unwrap();
         let test_git_folder = folder.path().to_str().unwrap();
 
-        create_sample_git_folder(&test_git_folder);
-        create_tag(&test_git_folder, "tag1");
+        create_sample_git_folder(test_git_folder);
+        create_tag(test_git_folder, "tag1");
 
-        let mut git_project = open_git_project(&test_git_folder).unwrap();
+        let mut git_project = open_git_project(test_git_folder).unwrap();
         let _ = git_project.fetch_branches(GitBranchType::Tags);
 
-        assert_eq!(
-            git_project.get_tags().contains(&"tags/tag1".to_string()),
-            true
+        assert!(
+            git_project.get_tags().contains(&"tags/tag1".to_string())
         );
     }
 
@@ -229,9 +225,9 @@ mod tests {
         let folder = TempDir::new("test_open_git_project_is_valid_state").unwrap();
         let test_git_folder = folder.path().to_str().unwrap();
 
-        create_sample_git_folder(&test_git_folder);
+        create_sample_git_folder(test_git_folder);
 
-        let git_project = open_git_project(&test_git_folder).unwrap();
+        let git_project = open_git_project(test_git_folder).unwrap();
         assert_eq!(git_project.get_state(), GitProjectState::Valid);
     }
 
@@ -240,17 +236,16 @@ mod tests {
         let folder = TempDir::new("test_git_project_get_local_main_branch").unwrap();
         let test_git_folder = folder.path().to_str().unwrap();
 
-        create_sample_git_folder(&test_git_folder);
-        create_local_branch(&test_git_folder, "main");
+        create_sample_git_folder(test_git_folder);
+        create_local_branch(test_git_folder, "main");
 
-        let mut git_project = open_git_project(&test_git_folder).unwrap();
+        let mut git_project = open_git_project(test_git_folder).unwrap();
         let _ = git_project.fetch_branches(GitBranchType::Local);
 
-        assert_eq!(
+        assert!(
             git_project
                 .get_local_branches()
-                .contains(&"main".to_string()),
-            true
+                .contains(&"main".to_string())
         );
     }
 
@@ -259,17 +254,16 @@ mod tests {
         let folder = TempDir::new("test_git_project_get_local_branch_from_subfolder").unwrap();
         let test_git_folder = folder.path().to_str().unwrap();
 
-        create_sample_git_folder(&test_git_folder);
-        create_local_branch(&test_git_folder, "feature/test");
+        create_sample_git_folder(test_git_folder);
+        create_local_branch(test_git_folder, "feature/test");
 
-        let mut git_project = open_git_project(&test_git_folder).unwrap();
+        let mut git_project = open_git_project(test_git_folder).unwrap();
         let _ = git_project.fetch_branches(GitBranchType::Local);
 
-        assert_eq!(
+        assert!(
             git_project
                 .get_local_branches()
-                .contains(&"feature/test".to_string()),
-            true
+                .contains(&"feature/test".to_string())
         );
     }
 
@@ -278,7 +272,7 @@ mod tests {
         let folder = TempDir::new("test_git_project_no_local_branches_folder").unwrap();
         let test_git_folder = folder.path().to_str().unwrap();
 
-        create_sample_git_folder(&test_git_folder);
+        create_sample_git_folder(test_git_folder);
         fs::remove_dir(format!(
             "{}/{}/{}/{}",
             test_git_folder,
@@ -288,10 +282,10 @@ mod tests {
         ))
         .unwrap();
 
-        let git_project = open_git_project(&test_git_folder)
+        let git_project = open_git_project(test_git_folder)
             .unwrap()
             .fetch_branches(GitBranchType::Local);
-        assert_eq!(git_project.is_err(), true);
+        assert!(git_project.is_err());
     }
 
     #[test]
@@ -299,9 +293,9 @@ mod tests {
         let folder = TempDir::new("test_git_folder_exists").unwrap();
         let test_git_folder = folder.path().to_str().unwrap();
 
-        create_sample_git_folder(&test_git_folder);
+        create_sample_git_folder(test_git_folder);
 
-        assert_eq!(check_valid_git_project(&test_git_folder).is_ok(), true);
+        assert!(check_valid_git_project(test_git_folder).is_ok());
     }
 
     #[test]
@@ -318,7 +312,7 @@ mod tests {
         let test_git_folder = folder.path().to_str().unwrap();
 
         assert_eq!(
-            open_git_project(&test_git_folder),
+            open_git_project(test_git_folder),
             Err(GitError::NoGitFolder)
         );
 

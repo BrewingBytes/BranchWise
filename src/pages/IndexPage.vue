@@ -1,14 +1,26 @@
 <template>
-    <v-container>
-        <v-row no-gutters>
-            <v-col class="mb-4" cols="6" sm="4" md="2" v-for="project in getProjects" :key="project.directory">
-                <Project :project="project" />
-            </v-col>
-            <v-col class="mb-4" cols="6" sm="4" md="2">
-                <AddProject />
-            </v-col>
-        </v-row>
-    </v-container>
+  <v-container>
+    <v-row no-gutters>
+      <v-col
+        v-for="project in getProjects"
+        :key="project.directory"
+        class="mb-4"
+        cols="6"
+        sm="4"
+        md="2"
+      >
+        <Project :project="project" />
+      </v-col>
+      <v-col
+        class="mb-4"
+        cols="6"
+        sm="4"
+        md="2"
+      >
+        <AddProject />
+      </v-col>
+    </v-row>
+  </v-container>
 </template>
 
 <script lang="ts">

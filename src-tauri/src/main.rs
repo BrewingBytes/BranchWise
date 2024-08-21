@@ -6,7 +6,7 @@ pub mod git;
 
 use std::fs;
 
-use database::database::DATABASE;
+use database::storage::DATABASE;
 use git::project_folder::{get_database_projects, open_git_project, remove_database_project};
 
 fn main() {
