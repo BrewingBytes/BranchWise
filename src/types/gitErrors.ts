@@ -3,4 +3,5 @@ export enum GitError {
     cannotOpenFolder = "Error: Cannot open folder",
     noGitFolder = "Error: Project is not a git repository",
     noLocalBranches = "Error: No local branches found",
+    databaseSaveError = "Error: Cannot save to database",
 };

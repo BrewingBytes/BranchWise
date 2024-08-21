@@ -206,4 +206,8 @@ impl GitProject{
     pub fn get_tags(&self) -> &Vec<String> {
         &self.tags
     }
+
+    pub fn get_directory(&self) -> &String {
+        &self.directory
+    }
 }

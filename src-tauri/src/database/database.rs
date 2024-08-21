@@ -18,6 +18,9 @@ pub enum LoadError {
 
     #[error("JSON error")]
     JSONError(#[from] serde_json::Error),
+
+    #[error("Project already exists")]
+    ProjectExists
 }
 
 #[derive(Serialize, Deserialize)]
@@ -35,10 +38,18 @@ impl Database {
     }
 
     pub fn add_project(&mut self, project: GitProject) -> Result<()> {
-        self.projects.push(project);
-        self.save()?;
+        if let Some(_) = self
+            .projects
+            .iter()
+            .position(|p| p.get_directory() == project.get_directory())
+        {
+            Err(LoadError::ProjectExists)
+        } else {
+            self.projects.push(project);
+            self.save()?;
 
-        Ok(())
+            Ok(())
+        }
     }
 
     pub fn remove_project(&mut self, project: GitProject) -> Result<()> {
@@ -89,10 +100,11 @@ mod tests {
         let mut db = Database::new();
         let _ = db.set_path(dir.path().to_str().unwrap().to_string());
         let project = GitProject::new("test");
-        db.add_project(project.clone()).expect("Failed to add project");
+        db.add_project(project.clone())
+            .expect("Failed to add project");
         let mut db2 = Database::new();
-        db2.set_path(dir.path().to_str().unwrap().to_string()).expect("Failed to set path and load database");
-
+        db2.set_path(dir.path().to_str().unwrap().to_string())
+            .expect("Failed to set path and load database");
 
         assert_eq!(db.get_projects(), db2.get_projects());
     }
