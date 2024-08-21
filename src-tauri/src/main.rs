@@ -7,7 +7,7 @@ pub mod git;
 use std::fs;
 
 use database::database::DATABASE;
-use git::project_folder::{get_database_projects, open_git_project};
+use git::project_folder::{get_database_projects, open_git_project, remove_database_project};
 
 fn main() {
     tauri::Builder::default()
@@ -27,7 +27,8 @@ fn main() {
         })
         .invoke_handler(tauri::generate_handler![
             open_git_project,
-            get_database_projects
+            get_database_projects,
+            remove_database_project
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

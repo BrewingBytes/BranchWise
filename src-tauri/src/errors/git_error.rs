@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 pub enum GitError {
     DatabaseSaveError,
+    DatabaseDeleteError,
     InvalidGitFolder,
     CannotOpenFolder,
     NoGitFolder,

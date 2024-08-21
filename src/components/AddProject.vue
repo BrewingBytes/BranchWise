@@ -57,7 +57,6 @@ export default defineComponent({
                 try {
                     const project: IGitProject = await invoke("open_git_project", { directory: result });
                     useAppStore().addProject(project);
-                    await invoke("save_database");
                 } catch (error) {
                     console.log(error);
                     this.showError(error as string);

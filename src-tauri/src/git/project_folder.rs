@@ -51,6 +51,13 @@ pub fn get_database_projects() -> Vec<GitProject> {
     DATABASE.lock().unwrap().get_projects()
 }
 
+#[tauri::command]
+pub fn remove_database_project(project: GitProject) -> Result<(), GitError> {
+    DATABASE.lock().unwrap().remove_project(project).map_err(|_| GitError::DatabaseDeleteError)?;
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use crate::git::{

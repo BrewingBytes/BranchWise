@@ -4,4 +4,5 @@ export enum GitError {
     noGitFolder = "Error: Project is not a git repository",
     noLocalBranches = "Error: No local branches found",
     databaseSaveError = "Error: Cannot save to database",
+    databaseDeleteError = "Error: Cannot delete from database",
 };
