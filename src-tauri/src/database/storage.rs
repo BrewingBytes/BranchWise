@@ -26,6 +26,7 @@ pub enum LoadError {
 #[derive(Serialize, Deserialize)]
 pub struct Database {
     path: String,
+    test_mode: bool,
     projects: Vec<GitProject>,
 }
 
@@ -33,6 +34,7 @@ impl Database {
     fn new() -> Self {
         Database {
             path: String::new(),
+            test_mode: false,
             projects: Vec::new(),
         }
     }
@@ -64,6 +66,10 @@ impl Database {
     }
 
     fn save(&self) -> Result<()> {
+        if self.test_mode {
+            return Ok(());
+        }
+
         let data = serde_json::to_string(&self)?;
         std::fs::write(self.path.clone(), data)?;
 
@@ -71,6 +77,10 @@ impl Database {
     }
 
     fn load(&mut self) -> Result<()> {
+        if self.test_mode {
+            return Ok(());
+        }
+        
         let data = &read_to_string(self.path.clone())?;
 
         let db: Database = serde_json::from_str(data)?;
@@ -84,6 +94,10 @@ impl Database {
         self.load()?;
 
         Ok(())
+    }
+
+    pub fn set_test_mode(&mut self, test_mode: bool) {
+        self.test_mode = test_mode;
     }
 }
 
@@ -107,5 +121,44 @@ mod tests {
             .expect("Failed to set path and load database");
 
         assert_eq!(db.get_projects(), db2.get_projects());
+    }
+
+    #[test]
+    fn test_already_exists() {
+        let dir = TempDir::new("test_database").expect("Failed to create temp dir");
+
+        let mut db = Database::new();
+        let _ = db.set_path(dir.path().to_str().unwrap().to_string());
+        let project = GitProject::new("test");
+        db.add_project(project.clone())
+            .expect("Failed to add project");
+        let result = db.add_project(project.clone());
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_remove_project() {
+        let dir = TempDir::new("test_database").expect("Failed to create temp dir");
+
+        let mut db = Database::new();
+        let _ = db.set_path(dir.path().to_str().unwrap().to_string());
+        let project = GitProject::new("test");
+        db.add_project(project.clone())
+            .expect("Failed to add project");
+        db.remove_project(project.clone())
+            .expect("Failed to remove project");
+        let projects = db.get_projects();
+        assert_eq!(projects.len(), 0);
+    }
+
+    #[test]
+    fn test_test_mode() {
+        let dir = TempDir::new("test_database").expect("Failed to create temp dir");
+
+        let mut db = Database::new();
+        let _ = db.set_path(dir.path().to_str().unwrap().to_string());
+        db.set_test_mode(true);
+        assert!(db.save().is_ok());
+        assert!(db.load().is_ok());
     }
 }

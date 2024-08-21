@@ -9,14 +9,11 @@ pub fn check_valid_git_project(directory: &str) -> Result<GitProject, GitError> 
     fs::read_dir(directory)
         .map(|read_dir| {
             for entry in read_dir {
-                match entry {
-                    Ok(entry) => {
-                        let path = entry.path();
-                        if path.is_dir() && path.file_name().unwrap() == ".git" {
-                            return Ok(GitProject::new(directory));
-                        }
+                if let Ok(entry) = entry {
+                    let path = entry.path();
+                    if path.is_dir() && path.file_name().unwrap() == ".git" {
+                        return Ok(GitProject::new(directory));
                     }
-                    Err(_) => return Err(GitError::CannotOpenFolder),
                 }
             }
 
@@ -40,7 +37,11 @@ pub fn open_git_project(directory: &str) -> Result<GitProject, GitError> {
         }
 
         // Add the project to the database (Note: This is not saved to disk)
-        DATABASE.lock().unwrap().add_project(git_project.clone()).map_err(|_| GitError::DatabaseSaveError)?;
+        DATABASE
+            .lock()
+            .unwrap()
+            .add_project(git_project.clone())
+            .map_err(|_| GitError::DatabaseSaveError)?;
 
         Ok(git_project)
     })?
@@ -53,7 +54,11 @@ pub fn get_database_projects() -> Vec<GitProject> {
 
 #[tauri::command]
 pub fn remove_database_project(project: GitProject) -> Result<(), GitError> {
-    DATABASE.lock().unwrap().remove_project(project).map_err(|_| GitError::DatabaseDeleteError)?;
+    DATABASE
+        .lock()
+        .unwrap()
+        .remove_project(project)
+        .map_err(|_| GitError::DatabaseDeleteError)?;
 
     Ok(())
 }
@@ -87,6 +92,8 @@ mod tests {
             fs::create_dir_all(format!("{}/{}/{}", git_path, GitFolders::REFS, ref_folder))
                 .unwrap();
         }
+
+        DATABASE.lock().unwrap().set_test_mode(true);
 
         // Return the path to the git sample project
         git_path.to_string()
@@ -163,6 +170,38 @@ mod tests {
     }
 
     #[test]
+    fn test_get_database_projects() {
+            let folder = TempDir::new("test_get_database_projects").unwrap();
+            let test_git_folder = folder.path().to_str().unwrap();
+
+            create_sample_git_folder(test_git_folder);
+
+            let git_project = open_git_project(test_git_folder).unwrap();
+            let projects = get_database_projects();
+
+            assert!(projects.iter().any(|x| x == &git_project));
+    }
+
+    #[test]
+    fn test_remove_database_project() {
+            let folder = TempDir::new("test_remove_database_project").unwrap();
+            let test_git_folder = folder.path().to_str().unwrap();
+
+            create_sample_git_folder(test_git_folder);
+
+            let git_project = open_git_project(test_git_folder).unwrap();
+            let projects = get_database_projects();
+
+            assert!(projects.iter().any(|x| x == &git_project));
+
+            let _ = remove_database_project(git_project.clone());
+
+            let projects = get_database_projects();
+            
+            assert!(!projects.iter().any(|x| x == &git_project));
+    }
+
+    #[test]
     fn test_get_remote_upstreams() {
         let folder = TempDir::new("test_get_remote_upstreams").unwrap();
         let test_git_folder = folder.path().to_str().unwrap();
@@ -174,16 +213,12 @@ mod tests {
         let mut git_project = open_git_project(test_git_folder).unwrap();
         let _ = git_project.fetch_remotes_directories();
 
-        assert!(
-            git_project
-                .get_remote_upstreams()
-                .contains(&"origin".to_string())
-        );
-        assert!(
-            git_project
-                .get_remote_upstreams()
-                .contains(&"test".to_string())
-        );
+        assert!(git_project
+            .get_remote_upstreams()
+            .contains(&"origin".to_string()));
+        assert!(git_project
+            .get_remote_upstreams()
+            .contains(&"test".to_string()));
     }
 
     #[test]
@@ -197,11 +232,9 @@ mod tests {
         let mut git_project = open_git_project(test_git_folder).unwrap();
         let _ = git_project.fetch_branches(GitBranchType::Remote("origin".to_string()));
 
-        assert!(
-            git_project
-                .get_remote_branches()
-                .contains(&"origin/main".to_string())
-        );
+        assert!(git_project
+            .get_remote_branches()
+            .contains(&"origin/main".to_string()));
     }
 
     #[test]
@@ -215,9 +248,7 @@ mod tests {
         let mut git_project = open_git_project(test_git_folder).unwrap();
         let _ = git_project.fetch_branches(GitBranchType::Tags);
 
-        assert!(
-            git_project.get_tags().contains(&"tags/tag1".to_string())
-        );
+        assert!(git_project.get_tags().contains(&"tags/tag1".to_string()));
     }
 
     #[test]
@@ -242,11 +273,9 @@ mod tests {
         let mut git_project = open_git_project(test_git_folder).unwrap();
         let _ = git_project.fetch_branches(GitBranchType::Local);
 
-        assert!(
-            git_project
-                .get_local_branches()
-                .contains(&"main".to_string())
-        );
+        assert!(git_project
+            .get_local_branches()
+            .contains(&"main".to_string()));
     }
 
     #[test]
@@ -260,11 +289,9 @@ mod tests {
         let mut git_project = open_git_project(test_git_folder).unwrap();
         let _ = git_project.fetch_branches(GitBranchType::Local);
 
-        assert!(
-            git_project
-                .get_local_branches()
-                .contains(&"feature/test".to_string())
-        );
+        assert!(git_project
+            .get_local_branches()
+            .contains(&"feature/test".to_string()));
     }
 
     #[test]
