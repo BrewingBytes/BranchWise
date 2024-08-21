@@ -26,6 +26,7 @@ pub enum LoadError {
 #[derive(Serialize, Deserialize)]
 pub struct Database {
     path: String,
+    test_mode: bool,
     projects: Vec<GitProject>,
 }
 
@@ -33,6 +34,7 @@ impl Database {
     fn new() -> Self {
         Database {
             path: String::new(),
+            test_mode: false,
             projects: Vec::new(),
         }
     }
@@ -64,6 +66,10 @@ impl Database {
     }
 
     fn save(&self) -> Result<()> {
+        if self.test_mode {
+            return Ok(());
+        }
+
         let data = serde_json::to_string(&self)?;
         std::fs::write(self.path.clone(), data)?;
 
@@ -71,6 +77,10 @@ impl Database {
     }
 
     fn load(&mut self) -> Result<()> {
+        if self.test_mode {
+            return Ok(());
+        }
+        
         let data = &read_to_string(self.path.clone())?;
 
         let db: Database = serde_json::from_str(data)?;
@@ -84,6 +94,10 @@ impl Database {
         self.load()?;
 
         Ok(())
+    }
+
+    pub fn set_test_mode(&mut self, test_mode: bool) {
+        self.test_mode = test_mode;
     }
 }
 

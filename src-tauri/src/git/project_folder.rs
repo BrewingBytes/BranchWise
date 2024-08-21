@@ -88,6 +88,8 @@ mod tests {
                 .unwrap();
         }
 
+        DATABASE.lock().unwrap().set_test_mode(true);
+
         // Return the path to the git sample project
         git_path.to_string()
     }
