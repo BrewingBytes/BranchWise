@@ -34,26 +34,32 @@ impl Database {
         }
     }
 
-    pub fn add_project(&mut self, project: GitProject) {
+    pub fn add_project(&mut self, project: GitProject) -> Result<()> {
         self.projects.push(project);
+        self.save()?;
+
+        Ok(())
     }
 
-    pub fn remove_project(&mut self, project: GitProject) {
+    pub fn remove_project(&mut self, project: GitProject) -> Result<()> {
         self.projects.retain(|p| p != &project);
+        self.save()?;
+
+        Ok(())
     }
 
     pub fn get_projects(&self) -> Vec<GitProject> {
         self.projects.clone()
     }
 
-    pub fn save(&self) -> Result<()> {
+    fn save(&self) -> Result<()> {
         let data = serde_json::to_string(&self)?;
         std::fs::write(self.path.clone(), data)?;
 
         Ok(())
     }
 
-    pub fn load(&mut self) -> Result<()> {
+    fn load(&mut self) -> Result<()> {
         let data = &read_to_string(self.path.clone())?;
 
         let db: Database = serde_json::from_str(data)?;
@@ -62,10 +68,11 @@ impl Database {
         Ok(())
     }
 
-    pub fn set_path(&mut self, path: String) {
+    pub fn set_path(&mut self, path: String) -> Result<()> {
         self.path = format!("{}/database.json", path);
+        self.load()?;
 
-        dbg!(&self.path);
+        Ok(())
     }
 }
 
@@ -80,13 +87,11 @@ mod tests {
         let dir = TempDir::new("test_database").expect("Failed to create temp dir");
 
         let mut db = Database::new();
-        db.set_path(dir.path().to_str().unwrap().to_string());
+        let _ = db.set_path(dir.path().to_str().unwrap().to_string());
         let project = GitProject::new("test");
-        db.add_project(project.clone());
-        db.save().expect("Failed to save database");
+        db.add_project(project.clone()).expect("Failed to add project");
         let mut db2 = Database::new();
-        db2.set_path(dir.path().to_str().unwrap().to_string());
-        db2.load().expect("Failed to load database");
+        db2.set_path(dir.path().to_str().unwrap().to_string()).expect("Failed to set path and load database");
 
 
         assert_eq!(db.get_projects(), db2.get_projects());

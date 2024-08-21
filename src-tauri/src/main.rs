@@ -7,7 +7,7 @@ pub mod git;
 use std::fs;
 
 use database::database::DATABASE;
-use git::project_folder::{get_database_projects, open_git_project, save_database};
+use git::project_folder::{get_database_projects, open_git_project};
 
 fn main() {
     tauri::Builder::default()
@@ -21,14 +21,12 @@ fn main() {
                     .app_data_dir()
                     .unwrap()
                     .display().to_string()
-            );
-            DATABASE.lock().unwrap().load().expect("Failed to load database");
+            ).expect("Failed to set database path and load it");
 
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
             open_git_project,
-            save_database,
             get_database_projects
         ])
         .run(tauri::generate_context!())

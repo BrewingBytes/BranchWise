@@ -40,21 +40,10 @@ pub fn open_git_project(directory: &str) -> Result<GitProject, GitError> {
         }
 
         // Add the project to the database (Note: This is not saved to disk)
-        DATABASE.lock().unwrap().add_project(git_project.clone());
+        DATABASE.lock().unwrap().add_project(git_project.clone()).map_err(|_| GitError::DatabaseSaveError)?;
 
         Ok(git_project)
     })?
-}
-
-#[tauri::command]
-pub fn save_database() -> Result<(), GitError> {
-    DATABASE
-        .lock()
-        .unwrap()
-        .save()
-        .map_err(|_| GitError::DatabaseSaveError)?;
-
-    Ok(())
 }
 
 #[tauri::command]
