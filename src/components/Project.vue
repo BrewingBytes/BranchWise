@@ -1,14 +1,23 @@
 <template>
-    <v-container>
-        <v-col align="center" class="pa-0">
-            <v-btn :ripple="false" flat base-color="transparent" variant="flat" icon>
-                <v-icon>mdi:mdi-source-branch</v-icon>
-            </v-btn>
-            <p>
-                {{ name }}
-            </p>
-        </v-col>
-    </v-container>
+  <v-container>
+    <v-col
+      align="center"
+      class="pa-0"
+    >
+      <v-btn
+        :ripple="false"
+        flat
+        base-color="transparent"
+        variant="flat"
+        icon
+      >
+        <v-icon>mdi:mdi-source-branch</v-icon>
+      </v-btn>
+      <p>
+        {{ name }}
+      </p>
+    </v-col>
+  </v-container>
 </template>
 
 <script lang="ts">

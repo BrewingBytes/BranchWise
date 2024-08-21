@@ -156,6 +156,7 @@ dependencies = [
 name = "branchwise"
 version = "0.0.1"
 dependencies = [
+ "lazy_static",
  "serde",
  "serde_json",
  "strum",
@@ -163,6 +164,7 @@ dependencies = [
  "tauri",
  "tauri-build",
  "tempdir",
+ "thiserror",
 ]
 
 [[package]]

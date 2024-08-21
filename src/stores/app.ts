@@ -20,6 +20,15 @@ export const useAppStore = defineStore('app', {
         },
         addProject(git: IGitProject) {
             this.projects.push(git);
-        }
+        },
+        setProjects(projects: IGitProject[]) {
+            this.projects = projects;
+        },
+        removeProject(git: IGitProject) {
+            const index = this.projects.indexOf(git);
+            if (index > -1) {
+                this.projects.splice(index, 1);
+            }
+        },
     }
 });
