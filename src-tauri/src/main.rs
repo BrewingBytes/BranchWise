@@ -43,4 +43,9 @@ mod tests {
     fn test_application_main() {
         main();
     }
+
+    #[test]
+    fn test_tauri_setup_ok() {
+        m
+    }
 }

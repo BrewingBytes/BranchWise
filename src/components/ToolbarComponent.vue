@@ -13,7 +13,7 @@
         align="center"
       >
         <v-tooltip
-          text="Navigating with Precision and Wisdom"
+          text="Open Hamburguer Menu"
           location="bottom"
         >
           <template #activator="{ props }">
@@ -26,6 +26,7 @@
             <p
               class="text-h5"
               v-bind="props"
+              @click="toggleNavbar"
             >
               {{ title }}
             </p>
