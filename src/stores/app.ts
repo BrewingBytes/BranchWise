@@ -8,12 +8,16 @@ export const useAppStore = defineStore('app', {
         title: "BranchWise",
         user: DEFAULT_USER,
         projects: [] as IGitProject[],
-        isNavbarOpen: false
+        isNavbarOpen: false,
+        selectedProject: null as IGitProject | null
     }),
     getters: {
         getProjects(): IGitProject[] {
             return this.projects;
-        }
+        },
+        getSelectedProject(): IGitProject | null {
+            return this.selectedProject;
+        },
     },
     actions: {
         setTitle(title: string) {
@@ -33,6 +37,9 @@ export const useAppStore = defineStore('app', {
         },
         toggleNavbar() {
             this.isNavbarOpen = !this.isNavbarOpen;
+        },
+        setCurrentProject(git: IGitProject) {
+            this.selectedProject = git;
         }
     }
 });

@@ -14,6 +14,18 @@
         </v-row>
       </v-list-item>
       <v-divider />
+      <v-list-item @click="goHome">
+        <v-row>
+          <v-col cols="3">
+            <v-icon icon="mdi:mdi-home" />
+          </v-col>
+          <v-col cols="9">
+            <p class="text-h5">
+              Projects
+            </p>
+          </v-col>
+        </v-row>
+      </v-list-item>
       <v-spacer />
       <v-list-item @click="closeMe">
         <v-row>
@@ -46,6 +58,9 @@ export default defineComponent({
   methods: {
     closeMe() {
       useAppStore().toggleNavbar();
+    },
+    goHome() {
+      this.$router.push("/");
     }
   }
 });
