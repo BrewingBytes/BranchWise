@@ -27,7 +27,7 @@
         </v-row>
       </v-list-item>
       <v-divider />
-      <v-template v-if="isProjectSelected">
+      <template v-if="isProjectSelected">
         <v-list-item>
           <v-row>
             <v-col cols="3">
@@ -40,7 +40,7 @@
             </v-col>
           </v-row>
         </v-list-item>
-      </v-template>
+      </template>
       <v-spacer />
       <v-list-item @click="closeMe">
         <v-row>

@@ -49,7 +49,7 @@ export default defineComponent({
     try {
       useAppStore().setProjects(await invoke("get_database_projects"));
     } catch (error) {
-      console.error(error);
+      this.showError(error as string);
     }
   },
   methods: {

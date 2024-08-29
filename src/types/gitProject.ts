@@ -3,6 +3,12 @@ export enum GitProjectState {
     VALID = "valid",
 }
 
+export enum BranchType {
+    LOCAL = "local",
+    REMOTE = "remote",
+    TAGS = "tags",
+}
+
 export interface IGitProject {
     directory: string,
     state: GitProjectState,

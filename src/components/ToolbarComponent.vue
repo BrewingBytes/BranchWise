@@ -140,7 +140,6 @@ export default defineComponent({
         ...mapState(useAppStore, ["title", "user"]),
     },
     mounted() {
-        console.log(this.$refs);
         (this.$refs.title as CreateComponentPublicInstance).$el.addEventListener("mousedown", this.startDragging);
     },
     methods: {
