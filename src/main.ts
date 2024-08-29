@@ -4,7 +4,7 @@ import router from "./router";
 
 import App from "./App.vue";
 
-let app = createApp(App);
+const app = createApp(App);
 
 registerPlugins(app);
 
