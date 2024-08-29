@@ -4,5 +4,8 @@ component_management:
       paths:
         - "src-tauri/"
 
+coverage:
+  range: "90...100"
+
 comment:
   layout: "header, diff, flags, components"
