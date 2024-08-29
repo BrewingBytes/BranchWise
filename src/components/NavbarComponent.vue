@@ -42,6 +42,19 @@
         </v-list-item>
       </template>
       <v-spacer />
+      <v-list-item @click="deleteProject">
+        <v-row>
+          <v-col cols="3">
+            <v-icon icon="mdi:mdi-delete" />
+          </v-col>
+          <v-col cols="9">
+            <p class="text-h5">
+              Delete Project
+            </p>
+          </v-col>
+        </v-row>
+      </v-list-item>
+      <v-divider />
       <v-list-item @click="closeMe">
         <v-row>
           <v-col cols="3">
@@ -80,6 +93,10 @@ export default defineComponent({
       useAppStore().toggleNavbar();
     },
     goHome() {
+      this.$router.push("/");
+    },
+    deleteProject() {
+      useAppStore().removeProject();
       this.$router.push("/");
     }
   }

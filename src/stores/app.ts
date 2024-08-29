@@ -29,11 +29,19 @@ export const useAppStore = defineStore('app', {
         setProjects(projects: IGitProject[]) {
             this.projects = projects;
         },
-        removeProject(git: IGitProject) {
-            const index = this.projects.indexOf(git);
+        removeProject(git: IGitProject | null = null) {
+            if (git === null && this.selectedProject !== null) {
+                git = this.selectedProject;
+            } else if (this.selectedProject === null) {
+                return;
+            }
+
+            const index = this.projects.indexOf(git as IGitProject);
             if (index > -1) {
                 this.projects.splice(index, 1);
             }
+
+            console.log("Removed project", git);
         },
         toggleNavbar() {
             this.isNavbarOpen = !this.isNavbarOpen;
