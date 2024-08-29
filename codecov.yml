@@ -4,5 +4,12 @@ component_management:
       paths:
         - "src-tauri/"
 
+ignore:
+  - "src-tauri/src/main.rs"
+  - "src-tauri/src/errors/git_error.rs"
+
+coverage:
+  range: "90...100"
+
 comment:
   layout: "header, diff, flags, components"

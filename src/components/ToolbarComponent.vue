@@ -13,7 +13,7 @@
         align="center"
       >
         <v-tooltip
-          text="Navigating with Precision and Wisdom"
+          text="Open Hamburguer Menu"
           location="bottom"
         >
           <template #activator="{ props }">
@@ -21,10 +21,12 @@
               class="mr-2"
               icon="mdi:mdi-source-branch"
               v-bind="props"
+              @click="toggleNavbar"
             />
             <p
               class="text-h5"
               v-bind="props"
+              @click="toggleNavbar"
             >
               {{ title }}
             </p>
@@ -71,6 +73,9 @@
                 @click="item.function"
               >
                 {{ item.title }}
+              </v-list-item>
+              <v-list-item class="text-caption text-center">
+                {{ getAppVersion }}
               </v-list-item>
             </v-list>
           </v-menu>
@@ -135,10 +140,9 @@ export default defineComponent({
         };
     },
     computed: {
-        ...mapState(useAppStore, ["title", "user"]),
+        ...mapState(useAppStore, ["title", "user", "getAppVersion"]),
     },
     mounted() {
-        console.log(this.$refs);
         (this.$refs.title as CreateComponentPublicInstance).$el.addEventListener("mousedown", this.startDragging);
     },
     methods: {
@@ -150,6 +154,9 @@ export default defineComponent({
                 event.preventDefault();
                 await appWindow.startDragging();
             }
+        },
+        toggleNavbar() {
+            useAppStore().toggleNavbar();
         },
         exit() {
             exit();

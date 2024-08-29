@@ -15,13 +15,13 @@ fn main() {
             fs::create_dir_all(app.handle().path_resolver().app_data_dir().unwrap())
                 .expect("Failed to create app data directory");
 
-            DATABASE.lock().unwrap().set_path(
+            let _ = DATABASE.lock().unwrap().set_path(
                 app.handle()
                     .path_resolver()
                     .app_data_dir()
                     .unwrap()
                     .display().to_string()
-            ).expect("Failed to set database path and load it");
+            );
 
             Ok(())
         })

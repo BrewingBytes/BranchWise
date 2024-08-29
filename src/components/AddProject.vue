@@ -58,7 +58,6 @@ export default defineComponent({
                     const project: IGitProject = await invoke("open_git_project", { directory: result });
                     useAppStore().addProject(project);
                 } catch (error) {
-                    console.log(error);
                     this.showError(error as string);
                 }
             }
@@ -72,6 +71,9 @@ export default defineComponent({
     width: max-content;
     border: 1px solid #e0e0e0;
     border-radius: 10px;
+    min-height: 120px;
+    max-height: 120px;
+    overflow: hidden;
 }
 
 .v-container:hover,

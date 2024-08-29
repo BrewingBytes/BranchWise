@@ -1,5 +1,7 @@
 <template>
-  <v-container>
+  <v-container
+    @click="openProjectPage"
+  >
     <v-col
       align="center"
       class="pa-0"
@@ -23,6 +25,7 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import { IGitProject } from "../types/gitProject";
+import { useAppStore } from "../stores/app";
 
 export default defineComponent({
     name: "ProjectComponent",
@@ -36,6 +39,12 @@ export default defineComponent({
         name() {
             return this.project.directory.split("/").pop();
         }
+    },
+    methods: {
+        openProjectPage() {
+            useAppStore().setCurrentProject(this.project);
+            this.$router.push("/project");
+        }
     }
 });
 </script>
@@ -45,6 +54,9 @@ export default defineComponent({
     width: max-content;
     border: 1px solid #e0e0e0;
     border-radius: 10px;
+    min-height: 120px;
+    max-height: 120px;
+    overflow: hidden;
 }
 
 .v-container:hover,
