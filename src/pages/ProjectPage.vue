@@ -1,8 +1,27 @@
 <template>
   <v-row class="fill-height" no-gutters>
-    <v-col align="center" class="pa-0" cols="3" style="border-right: 1px solid #e0e0e0;">
+    <v-col align="center" class="pa-0" cols="4" style="border-right: 1px solid #e0e0e0;">
+      <v-expansion-panels>
+        <v-expansion-panel static>
+          <v-expansion-panel-title>Branches</v-expansion-panel-title>
+          <v-expansion-panel-text>
+            <v-treeview :items="localProjectBranchesTree"
+              expand-icon="mdi:mdi-folder" collapse-icon="mdi:mdi-folder-open" item-key="title" item-props>
+              <template v-slot:prepend="{ item }">
+                <v-icon v-if="!item.children" icon="mdi:mdi-source-branch" />
+              </template>
+            </v-treeview>
+          </v-expansion-panel-text>
+        </v-expansion-panel>
+        <v-expansion-panel static>
+          <v-expansion-panel-title>Remotes</v-expansion-panel-title>
+        </v-expansion-panel>
+        <v-expansion-panel static>
+          <v-expansion-panel-title>Tags</v-expansion-panel-title>
+        </v-expansion-panel>
+      </v-expansion-panels>
     </v-col>
-    <v-col align="center" class="pa-0" cols="9">
+    <v-col align="center" class="pa-0" cols="8">
     </v-col>
   </v-row>
 </template>
@@ -20,6 +39,12 @@ interface IDirectory {
   branches: string[];
 }
 
+interface IBranchTreeItem {
+  id: number;
+  title: string;
+  children?: IBranchTreeItem[];
+}
+
 export default defineComponent({
   name: "ProjectPage",
   computed: {
@@ -30,7 +55,38 @@ export default defineComponent({
       project: "getSelectedProject",
     }),
     localProjectBranchesTree() {
-      return this.makeBranchesTree(BranchType.LOCAL);
+      const treeItems: IBranchTreeItem[] = [];
+      const items = this.makeBranchesTree(BranchType.LOCAL);
+
+      const addBranches = (directory: IDirectory, parent: IBranchTreeItem | null = null) => {
+        const item: IBranchTreeItem = {
+          id: treeItems.length,
+          title: directory.name,
+          children: [],
+        };
+        if (parent) {
+          parent.children?.push(item);
+        } else {
+          treeItems.push(item);
+        }
+
+        directory.children.forEach((child) => {
+          addBranches(child, item);
+        });
+
+        directory.branches.forEach((branch) => {
+          item.children?.push({
+            id: treeItems.length,
+            title: branch,
+          });
+        });
+      };
+
+      items.children.forEach((child) => {
+        addBranches(child);
+      });
+
+      return treeItems;
     },
     remoteProjectBranchesTree() {
       return this.makeBranchesTree(BranchType.REMOTE);
@@ -83,9 +139,32 @@ export default defineComponent({
         }
         currentDirectory.branches.push(branchParts[branchParts.length - 1]);
       });
-      
+
       return tree;
     }
   }
 });
 </script>
+
+<style scoped>
+.v-expansion-panel--active {
+  margin: 0 !important;
+  border: 0 !important;
+}
+
+.v-expansion-panel-text__wrapper {
+  padding: 0 !important;
+}
+
+.v-expansion-panel-text :deep(.v-expansion-panel-text__wrapper) {
+  padding: 0 !important;
+}
+
+.v-treeview-item {
+  padding: 0 !important;
+}
+
+.v-treeview-item--activetable-group-activator {
+  padding: 0 !important;
+}
+</style>
