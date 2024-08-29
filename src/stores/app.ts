@@ -38,7 +38,7 @@ export const useAppStore = defineStore('app', {
         toggleNavbar() {
             this.isNavbarOpen = !this.isNavbarOpen;
         },
-        setCurrentProject(git: IGitProject) {
+        setCurrentProject(git: IGitProject | null) {
             this.selectedProject = git;
         }
     }

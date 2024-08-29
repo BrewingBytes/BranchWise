@@ -21,6 +21,9 @@ import { useAppStore } from "../stores/app";
 export default defineComponent({
     name: "IndexPage",
     computed: {
+        projectName(): string {
+            return this.project?.directory.split("/").pop() || "";
+        },
         ...mapState(useAppStore, {
             project: "getSelectedProject",
         })
@@ -28,6 +31,8 @@ export default defineComponent({
     mounted() {
         if (!this.project) {
             this.$router.push("/");
+        } else {
+          useAppStore().setTitle(this.projectName);
         }
     }
 });

@@ -26,6 +26,21 @@
           </v-col>
         </v-row>
       </v-list-item>
+      <v-divider />
+      <v-template v-if="isProjectSelected">
+        <v-list-item>
+          <v-row>
+            <v-col cols="3">
+              <v-icon icon="mdi:mdi-source-branch" />
+            </v-col>
+            <v-col cols="9">
+              <p class="text-h5">
+                Branches
+              </p>
+            </v-col>
+          </v-row>
+        </v-list-item>
+      </v-template>
       <v-spacer />
       <v-list-item @click="closeMe">
         <v-row>
@@ -53,6 +68,11 @@ export default defineComponent({
     isOpen: {
       type: Boolean,
       required: true,
+    }
+  },
+  computed: {
+    isProjectSelected() {
+      return useAppStore().getSelectedProject !== null;
     }
   },
   methods: {

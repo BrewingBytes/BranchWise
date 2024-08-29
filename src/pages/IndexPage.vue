@@ -39,6 +39,10 @@ export default defineComponent({
     },
     computed: {
         ...mapState(useAppStore, ["getProjects"])
+    },
+    mounted() {
+        useAppStore().setTitle("BranchWise");
+        useAppStore().setCurrentProject(null);
     }
 });
 </script>
