@@ -74,6 +74,9 @@
               >
                 {{ item.title }}
               </v-list-item>
+              <v-list-item class="text-caption text-center">
+                {{ getAppVersion }}
+              </v-list-item>
             </v-list>
           </v-menu>
         </v-btn>
@@ -137,7 +140,7 @@ export default defineComponent({
         };
     },
     computed: {
-        ...mapState(useAppStore, ["title", "user"]),
+        ...mapState(useAppStore, ["title", "user", "getAppVersion"]),
     },
     mounted() {
         (this.$refs.title as CreateComponentPublicInstance).$el.addEventListener("mousedown", this.startDragging);

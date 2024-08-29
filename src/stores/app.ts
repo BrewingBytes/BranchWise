@@ -9,7 +9,8 @@ export const useAppStore = defineStore('app', {
         user: DEFAULT_USER,
         projects: [] as IGitProject[],
         isNavbarOpen: false,
-        selectedProject: null as IGitProject | null
+        selectedProject: null as IGitProject | null,
+        appVersion: "0.0.1",
     }),
     getters: {
         getProjects(): IGitProject[] {
@@ -18,6 +19,9 @@ export const useAppStore = defineStore('app', {
         getSelectedProject(): IGitProject | null {
             return this.selectedProject;
         },
+        getAppVersion(): string {
+            return `v${this.appVersion}`;
+        }
     },
     actions: {
         setTitle(title: string) {
