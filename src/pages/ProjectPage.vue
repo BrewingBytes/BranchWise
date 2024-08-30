@@ -1,14 +1,30 @@
 <template>
-  <v-row class="fill-height" no-gutters>
-    <v-col align="center" class="pa-0" cols="4" style="border-right: 1px solid #e0e0e0;">
+  <v-row
+    class="fill-height"
+    no-gutters
+  >
+    <v-col
+      align="center"
+      class="pa-0"
+      cols="4"
+      style="border-right: 1px solid #e0e0e0;"
+    >
       <v-expansion-panels>
         <v-expansion-panel static>
           <v-expansion-panel-title>Branches</v-expansion-panel-title>
           <v-expansion-panel-text>
-            <v-treeview :items="localProjectBranchesTree" expand-icon="mdi:mdi-folder"
-              collapse-icon="mdi:mdi-folder-open" item-key="title" item-props>
-              <template v-slot:prepend="{ item }">
-                <v-icon v-if="!item.children" icon="mdi:mdi-source-branch" />
+            <v-treeview
+              :items="localProjectBranchesTree"
+              expand-icon="mdi:mdi-folder"
+              collapse-icon="mdi:mdi-folder-open"
+              item-key="title"
+              item-props
+            >
+              <template #prepend="{ item }">
+                <v-icon
+                  v-if="!item.children"
+                  icon="mdi:mdi-source-branch"
+                />
               </template>
             </v-treeview>
           </v-expansion-panel-text>
@@ -16,12 +32,30 @@
         <v-expansion-panel static>
           <v-expansion-panel-title>Remotes</v-expansion-panel-title>
           <v-expansion-panel-text>
-            <v-treeview :items="remoteProjectBranchesTree" expand-icon="" collapse-icon="" item-key="title" item-props>
-              <template v-slot:prepend="{ isActive, item }">
-                <v-icon v-if="!item.children" icon="mdi:mdi-source-branch" />
-                <v-icon v-else-if="item.customIcon" :icon="item.customIcon" />
-                <v-icon v-else-if="isActive" icon="mdi:mdi-folder-open" />
-                <v-icon v-else icon="mdi:mdi-folder" />
+            <v-treeview
+              :items="remoteProjectBranchesTree"
+              expand-icon=""
+              collapse-icon=""
+              item-key="title"
+              item-props
+            >
+              <template #prepend="{ isActive, item }">
+                <v-icon
+                  v-if="!item.children"
+                  icon="mdi:mdi-source-branch"
+                />
+                <v-icon
+                  v-else-if="item.customIcon"
+                  :icon="item.customIcon"
+                />
+                <v-icon
+                  v-else-if="isActive"
+                  icon="mdi:mdi-folder-open"
+                />
+                <v-icon
+                  v-else
+                  icon="mdi:mdi-folder"
+                />
               </template>
             </v-treeview>
           </v-expansion-panel-text>
@@ -29,18 +63,29 @@
         <v-expansion-panel static>
           <v-expansion-panel-title>Tags</v-expansion-panel-title>
           <v-expansion-panel-text>
-            <v-treeview :items="tagsProjectBranchesTree" expand-icon="mdi:mdi-tag-arrow-down"
-              collapse-icon="mdi:mdi-tag-arrow-up" item-key="title" item-props>
-              <template v-slot:prepend="{ item }">
-                <v-icon v-if="!item.children" icon="mdi:mdi-tag" />
+            <v-treeview
+              :items="tagsProjectBranchesTree"
+              expand-icon="mdi:mdi-tag-arrow-down"
+              collapse-icon="mdi:mdi-tag-arrow-up"
+              item-key="title"
+              item-props
+            >
+              <template #prepend="{ item }">
+                <v-icon
+                  v-if="!item.children"
+                  icon="mdi:mdi-tag"
+                />
               </template>
             </v-treeview>
           </v-expansion-panel-text>
         </v-expansion-panel>
       </v-expansion-panels>
     </v-col>
-    <v-col align="center" class="pa-0" cols="8">
-    </v-col>
+    <v-col
+      align="center"
+      class="pa-0"
+      cols="8"
+    />
   </v-row>
 </template>
 
