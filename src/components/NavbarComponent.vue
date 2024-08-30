@@ -74,6 +74,7 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import { useAppStore } from "../stores/app";
+import { invoke } from "@tauri-apps/api";
 
 export default defineComponent({
   name: "NavbarComponent",
@@ -95,9 +96,17 @@ export default defineComponent({
     goHome() {
       this.$router.push("/");
     },
-    deleteProject() {
-      useAppStore().removeProject();
-      this.$router.push("/");
+    async deleteProject() {
+      try {
+        await invoke("remove_database_project", {
+          project: useAppStore().getSelectedProject,
+        });
+
+        useAppStore().removeProject();
+        this.$router.push("/");
+      } catch (e) {
+        console.error(e);
+      }
     }
   }
 });
