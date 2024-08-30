@@ -8,20 +8,25 @@ use std::fs;
 
 use database::storage::DATABASE;
 use git::project_folder::{get_database_projects, open_git_project, remove_database_project};
+use tauri::AppHandle;
+
+async fn setup(app: AppHandle) {
+    fs::create_dir_all(app.path_resolver().app_data_dir().unwrap())
+        .expect("Failed to create app data directory");
+
+    let _ = DATABASE.lock().unwrap().set_path(
+        app.path_resolver()
+            .app_data_dir()
+            .unwrap()
+            .display()
+            .to_string(),
+    );
+}
 
 fn main() {
     tauri::Builder::default()
         .setup(|app| {
-            fs::create_dir_all(app.handle().path_resolver().app_data_dir().unwrap())
-                .expect("Failed to create app data directory");
-
-            let _ = DATABASE.lock().unwrap().set_path(
-                app.handle()
-                    .path_resolver()
-                    .app_data_dir()
-                    .unwrap()
-                    .display().to_string()
-            );
+            tauri::async_runtime::block_on(setup(app.handle()));
 
             Ok(())
         })
