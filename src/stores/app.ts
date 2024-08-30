@@ -44,8 +44,6 @@ export const useAppStore = defineStore('app', {
             if (index > -1) {
                 this.projects.splice(index, 1);
             }
-
-            console.log("Removed project", git);
         },
         toggleNavbar() {
             this.isNavbarOpen = !this.isNavbarOpen;

@@ -8,12 +8,10 @@ use std::fs;
 pub fn check_valid_git_project(directory: &str) -> Result<GitProject, GitError> {
     fs::read_dir(directory)
         .map(|read_dir| {
-            for entry in read_dir {
-                if let Ok(entry) = entry {
-                    let path = entry.path();
-                    if path.is_dir() && path.file_name().unwrap() == ".git" {
-                        return Ok(GitProject::new(directory));
-                    }
+            for entry in read_dir.flatten() {
+                let path = entry.path();
+                if path.is_dir() && path.file_name().unwrap() == ".git" {
+                    return Ok(GitProject::new(directory));
                 }
             }
 
@@ -171,34 +169,34 @@ mod tests {
 
     #[test]
     fn test_get_database_projects() {
-            let folder = TempDir::new("test_get_database_projects").unwrap();
-            let test_git_folder = folder.path().to_str().unwrap();
+        let folder = TempDir::new("test_get_database_projects").unwrap();
+        let test_git_folder = folder.path().to_str().unwrap();
 
-            create_sample_git_folder(test_git_folder);
+        create_sample_git_folder(test_git_folder);
 
-            let git_project = open_git_project(test_git_folder).unwrap();
-            let projects = get_database_projects();
+        let git_project = open_git_project(test_git_folder).unwrap();
+        let projects = get_database_projects();
 
-            assert!(projects.iter().any(|x| x == &git_project));
+        assert!(projects.iter().any(|x| x == &git_project));
     }
 
     #[test]
     fn test_remove_database_project() {
-            let folder = TempDir::new("test_remove_database_project").unwrap();
-            let test_git_folder = folder.path().to_str().unwrap();
+        let folder = TempDir::new("test_remove_database_project").unwrap();
+        let test_git_folder = folder.path().to_str().unwrap();
 
-            create_sample_git_folder(test_git_folder);
+        create_sample_git_folder(test_git_folder);
 
-            let git_project = open_git_project(test_git_folder).unwrap();
-            let projects = get_database_projects();
+        let git_project = open_git_project(test_git_folder).unwrap();
+        let projects = get_database_projects();
 
-            assert!(projects.iter().any(|x| x == &git_project));
+        assert!(projects.iter().any(|x| x == &git_project));
 
-            let _ = remove_database_project(git_project.clone());
+        let _ = remove_database_project(git_project.clone());
 
-            let projects = get_database_projects();
-            
-            assert!(!projects.iter().any(|x| x == &git_project));
+        let projects = get_database_projects();
+
+        assert!(!projects.iter().any(|x| x == &git_project));
     }
 
     #[test]
