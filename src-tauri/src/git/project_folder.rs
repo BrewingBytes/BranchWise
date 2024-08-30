@@ -21,6 +21,11 @@ pub fn check_valid_git_project(directory: &str) -> Result<GitProject, GitError> 
 }
 
 #[tauri::command]
+pub fn set_current_project(project: GitProject) {
+    DATABASE.lock().unwrap().current_project = Some(project);
+}
+
+#[tauri::command]
 pub fn open_git_project(directory: &str) -> Result<GitProject, GitError> {
     check_valid_git_project(directory).map(|mut git_project| {
         git_project.has_required_files()?;
@@ -342,5 +347,19 @@ mod tests {
         );
 
         fs::remove_dir_all(test_git_folder).unwrap();
+    }
+    
+    #[test]
+    fn test_set_current_project() {
+        let folder = TempDir::new("test_set_current_project").unwrap();
+        let test_git_folder = folder.path().to_str().unwrap();
+
+        create_sample_git_folder(test_git_folder);
+
+        let git_project = open_git_project(test_git_folder).unwrap();
+        set_current_project(git_project.clone());
+
+        let current_project = DATABASE.lock().unwrap().current_project.clone();
+        assert_eq!(current_project, Some(git_project));
     }
 }

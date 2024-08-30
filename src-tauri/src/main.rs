@@ -7,7 +7,9 @@ pub mod git;
 use std::fs;
 
 use database::storage::DATABASE;
-use git::project_folder::{get_database_projects, open_git_project, remove_database_project};
+use git::project_folder::{
+    get_database_projects, open_git_project, remove_database_project, set_current_project,
+};
 use tauri::AppHandle;
 
 async fn setup(app: AppHandle) {
@@ -23,17 +25,26 @@ async fn setup(app: AppHandle) {
     );
 }
 
+async fn event_loop(_app: AppHandle) {
+    let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(60));
+    loop {
+        interval.tick().await;
+    }
+}
+
 fn main() {
     tauri::Builder::default()
         .setup(|app| {
             tauri::async_runtime::block_on(setup(app.handle()));
+            tauri::async_runtime::spawn(event_loop(app.handle()));
 
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
             open_git_project,
             get_database_projects,
-            remove_database_project
+            remove_database_project,
+            set_current_project
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

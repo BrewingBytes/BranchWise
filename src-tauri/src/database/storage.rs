@@ -28,6 +28,7 @@ pub struct Database {
     path: String,
     test_mode: bool,
     projects: Vec<GitProject>,
+    pub current_project: Option<GitProject>,
 }
 
 impl Database {
@@ -36,6 +37,7 @@ impl Database {
             path: String::new(),
             test_mode: false,
             projects: Vec::new(),
+            current_project: None,
         }
     }
 
