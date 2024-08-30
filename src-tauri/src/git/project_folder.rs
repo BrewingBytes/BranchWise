@@ -21,8 +21,8 @@ pub fn check_valid_git_project(directory: &str) -> Result<GitProject, GitError> 
 }
 
 #[tauri::command]
-pub fn set_current_project(project: GitProject) {
-    DATABASE.lock().unwrap().current_project = Some(project);
+pub fn set_current_project(project: Option<GitProject>) {
+    DATABASE.lock().unwrap().current_project = project;
 }
 
 #[tauri::command]
@@ -357,7 +357,7 @@ mod tests {
         create_sample_git_folder(test_git_folder);
 
         let git_project = open_git_project(test_git_folder).unwrap();
-        set_current_project(git_project.clone());
+        set_current_project(Some(git_project.clone()));
 
         let current_project = DATABASE.lock().unwrap().current_project.clone();
         assert_eq!(current_project, Some(git_project));

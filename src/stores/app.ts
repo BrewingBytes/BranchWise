@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { DEFAULT_USER } from "../types/user";
 import { IGitProject } from "../types/gitProject";
+import { invoke } from "@tauri-apps/api";
 
 export const useAppStore = defineStore('app', {
     state: () => (
@@ -50,6 +51,7 @@ export const useAppStore = defineStore('app', {
         },
         setCurrentProject(git: IGitProject | null) {
             this.selectedProject = git;
+            invoke("set_current_project", { project: git });
         }
     }
 });
