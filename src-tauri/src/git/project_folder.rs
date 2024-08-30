@@ -22,7 +22,7 @@ pub fn check_valid_git_project(directory: &str) -> Result<GitProject, GitError> 
 
 #[tauri::command]
 pub fn set_current_project(project: Option<GitProject>) {
-    DATABASE.lock().unwrap().current_project = project;
+    DATABASE.lock().unwrap().set_current_project(project);
 }
 
 #[tauri::command]
@@ -298,6 +298,29 @@ mod tests {
     }
 
     #[test]
+    fn test_git_project_update() {
+        let folder = TempDir::new("test_git_project_update").unwrap();
+        let test_git_folder = folder.path().to_str().unwrap();
+
+        create_sample_git_folder(test_git_folder);
+        create_local_branch(test_git_folder, "feature/test");
+
+        let mut git_project = open_git_project(test_git_folder).unwrap();
+        let _ = git_project.fetch_branches(GitBranchType::Local);
+
+        assert!(git_project
+            .get_local_branches()
+            .contains(&"feature/test".to_string()));
+
+        create_local_branch(test_git_folder, "feature/test2");
+        git_project.update().unwrap();
+
+        assert!(git_project
+            .get_local_branches()
+            .contains(&"feature/test2".to_string()));
+    }
+
+    #[test]
     fn test_git_project_no_local_branches_folder() {
         let folder = TempDir::new("test_git_project_no_local_branches_folder").unwrap();
         let test_git_folder = folder.path().to_str().unwrap();
@@ -348,7 +371,7 @@ mod tests {
 
         fs::remove_dir_all(test_git_folder).unwrap();
     }
-    
+
     #[test]
     fn test_set_current_project() {
         let folder = TempDir::new("test_set_current_project").unwrap();
@@ -359,7 +382,26 @@ mod tests {
         let git_project = open_git_project(test_git_folder).unwrap();
         set_current_project(Some(git_project.clone()));
 
-        let current_project = DATABASE.lock().unwrap().current_project.clone();
+        let current_project = DATABASE.lock().unwrap().get_current_project();
         assert_eq!(current_project, Some(git_project));
+    }
+
+    #[test]
+    fn test_remove_current_project() {
+        let folder = TempDir::new("test_remove_current_project").unwrap();
+        let test_git_folder = folder.path().to_str().unwrap();
+
+        create_sample_git_folder(test_git_folder);
+
+        let git_project = open_git_project(test_git_folder).unwrap();
+        set_current_project(Some(git_project.clone()));
+
+        let current_project = DATABASE.lock().unwrap().get_current_project();
+        assert_eq!(current_project, Some(git_project));
+
+        set_current_project(None);
+
+        let current_project = DATABASE.lock().unwrap().get_current_project();
+        assert_eq!(current_project, None);
     }
 }

@@ -28,7 +28,7 @@ pub struct Database {
     path: String,
     test_mode: bool,
     projects: Vec<GitProject>,
-    pub current_project: Option<GitProject>,
+    current_project: Option<GitProject>,
 }
 
 impl Database {
@@ -100,6 +100,14 @@ impl Database {
 
     pub fn set_test_mode(&mut self, test_mode: bool) {
         self.test_mode = test_mode;
+    }
+
+    pub fn set_current_project(&mut self, project: Option<GitProject>) {
+        self.current_project = project;
+    }
+
+    pub fn get_current_project(&self) -> Option<GitProject> {
+        self.current_project.clone()
     }
 }
 

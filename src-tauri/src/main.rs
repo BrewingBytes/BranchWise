@@ -10,7 +10,7 @@ use database::storage::DATABASE;
 use git::project_folder::{
     get_database_projects, open_git_project, remove_database_project, set_current_project,
 };
-use tauri::AppHandle;
+use tauri::{AppHandle, Manager};
 
 async fn setup(app: AppHandle) {
     fs::create_dir_all(app.path_resolver().app_data_dir().unwrap())
@@ -25,10 +25,36 @@ async fn setup(app: AppHandle) {
     );
 }
 
-async fn event_loop(_app: AppHandle) {
-    let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(60));
+async fn event_loop(app: AppHandle) {
+    let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(30));
     loop {
         interval.tick().await;
+
+        if let Some(mut project) = DATABASE.lock().unwrap().get_current_project() {
+            match project.update() {
+                Ok(_) => {
+                    let window = app.get_window("main").unwrap();
+                    DATABASE
+                        .lock()
+                        .unwrap()
+                        .set_current_project(Some(project.clone()));
+                    window.emit("project_update", project).unwrap();
+                }
+                Err(e) => {
+                    let window = app.get_window("main").unwrap();
+                    DATABASE
+                        .lock()
+                        .unwrap()
+                        .set_current_project(Some(project.clone()));
+                    window
+                        .emit("project_update_error", {
+                            drop(e);
+                            drop(project);
+                        })
+                        .unwrap();
+                }
+            }
+        }
     }
 }
 
