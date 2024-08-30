@@ -7,6 +7,7 @@ pub mod git;
 use std::fs;
 
 use database::storage::DATABASE;
+use errors::git_error::GitErrorProject;
 use git::project_folder::{
     get_database_projects, open_git_project, remove_database_project, set_current_project,
 };
@@ -47,10 +48,7 @@ async fn event_loop(app: AppHandle) {
                         .unwrap()
                         .set_current_project(Some(project.clone()));
                     window
-                        .emit("project_update_error", {
-                            drop(e);
-                            drop(project);
-                        })
+                        .emit("project_update_error", GitErrorProject::new(e, project))
                         .unwrap();
                 }
             }
