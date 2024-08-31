@@ -1,4 +1,4 @@
-name: "Vue Checker and Coverage"
+name: "Vue Checker"
 on:
     pull_request:
     push:
