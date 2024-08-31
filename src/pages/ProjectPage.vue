@@ -208,11 +208,8 @@ export default defineComponent({
         });
       };
 
-      items.children.forEach((child) => {
-        addBranches(child);
-      });
-
-      return treeItems;
+      addBranches(items);
+      return treeItems[0].children;
     },
   }
 });
