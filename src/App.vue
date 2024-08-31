@@ -23,6 +23,8 @@ import { GitError } from "./types/gitErrors";
 import { invoke } from "@tauri-apps/api";
 import { useAppStore } from "./stores/app";
 import { mapState } from "pinia";
+import { listen, UnlistenFn } from "@tauri-apps/api/event";
+import { IGitProject } from "./types/gitProject";
 
 export default defineComponent({
   name: "AppComponent",
@@ -38,6 +40,7 @@ export default defineComponent({
         color: "",
         timeout: 5000,
       },
+      listeners: [] as UnlistenFn[],
     };
   },
   computed: {
@@ -51,6 +54,15 @@ export default defineComponent({
     } catch (error) {
       this.showError(error as string);
     }
+
+    const unlisten = await listen("project_update", (event) => {
+      useAppStore().updateProject(event.payload as IGitProject);
+    });
+
+    this.listeners.push(unlisten);
+  },
+  unmounted() {
+    this.listeners.forEach((unlisten) => unlisten());
   },
   methods: {
     showError(error: string) {

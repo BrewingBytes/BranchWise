@@ -30,25 +30,13 @@ async fn event_loop(app: AppHandle) {
     let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(30));
     loop {
         interval.tick().await;
-
         if let Some(mut project) = DATABASE.lock().unwrap().get_current_project() {
             match project.update() {
                 Ok(_) => {
-                    let window = app.get_window("main").unwrap();
-                    DATABASE
-                        .lock()
-                        .unwrap()
-                        .set_current_project(Some(project.clone()));
-                    window.emit("project_update", project).unwrap();
+                    app.emit_all("project_update", project).unwrap();
                 }
                 Err(e) => {
-                    let window = app.get_window("main").unwrap();
-                    DATABASE
-                        .lock()
-                        .unwrap()
-                        .set_current_project(Some(project.clone()));
-                    window
-                        .emit("project_update_error", GitErrorProject::new(e, project))
+                    app.emit_all("project_update_error", GitErrorProject::new(e, project))
                         .unwrap();
                 }
             }
