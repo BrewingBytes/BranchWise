@@ -39,6 +39,11 @@ impl GitProject{
     }
 
     pub fn update(&mut self) -> Result<(), GitError> {
+        self.local_branches.clear();
+        self.remotes.clear();
+        self.remote_branches.clear();
+        self.tags.clear();
+
         self.fetch_remotes_directories()?;
         self.fetch_branches(GitBranchType::Local)?;
         self.fetch_branches(GitBranchType::Tags)?;

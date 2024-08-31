@@ -315,6 +315,7 @@ mod tests {
         create_local_branch(test_git_folder, "feature/test2");
         git_project.update().unwrap();
 
+        assert_eq!(git_project.get_local_branches().len(), 2);
         assert!(git_project
             .get_local_branches()
             .contains(&"feature/test2".to_string()));
