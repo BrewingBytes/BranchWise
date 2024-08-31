@@ -1,6 +1,7 @@
 name: "Rust Checker and Coverage"
 on:
     pull_request:
+    merge_group:
     push:
         branches:
             - main
