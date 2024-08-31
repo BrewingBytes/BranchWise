@@ -27,7 +27,7 @@ async fn setup(app: AppHandle) {
 }
 
 async fn event_loop(app: AppHandle) {
-    let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(30));
+    let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(5));
     loop {
         interval.tick().await;
         if let Some(mut project) = DATABASE.lock().unwrap().get_current_project() {
