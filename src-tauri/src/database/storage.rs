@@ -109,11 +109,25 @@ impl Database {
     pub fn get_current_project(&self) -> Option<GitProject> {
         self.current_project.clone()
     }
+
+    pub fn update_project(&mut self, project: GitProject) -> Result<()> {
+        let index = self
+            .projects
+            .iter()
+            .position(|p| p.get_directory() == project.get_directory())
+            .unwrap();
+        self.projects[index] = project;
+        self.save()?;
+
+        Ok(())
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use tempdir::TempDir;
+
+    use crate::git::git_project::GitProjectState;
 
     use super::*;
 
@@ -170,5 +184,22 @@ mod tests {
         db.set_test_mode(true);
         assert!(db.save().is_ok());
         assert!(db.load().is_ok());
+    }
+
+    #[test]
+    fn test_update_project() {
+        let dir = TempDir::new("test_database").expect("Failed to create temp dir");
+
+        let mut db = Database::new();
+        let _ = db.set_path(dir.path().to_str().unwrap().to_string());
+        let project = GitProject::new("test");
+        db.add_project(project.clone())
+            .expect("Failed to add project");
+        let mut project2 = project.clone();
+        project2.set_state(GitProjectState::Invalid);
+        db.update_project(project2.clone())
+            .expect("Failed to update project");
+        let projects = db.get_projects();
+        assert_eq!(projects[0].get_state(), GitProjectState::Invalid);
     }
 }
