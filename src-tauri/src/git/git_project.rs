@@ -38,6 +38,26 @@ impl GitProject{
         }
     }
 
+    pub fn update(&mut self) -> Result<(), GitError> {
+        self.local_branches.clear();
+        self.remotes.clear();
+        self.remote_branches.clear();
+        self.tags.clear();
+
+        self.fetch_remotes_directories()?;
+        self.fetch_branches(GitBranchType::Local)?;
+        self.fetch_branches(GitBranchType::Tags)?;
+
+        let remotes = self.remotes.clone();
+        for remote in remotes {
+            self.fetch_branches(GitBranchType::Remote(remote))?;
+        }
+
+        self.state = GitProjectState::Valid;
+
+        Ok(())
+    }
+
     pub fn fetch_remotes_directories(&mut self) -> Result<(), GitError> {
         self.has_required_files().map_err(|_| {
             self.state = GitProjectState::Invalid;

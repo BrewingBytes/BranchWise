@@ -123,6 +123,10 @@ export default defineComponent({
     },
     remoteProjectBranchesTree() {
       const tree = this.branchTreeToTreeview(BranchType.REMOTE);
+      if (!tree) {
+        return [];
+      }
+      
       tree.forEach((root) => {
         root.customIcon = "mdi:mdi-cloud";
       });
@@ -208,11 +212,8 @@ export default defineComponent({
         });
       };
 
-      items.children.forEach((child) => {
-        addBranches(child);
-      });
-
-      return treeItems;
+      addBranches(items);
+      return treeItems[0].children;
     },
   }
 });

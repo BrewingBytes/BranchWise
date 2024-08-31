@@ -1,17 +1,18 @@
 import { defineStore } from "pinia";
 import { DEFAULT_USER } from "../types/user";
 import { IGitProject } from "../types/gitProject";
+import { invoke } from "@tauri-apps/api";
 
 export const useAppStore = defineStore('app', {
     state: () => (
         {
-        title: "BranchWise",
-        user: DEFAULT_USER,
-        projects: [] as IGitProject[],
-        isNavbarOpen: false,
-        selectedProject: null as IGitProject | null,
-        appVersion: "0.0.1",
-    }),
+            title: "BranchWise",
+            user: DEFAULT_USER,
+            projects: [] as IGitProject[],
+            isNavbarOpen: false,
+            selectedProject: null as IGitProject | null,
+            appVersion: "0.0.1",
+        }),
     getters: {
         getProjects(): IGitProject[] {
             return this.projects;
@@ -50,6 +51,12 @@ export const useAppStore = defineStore('app', {
         },
         setCurrentProject(git: IGitProject | null) {
             this.selectedProject = git;
+            invoke("set_current_project", { project: git });
+        },
+        updateProject(git: IGitProject) {
+            this.removeProject(this.selectedProject);
+            this.addProject(git);
+            this.setCurrentProject(git);
         }
     }
 });
