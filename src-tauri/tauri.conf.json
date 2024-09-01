@@ -10,6 +10,14 @@
     "version": "0.0.1"
   },
   "tauri": {
+    "updater": {
+      "active": true,
+      "endpoints": [
+        "https://api.github.com/repos/brewingbytes/branchwise/releases/latest"
+      ],
+      "dialog": true,
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEM1RERFRTIwMjk4Qzg5ODYKUldTR2lZd3BJTzdkeFNyYjRpSUhaUWMwNDd5WXpvTmVRbVErbHNIUmJKZTUvTVEwRHZxZFNzQ2sK%"
+    },
     "allowlist": {
       "all": false,
       "shell": {
