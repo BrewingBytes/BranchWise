@@ -68,9 +68,12 @@ pub fn remove_database_project(project: GitProject) -> Result<(), GitError> {
 
 #[cfg(test)]
 mod tests {
+    use std::io::Write;
+
     use crate::git::{
         git_files::GitFiles,
         git_folders::{GitFolders, GitRefs, GIT_FOLDER},
+        git_project::GitBranch,
     };
     use strum::IntoEnumIterator;
     use tempdir::TempDir;
@@ -102,7 +105,7 @@ mod tests {
         git_path.to_string()
     }
 
-    fn create_local_branch(git_directory: &str, branch: &str) {
+    fn create_local_branch(git_directory: &str, branch: &str, commit: &str) {
         let branch_name = branch.split('/').last().unwrap();
         let branch_directory = branch
             .split('/')
@@ -128,10 +131,12 @@ mod tests {
             GitRefs::HEADS,
             branch
         ))
+        .unwrap()
+        .write(commit.as_bytes())
         .unwrap();
     }
 
-    fn create_remote_branch(git_directory: &str, branch: &str) {
+    fn create_remote_branch(git_directory: &str, branch: &str, commit: &str) {
         let branch_name = branch.split('/').last().unwrap();
         let branch_directory = branch
             .split('/')
@@ -157,10 +162,10 @@ mod tests {
             GitRefs::REMOTES,
             branch
         ))
-        .unwrap();
+        .unwrap().write(commit.as_bytes()).unwrap();
     }
 
-    fn create_tag(git_directory: &str, tag: &str) {
+    fn create_tag(git_directory: &str, tag: &str, commit: &str) {
         fs::File::create(format!(
             "{}/{}/{}/{}/{}",
             git_directory,
@@ -169,7 +174,7 @@ mod tests {
             GitRefs::TAGS,
             tag
         ))
-        .unwrap();
+        .unwrap().write(commit.as_bytes()).unwrap();
     }
 
     #[test]
@@ -210,8 +215,8 @@ mod tests {
         let test_git_folder = folder.path().to_str().unwrap();
 
         create_sample_git_folder(test_git_folder);
-        create_remote_branch(test_git_folder, "origin/main");
-        create_remote_branch(test_git_folder, "test/main");
+        create_remote_branch(test_git_folder, "origin/main", "origin_commit");
+        create_remote_branch(test_git_folder, "test/main", "test_commit");
 
         let mut git_project = open_git_project(test_git_folder).unwrap();
         let _ = git_project.fetch_remotes_directories();
@@ -230,14 +235,14 @@ mod tests {
         let test_git_folder = folder.path().to_str().unwrap();
 
         create_sample_git_folder(test_git_folder);
-        create_remote_branch(test_git_folder, "origin/main");
+        create_remote_branch(test_git_folder, "origin/main", "origin_commit");
 
         let mut git_project = open_git_project(test_git_folder).unwrap();
         let _ = git_project.fetch_branches(GitBranchType::Remote("origin".to_string()));
 
         assert!(git_project
             .get_remote_branches()
-            .contains(&"origin/main".to_string()));
+            .contains(&GitBranch::new("origin/main".to_string(), "origin_commit".to_string())));
     }
 
     #[test]
@@ -246,12 +251,14 @@ mod tests {
         let test_git_folder = folder.path().to_str().unwrap();
 
         create_sample_git_folder(test_git_folder);
-        create_tag(test_git_folder, "tag1");
+        create_tag(test_git_folder, "tag1", "tag1_commit");
 
         let mut git_project = open_git_project(test_git_folder).unwrap();
         let _ = git_project.fetch_branches(GitBranchType::Tags);
 
-        assert!(git_project.get_tags().contains(&"tags/tag1".to_string()));
+        assert!(git_project
+            .get_tags()
+            .contains(&GitBranch::new("tags/tag1".to_string(), "tag1_commit".to_string())));
     }
 
     #[test]
@@ -271,14 +278,14 @@ mod tests {
         let test_git_folder = folder.path().to_str().unwrap();
 
         create_sample_git_folder(test_git_folder);
-        create_local_branch(test_git_folder, "main");
+        create_local_branch(test_git_folder, "main", "commit");
 
         let mut git_project = open_git_project(test_git_folder).unwrap();
         let _ = git_project.fetch_branches(GitBranchType::Local);
 
         assert!(git_project
             .get_local_branches()
-            .contains(&"main".to_string()));
+            .contains(&GitBranch::new("main".to_string(), "commit".to_string())));
     }
 
     #[test]
@@ -287,14 +294,14 @@ mod tests {
         let test_git_folder = folder.path().to_str().unwrap();
 
         create_sample_git_folder(test_git_folder);
-        create_local_branch(test_git_folder, "feature/test");
+        create_local_branch(test_git_folder, "feature/test", "test_commit");
 
         let mut git_project = open_git_project(test_git_folder).unwrap();
         let _ = git_project.fetch_branches(GitBranchType::Local);
 
         assert!(git_project
             .get_local_branches()
-            .contains(&"feature/test".to_string()));
+            .contains(&GitBranch::new("feature/test".to_string(), "test_commit".to_string())));
     }
 
     #[test]
@@ -303,22 +310,22 @@ mod tests {
         let test_git_folder = folder.path().to_str().unwrap();
 
         create_sample_git_folder(test_git_folder);
-        create_local_branch(test_git_folder, "feature/test");
+        create_local_branch(test_git_folder, "feature/test", "test_commit");
 
         let mut git_project = open_git_project(test_git_folder).unwrap();
         let _ = git_project.fetch_branches(GitBranchType::Local);
 
         assert!(git_project
             .get_local_branches()
-            .contains(&"feature/test".to_string()));
+            .contains(&GitBranch::new("feature/test".to_string(), "test_commit".to_string())));
 
-        create_local_branch(test_git_folder, "feature/test2");
+        create_local_branch(test_git_folder, "feature/test2", "test_commit");
         git_project.update().unwrap();
 
         assert_eq!(git_project.get_local_branches().len(), 2);
         assert!(git_project
             .get_local_branches()
-            .contains(&"feature/test2".to_string()));
+            .contains(&GitBranch::new("feature/test2".to_string(), "test_commit".to_string())));
     }
 
     #[test]
