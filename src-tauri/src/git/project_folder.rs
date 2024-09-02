@@ -329,6 +329,30 @@ mod tests {
     }
 
     #[test]
+    fn test_git_project_update_remotes() {
+        let folder = TempDir::new("test_git_project_update_remotes").unwrap();
+        let test_git_folder = folder.path().to_str().unwrap();
+
+        create_sample_git_folder(test_git_folder);
+        create_remote_branch(test_git_folder, "origin/main", "origin_commit");
+
+        let mut git_project = open_git_project(test_git_folder).unwrap();
+        let _ = git_project.fetch_branches(GitBranchType::Remote("origin".to_string()));
+
+        assert!(git_project
+            .get_remote_branches()
+            .contains(&GitBranch::new("origin/main".to_string(), "origin_commit".to_string())));
+
+        create_remote_branch(test_git_folder, "origin/main2", "origin_commit");
+        git_project.update().unwrap();
+
+        assert_eq!(git_project.get_remote_branches().len(), 2);
+        assert!(git_project
+            .get_remote_branches()
+            .contains(&GitBranch::new("origin/main2".to_string(), "origin_commit".to_string())));
+    }
+
+    #[test]
     fn test_git_project_no_local_branches_folder() {
         let folder = TempDir::new("test_git_project_no_local_branches_folder").unwrap();
         let test_git_folder = folder.path().to_str().unwrap();
