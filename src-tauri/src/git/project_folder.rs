@@ -1,6 +1,7 @@
 use super::{
     git_folders::GitBranchType,
-    git_project::{GitProject, GitProjectState},
+    git_project::GitProject,
+    git_project_state::GitProjectState,
 };
 use crate::{database::storage::DATABASE, errors::git_error::GitError};
 use std::fs;
@@ -73,7 +74,7 @@ mod tests {
     use crate::git::{
         git_files::GitFiles,
         git_folders::{GitFolders, GitRefs, GIT_FOLDER},
-        git_project::GitBranch,
+        git_branch::GitBranch,
     };
     use strum::IntoEnumIterator;
     use tempdir::TempDir;
@@ -132,7 +133,7 @@ mod tests {
             branch
         ))
         .unwrap()
-        .write(commit.as_bytes())
+        .write_all(commit.as_bytes())
         .unwrap();
     }
 
@@ -162,7 +163,7 @@ mod tests {
             GitRefs::REMOTES,
             branch
         ))
-        .unwrap().write(commit.as_bytes()).unwrap();
+        .unwrap().write_all(commit.as_bytes()).unwrap();
     }
 
     fn create_tag(git_directory: &str, tag: &str, commit: &str) {
@@ -174,7 +175,7 @@ mod tests {
             GitRefs::TAGS,
             tag
         ))
-        .unwrap().write(commit.as_bytes()).unwrap();
+        .unwrap().write_all(commit.as_bytes()).unwrap();
     }
 
     #[test]

@@ -3,30 +3,9 @@ use std::fs;
 use strum::IntoEnumIterator;
 
 use super::{
-    git_files::GitFiles,
-    git_folders::{GitBranchType, GitFolders, GitRefs, GIT_FOLDER},
+    git_branch::GitBranch, git_files::GitFiles, git_folders::{GitBranchType, GitFolders, GitRefs, GIT_FOLDER}, git_project_state::GitProjectState
 };
 use crate::errors::git_error::GitError;
-
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum GitProjectState {
-    Valid,
-    Invalid,
-}
-
-#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct GitBranch {
-    name: String,
-    commit: String,
-}
-
-impl GitBranch {
-    pub fn new(name: String, commit: String) -> GitBranch {
-        GitBranch { name, commit }
-    }
-}
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -249,17 +228,5 @@ impl GitProject {
 
     pub fn get_directory(&self) -> &String {
         &self.directory
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_git_branch_new() {
-        let branch = GitBranch::new("test".to_string(), "test".to_string());
-        assert_eq!(branch.name, "test");
-        assert_eq!(branch.commit, "test");
     }
 }
