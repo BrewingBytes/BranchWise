@@ -95,6 +95,7 @@ import { defineComponent } from "vue";
 import { mapState } from "pinia";
 import { useAppStore } from "../stores/app";
 import { BranchType } from "../types/gitProject";
+import { IGitBranch } from "../types/gitBranch";
 
 interface IDirectory {
   name: string;
@@ -152,7 +153,7 @@ export default defineComponent({
         branches: []
       };
 
-      let branches: string[] = [];
+      let branches: IGitBranch[] = [];
       if (branchType === BranchType.LOCAL) {
         branches = this.project?.localBranches || [];
       } else if (branchType === BranchType.REMOTE) {
@@ -162,7 +163,7 @@ export default defineComponent({
       }
 
       branches.forEach((branch) => {
-        const branchParts = branch.split("/");
+        const branchParts = branch.name.split("/");
         let currentDirectory = tree;
         for (let i = 0; i < branchParts.length - 1; i++) {
           const directoryName = branchParts[i];
