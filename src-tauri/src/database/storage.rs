@@ -127,7 +127,7 @@ impl Database {
 mod tests {
     use tempdir::TempDir;
 
-    use crate::git::git_project::GitProjectState;
+    use crate::git::git_project_state::GitProjectState;
 
     use super::*;
 

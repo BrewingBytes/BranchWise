@@ -1,7 +1,5 @@
-export enum GitProjectState {
-    INVALID = "invalid",
-    VALID = "valid",
-}
+import { IGitBranch } from "./gitBranch";
+import { GitProjectState } from "./gitProjectState";
 
 export enum BranchType {
     LOCAL = "local",
@@ -12,10 +10,10 @@ export enum BranchType {
 export interface IGitProject {
     directory: string,
     state: GitProjectState,
-    localBranches: string[],
+    localBranches: IGitBranch[],
     remotes: string[],
-    remoteBranches: string[],
-    tags: string[],
+    remoteBranches: IGitBranch[],
+    tags: IGitBranch[],
 }
 
 export const DEFAULT_GIT_PROJECT: IGitProject = {

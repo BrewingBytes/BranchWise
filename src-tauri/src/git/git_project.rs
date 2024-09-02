@@ -3,30 +3,22 @@ use std::fs;
 use strum::IntoEnumIterator;
 
 use super::{
-    git_files::GitFiles,
-    git_folders::{GitBranchType, GitFolders, GitRefs, GIT_FOLDER},
+    git_branch::GitBranch, git_files::GitFiles, git_folders::{GitBranchType, GitFolders, GitRefs, GIT_FOLDER}, git_project_state::GitProjectState
 };
 use crate::errors::git_error::GitError;
-
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum GitProjectState {
-    Valid,
-    Invalid,
-}
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct GitProject {
     directory: String,
     state: GitProjectState,
-    local_branches: Vec<String>,
+    local_branches: Vec<GitBranch>,
     remotes: Vec<String>,
-    remote_branches: Vec<String>,
-    tags: Vec<String>,
+    remote_branches: Vec<GitBranch>,
+    tags: Vec<GitBranch>,
 }
 
-impl GitProject{
+impl GitProject {
     pub fn new(directory: &str) -> GitProject {
         GitProject {
             directory: String::from(directory),
@@ -120,6 +112,7 @@ impl GitProject{
                         dirs_to_check.push(path.to_str().unwrap().to_string());
                     } else {
                         let branch_name = path.file_name().unwrap().to_str().unwrap().to_string();
+                        let commit_hash = fs::read_to_string(path).unwrap();
 
                         let full_branch_name = if current_dir
                             != format!(
@@ -145,13 +138,19 @@ impl GitProject{
                         };
 
                         match &branch_type {
-                            GitBranchType::Local => self.local_branches.push(full_branch_name),
-                            GitBranchType::Remote(upstream) => self
-                                .remote_branches
-                                .push(format!("{}/{}", upstream, full_branch_name)),
-                            GitBranchType::Tags => {
-                                self.tags.push(format!("tags/{}", full_branch_name))
-                            }
+                            GitBranchType::Local => self.local_branches.push(
+                                GitBranch::new(full_branch_name, commit_hash),
+                            ),
+                            GitBranchType::Remote(upstream) => self.remote_branches.push(
+                                GitBranch::new(
+                                    format!("{}/{}", upstream, full_branch_name),
+                                    commit_hash,
+                                ),
+                            ),
+                            GitBranchType::Tags => self.tags.push(GitBranch::new(
+                                format!("tags/{}", full_branch_name),
+                                commit_hash,
+                            )),
                         }
                     }
                 }
@@ -211,7 +210,7 @@ impl GitProject{
         self.state.clone()
     }
 
-    pub fn get_local_branches(&self) -> &Vec<String> {
+    pub fn get_local_branches(&self) -> &Vec<GitBranch> {
         &self.local_branches
     }
 
@@ -219,11 +218,11 @@ impl GitProject{
         &self.remotes
     }
 
-    pub fn get_remote_branches(&self) -> &Vec<String> {
+    pub fn get_remote_branches(&self) -> &Vec<GitBranch> {
         &self.remote_branches
     }
 
-    pub fn get_tags(&self) -> &Vec<String> {
+    pub fn get_tags(&self) -> &Vec<GitBranch> {
         &self.tags
     }
 
