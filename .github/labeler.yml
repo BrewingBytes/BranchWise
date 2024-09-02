@@ -1,8 +1,11 @@
 'Workflow':
-- .github/workflows/**
+- changed-files:
+  - any-glob-to-any-file: '.github/workflows/**'
 
 'UI':
-- src/**
+- changed-files:
+  - any-glob-to-any-file: 'src/**'
 
 'Tauri':
-- src-tauri/**
+- changed-files:
+  - any-glob-to-any-file: 'src-tauri/**'
