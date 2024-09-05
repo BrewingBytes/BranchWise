@@ -16,10 +16,8 @@ mod tests {
 
     #[test]
     fn test_new() {
-        let name = "name".to_string();
-        let email = "email".to_string();
-        let git_user = GitUser::new(name.clone(), email.clone());
-        assert_eq!(git_user.name, name);
-        assert_eq!(git_user.email, email);
+        let git_user = GitUser::new("name".to_string(), "email".to_string());
+        assert_eq!(git_user.name, "name".to_string());
+        assert_eq!(git_user.email, "email".to_string());
     }
 }

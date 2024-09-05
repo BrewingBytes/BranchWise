@@ -20,6 +20,7 @@ tempdir = "0.3.7"
 thiserror = "1.0.63"
 lazy_static = "1.5.0"
 tokio = "1.40.0"
+flate2 = { version = "1.0.33", features = ["zlib-ng"], default-features = false }
 
 [features]
 # This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!
