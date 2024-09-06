@@ -1,9 +1,6 @@
 use std::io::Read;
-
 use flate2::bufread::ZlibDecoder;
-
 use crate::errors::git_commit_error::GitCommitError;
-
 use super::git_commit_author::GitCommitAuthor;
 
 pub struct GitCommit {
@@ -45,10 +42,13 @@ impl GitCommit {
             .map_err(|_| GitCommitError::DecompressionError)?;
 
         let mut lines = decoded_file_content.lines();
+
         let tree_line = lines.next().ok_or(GitCommitError::InvalidCommitFile)?;
+        let tree_line = tree_line.split("\0").skip(1).next().ok_or(GitCommitError::InvalidCommitFile)?;
         let tree_hash = tree_line
             .strip_prefix("tree ")
             .ok_or(GitCommitError::InvalidCommitFile)?;
+
         let parent_hashes = lines.clone()
             .take_while(|line| line.starts_with("parent "))
             .map(|line| line.strip_prefix("parent ").unwrap().to_string())
