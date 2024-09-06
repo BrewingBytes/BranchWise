@@ -19,15 +19,11 @@ impl GitCommitAuthor {
     }
 
     pub fn from_string(author_line: &str) -> Result<GitCommitAuthor, GitCommitError> {
-        let stripped_author_line: &str;
-        
-        match author_line {
-            _ if author_line.starts_with("author ") => {stripped_author_line = author_line.strip_prefix("author ").ok_or(GitCommitError::InvalidCommitFile)?;
-             ()},
-            _ if author_line.starts_with("commiter ") => {stripped_author_line = author_line.strip_prefix("commiter ").ok_or(GitCommitError::InvalidCommitFile)?;
-        ()},
+        let stripped_author_line = match author_line {
+            _ if author_line.starts_with("author ") => author_line.strip_prefix("author ").ok_or(GitCommitError::InvalidCommitFile)?,
+            _ if author_line.starts_with("commiter ") => author_line.strip_prefix("commiter ").ok_or(GitCommitError::InvalidCommitFile)?,
             _ => return Err(GitCommitError::InvalidCommitFile),
-        }
+        };
 
         let mut split_by_email = stripped_author_line.split("<");
         let name = split_by_email.next().ok_or(GitCommitError::InvalidCommitFile)?.trim();

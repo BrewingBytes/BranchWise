@@ -44,7 +44,7 @@ impl GitCommit {
         let mut lines = decoded_file_content.lines();
 
         let tree_line = lines.next().ok_or(GitCommitError::InvalidCommitFile)?;
-        let tree_line = tree_line.split("\0").skip(1).next().ok_or(GitCommitError::InvalidCommitFile)?;
+        let tree_line = tree_line.split("\0").nth(1).ok_or(GitCommitError::InvalidCommitFile)?;
         let tree_hash = tree_line
             .strip_prefix("tree ")
             .ok_or(GitCommitError::InvalidCommitFile)?;
