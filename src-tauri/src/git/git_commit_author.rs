@@ -2,7 +2,7 @@ use crate::errors::git_commit_error::GitCommitError;
 
 use super::git_user::GitUser;
 
-#[derive(Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct GitCommitAuthor {
     user: GitUser,
     pub date_seconds: i64,
@@ -28,8 +28,6 @@ impl GitCommitAuthor {
         ()},
             _ => return Err(GitCommitError::InvalidCommitFile),
         }
-
-        println!("stripped_author_line: {}", stripped_author_line);
 
         let mut split_by_email = stripped_author_line.split("<");
         let name = split_by_email.next().ok_or(GitCommitError::InvalidCommitFile)?.trim();

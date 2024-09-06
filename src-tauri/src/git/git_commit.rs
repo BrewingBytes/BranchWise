@@ -52,17 +52,22 @@ impl GitCommit {
         let parent_hashes = lines.clone()
             .take_while(|line| line.starts_with("parent "))
             .map(|line| line.strip_prefix("parent ").unwrap().to_string())
-            .collect();
+            .collect::<Vec<String>>();
+
+        let mut lines = lines.skip_while(|line| line.starts_with("parent "));
         let author_line = lines.next().ok_or(GitCommitError::InvalidCommitFile)?;
         let author = GitCommitAuthor::from_string(author_line)?;
+
         let committer_line = lines.next().ok_or(GitCommitError::InvalidCommitFile)?;
         let committer = GitCommitAuthor::from_string(committer_line)?;
+
+        lines.next(); // skip empty line
         let message = lines.collect::<Vec<&str>>().join("\n");
 
         Ok(GitCommit::new(
             commit_hash,
             tree_hash.to_string(),
-            parent_hashes,
+            parent_hashes.clone(),
             author,
             committer,
             message,
@@ -103,11 +108,36 @@ mod tests {
         }, 1725372312, "+0300".to_string());
 
         let commit_hash = "ae575432e84a11c11b8dc3e357806f65c50f4619".to_string();
-        let encoded_file_content = create_encoded_commit_file(commiter.clone(), commiter, Some("50c8353444afbef3172c999ef6cff8d31309ac3e"), Vec::new(), "test commit");
+        let encoded_file_content = create_encoded_commit_file(commiter.clone(), commiter.clone(), Some("50c8353444afbef3172c999ef6cff8d31309ac3e"), Vec::new(), "test commit");
 
         let git_commit = GitCommit::from_string(commit_hash.clone(), &encoded_file_content).unwrap();
         assert_eq!(git_commit.hash, commit_hash);
+        assert_eq!(git_commit.parent_hashes, Vec::<String>::new());
+        assert_eq!(git_commit.tree_hash, "50c8353444afbef3172c999ef6cff8d31309ac3e");
+        assert_eq!(git_commit.message, "test commit");
+        assert_eq!(git_commit.author, commiter);
+        assert_eq!(git_commit.committer, commiter);
     }
+
+    #[test]
+    fn test_from_string_with_parents() {
+        let commiter = GitCommitAuthor::new(GitUser {
+            name: "Andrei Serban".to_string(),
+            email: "andrei.serban@brewingbytes.com".to_string()
+        }, 1725372312, "+0300".to_string());
+
+        let commit_hash = "ae575432e84a11c11b8dc3e357806f65c50f4619".to_string();
+        let parent_commit_hash = Vec::from(["50c8353444afbef3172c999ef6cff8d31309ac3e", "50c8353444afbef3172c999ef6cff8d31309ac33"]);
+        let encoded_file_content = create_encoded_commit_file(commiter.clone(), commiter.clone(), Some(&commit_hash), parent_commit_hash.clone(), "test commit");
+
+        let git_commit = GitCommit::from_string(commit_hash.clone(), &encoded_file_content).unwrap();
+        assert_eq!(git_commit.hash, commit_hash);
+        assert_eq!(git_commit.parent_hashes, parent_commit_hash);
+        assert_eq!(git_commit.tree_hash, commit_hash);
+        assert_eq!(git_commit.message, "test commit");
+        assert_eq!(git_commit.author, commiter);
+    }
+
 
     #[test]
     fn test_new() {
