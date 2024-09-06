@@ -36,6 +36,11 @@ impl GitCommitAuthor {
 
         Ok(GitCommitAuthor::new(GitUser::new(name.to_string(), email.to_string()), date_seconds, timezone.to_string()))
     }
+
+    pub fn to_string(&self, author: bool) -> String {
+        let author_or_commiter = if author { "author" } else { "commiter" };
+        format!("{} {} <{}> {} {}", author_or_commiter, self.user.name, self.user.email, self.date_seconds, self.timezone)
+    }
 }
 
 #[cfg(test)]
@@ -68,5 +73,23 @@ mod tests {
         assert_eq!(git_commit_author.get_user().email, "email".to_string());
         assert_eq!(git_commit_author.date_seconds, 1);
         assert_eq!(git_commit_author.timezone, "timezone".to_string());
+    }
+
+    #[test]
+    fn test_from_to_string_author() {
+        let git_commit_author = GitCommitAuthor::from_string("author name name <email> 1 timezone").unwrap();
+        assert_eq!(git_commit_author.to_string(true), "author name name <email> 1 timezone".to_string());
+    }
+
+    #[test]
+    fn test_from_to_string_commiter() {
+        let git_commit_author = GitCommitAuthor::from_string("commiter name name <email> 1 timezone").unwrap();
+        assert_eq!(git_commit_author.to_string(false), "commiter name name <email> 1 timezone".to_string());
+    }
+
+    #[test]
+    fn test_from_string_invalid() {
+        let git_commit_author = GitCommitAuthor::from_string("invalid").unwrap_err();
+        assert_eq!(git_commit_author, GitCommitError::InvalidCommitFile);
     }
 }

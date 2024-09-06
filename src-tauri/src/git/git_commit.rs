@@ -73,13 +73,60 @@ impl GitCommit {
             message,
         ))
     }
+
+    pub fn to_string(&self) -> String {
+        let parent_hashes = self
+            .parent_hashes
+            .iter()
+            .map(|parent_hash| format!("parent {}\n", parent_hash))
+            .collect::<Vec<String>>()
+            .join("");
+
+        let content = format!(
+            "tree {}\n{}author {}\ncommiter {}\n\n{}",
+            self.tree_hash,
+            parent_hashes,
+            self.author.to_string(true),
+            self.committer.to_string(false),
+            self.message
+        );
+
+        format!("commit {}\0{}\n", content.len(), content)
+    }
+
+    pub fn get_hash(&self) -> &String {
+        &self.hash
+    }
+
+    pub fn get_tree_hash(&self) -> &String {
+        &self.tree_hash
+    }
+
+    pub fn get_parent_hashes(&self) -> &Vec<String> {
+        &self.parent_hashes
+    }
+
+    pub fn get_author(&self) -> &GitCommitAuthor {
+        &self.author
+    }
+
+    pub fn get_committer(&self) -> &GitCommitAuthor {
+        &self.committer
+    }
+
+    pub fn get_message(&self) -> &String {
+        &self.message
+    }
 }
 
 #[cfg(test)]
 mod tests {
+    use std::io::Write;
+
     use super::*;
 
     use crate::git::git_user::GitUser;
+    use flate2::write::ZlibEncoder;
 
     fn create_encoded_commit_file(author: GitCommitAuthor, commiter: GitCommitAuthor, tree: Option<&str>, parent_commits: Vec<&str>, message: &str) -> Vec<u8> {
         let tree_line = match tree {
@@ -117,6 +164,59 @@ mod tests {
         assert_eq!(git_commit.message, "test commit");
         assert_eq!(git_commit.author, commiter);
         assert_eq!(git_commit.committer, commiter);
+    }
+
+    #[test]
+    fn test_from_string_invalid() {
+        let commit_hash = "50c8353444afbef3172c999ef6cff8d31309ac3e";
+        let encoded_file_content = "invalid content".as_bytes();
+
+        let git_commit = GitCommit::from_string(commit_hash.to_string(), encoded_file_content);
+        assert!(git_commit.is_err());
+    }
+
+    #[test]
+    fn test_to_string_no_parent() {
+        let commiter = GitCommitAuthor::new(GitUser {
+            name: "Andrei Serban".to_string(),
+            email: "andrei.serban@brewingbytes.com".to_string()
+        }, 1725372312, "+0300".to_string());
+
+        let commit_hash = "ae575432e84a11c11b8dc3e357806f65c50f4619".to_string();
+        let encoded_file_content = create_encoded_commit_file(commiter.clone(), commiter.clone(), Some("50c8353444afbef3172c999ef6cff8d31309ac3e"), Vec::new(), "test commit");
+
+        let git_commit = GitCommit::from_string(commit_hash.clone(), &encoded_file_content).unwrap();
+
+        let mut zlib = ZlibEncoder::new(Vec::new(), flate2::Compression::default());
+        zlib.write_all(git_commit.to_string().as_bytes()).unwrap();
+
+        let encoded_git_commit = zlib.finish().unwrap();
+
+        println!("{}", git_commit.to_string());
+        assert_eq!(encoded_git_commit, encoded_file_content);
+    }
+
+    #[test]
+    fn test_to_string_with_parents() {
+        let commiter = GitCommitAuthor::new(GitUser {
+            name: "Andrei Serban".to_string(),
+            email: "andrei.serban@brewingbytes.com".to_string()
+        }, 1725372312, "+0300".to_string());
+
+        let commit_hash = "ae575432e84a11c11b8dc3e357806f65c50f4619".to_string();
+        let parent_commit_hash = Vec::from(["50c8353444afbef3172c999ef6cff8d31309ac3e", "50c8353444afbef3172c999ef6cff8d31309ac33"]);
+        let encoded_file_content = create_encoded_commit_file(commiter.clone(), commiter.clone(), Some("50c8353444afbef3172c999ef6cff8d31309ac3e"), parent_commit_hash.clone(), "test commit");
+
+        let git_commit = GitCommit::from_string(commit_hash.clone(), &encoded_file_content).unwrap();
+
+        let mut zlib = ZlibEncoder::new(Vec::new(), flate2::Compression::default());
+        zlib.write_all(git_commit.to_string().as_bytes()).unwrap();
+
+        let encoded_git_commit = zlib.finish().unwrap();
+
+        println!("{}", git_commit.to_string());
+
+        assert_eq!(encoded_git_commit, encoded_file_content);
     }
 
     #[test]
