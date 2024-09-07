@@ -83,7 +83,7 @@ impl GitCommit {
             .join("");
 
         let content = format!(
-            "tree {}\n{}author {}\ncommiter {}\n\n{}",
+            "tree {}\n{}{}\n{}\n\n{}",
             self.tree_hash,
             parent_hashes,
             self.author.to_string(true),
@@ -91,7 +91,7 @@ impl GitCommit {
             self.message
         );
 
-        format!("commit {}\0{}\n", content.len(), content)
+        format!("commit {}\0{}", content.len(), content)
     }
 
     pub fn get_hash(&self) -> &String {
@@ -139,7 +139,7 @@ mod tests {
 
         let file_content = format!("{}{}{}{}\n{}", tree_line, parent_lines, author_line, commiter_line, message);
         let file_content_to_encode = format!("commit {}\0{}", file_content.len(), file_content);
-
+        
         let mut zlib = flate2::bufread::ZlibEncoder::new(file_content_to_encode.as_bytes(), flate2::Compression::default());
         let mut encoded_file_content = Vec::new();
         zlib.read_to_end(&mut encoded_file_content).unwrap();
@@ -191,8 +191,6 @@ mod tests {
         zlib.write_all(git_commit.to_string().as_bytes()).unwrap();
 
         let encoded_git_commit = zlib.finish().unwrap();
-
-        println!("{}", git_commit.to_string());
         assert_eq!(encoded_git_commit, encoded_file_content);
     }
 
@@ -213,9 +211,6 @@ mod tests {
         zlib.write_all(git_commit.to_string().as_bytes()).unwrap();
 
         let encoded_git_commit = zlib.finish().unwrap();
-
-        println!("{}", git_commit.to_string());
-
         assert_eq!(encoded_git_commit, encoded_file_content);
     }
 
