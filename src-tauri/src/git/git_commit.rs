@@ -35,7 +35,7 @@ impl GitCommit {
     }
 
     pub fn from_file(
-        project: GitProject,
+        project: &GitProject,
         commit_hash: &str,
     ) -> Result<GitCommit, GitCommitError> {
         let objects_folder = format!("{}/{}/{}", project.get_directory(), GIT_FOLDER, GitFolders::OBJECTS);
@@ -109,6 +109,13 @@ impl GitCommit {
 
     pub fn get_message(&self) -> &String {
         &self.message
+    }
+
+    pub fn get_parent_commits(&self, project: &GitProject) -> Result<Vec<GitCommit>, GitCommitError> {
+        self.parent_hashes
+            .iter()
+            .map(|parent_hash| GitCommit::from_file(project, parent_hash))
+            .collect()
     }
 }
 

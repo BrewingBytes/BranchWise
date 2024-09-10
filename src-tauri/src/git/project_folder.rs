@@ -219,7 +219,7 @@ mod tests {
 
         let content = create_encoded_commit_content(author_commiter.clone(), author_commiter.clone(), Some("tree"), Vec::new(), "test");
         create_commit(git_project.get_directory(), "aabb", content.as_slice());
-        let commit = GitCommit::from_file(git_project, "aabb").unwrap();
+        let commit = GitCommit::from_file(&git_project, "aabb").unwrap();
 
         assert_eq!(commit.get_hash(), "aabb");
         assert_eq!(commit.get_author(), &author_commiter);
@@ -227,6 +227,34 @@ mod tests {
         assert_eq!(commit.get_tree_hash(), "tree");
         assert_eq!(commit.get_parent_hashes(), &Vec::<String>::new());
         assert_eq!(commit.get_message(), "test");
+    }
+
+    #[test]
+    fn test_git_commit_get_parent_commits() {
+        let folder = TempDir::new("test_git_commit_get_parent_commits").unwrap();
+        let test_git_folder = folder.path().to_str().unwrap();
+
+        let author_commiter = GitCommitAuthor::new(GitUser::new("Andrei Serban".to_string(), "andrei.serban@brewingbytes.com".to_string()), 100, "+03:00".to_string());
+    
+        create_sample_git_folder(test_git_folder);
+        let git_project = open_git_project(test_git_folder).unwrap();
+
+        let parent_content = create_encoded_commit_content(author_commiter.clone(), author_commiter.clone(), Some("tree"), Vec::new(), "parent");
+        create_commit(git_project.get_directory(), "parent", parent_content.as_slice());
+        let content = create_encoded_commit_content(author_commiter.clone(), author_commiter.clone(), Some("tree"), vec!["parent"], "test");
+        create_commit(git_project.get_directory(), "aabb", content.as_slice());
+        let commit = GitCommit::from_file(&git_project, "aabb").unwrap();
+
+        let parent_commits = commit.get_parent_commits(&git_project).unwrap();
+        assert_eq!(parent_commits.len(), 1);
+
+        let parent_commit = parent_commits.first().unwrap();
+        assert_eq!(parent_commit.get_hash(), "parent");
+        assert_eq!(parent_commit.get_author(), &author_commiter);
+        assert_eq!(parent_commit.get_committer(), &author_commiter);
+        assert_eq!(parent_commit.get_tree_hash(), "tree");
+        assert_eq!(parent_commit.get_parent_hashes(), &Vec::<String>::new());
+        assert_eq!(parent_commit.get_message(), "parent");
     }
 
     #[test]
