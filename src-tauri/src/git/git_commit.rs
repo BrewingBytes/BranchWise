@@ -47,8 +47,7 @@ impl GitCommit {
         let commit_file = &commit_hash[2..];
         let commit_file = objects_folder_path.join(commit_folder).join(commit_file);
 
-        let buf =
-            std::fs::read(commit_file).map_err(|_| GitCommitError::FileReadError)?;
+        let buf = std::fs::read(commit_file).map_err(|_| GitCommitError::FileReadError)?;
         GitCommit::from_string(commit_hash.to_string(), &buf)
     }
 
@@ -73,7 +72,8 @@ impl GitCommit {
             .strip_prefix("tree ")
             .ok_or(GitCommitError::InvalidCommitFile)?;
 
-        let parent_hashes = lines.clone()
+        let parent_hashes = lines
+            .clone()
             .take_while(|line| line.starts_with("parent "))
             .map(|line| line.strip_prefix("parent ").unwrap().to_string())
             .collect::<Vec<String>>();

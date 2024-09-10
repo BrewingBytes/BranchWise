@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use std::fs;
+use std::{fs, path::PathBuf, time::SystemTime};
 use strum::IntoEnumIterator;
 
 use super::{
@@ -19,6 +19,7 @@ pub struct GitProject {
     remotes: Vec<String>,
     remote_branches: Vec<GitBranch>,
     tags: Vec<GitBranch>,
+    pub packed_refs_last_modified: Option<SystemTime>,
 }
 
 impl GitProject {
@@ -30,6 +31,7 @@ impl GitProject {
             remotes: Vec::new(),
             remote_branches: Vec::new(),
             tags: Vec::new(),
+            packed_refs_last_modified: None,
         }
     }
 
@@ -168,12 +170,23 @@ impl GitProject {
     }
 
     pub fn fetch_packed_refs(&mut self) -> Result<(), GitError> {
-        if let Ok(refs) = fs::read_to_string(format!(
-            "{}/{}/{}",
-            self.get_directory(),
-            GIT_FOLDER,
-            GitFiles::PackedRefs
-        )) {
+        let packed_refs_path = PathBuf::from(self.get_directory())
+            .join(GIT_FOLDER)
+            .join(GitFiles::PackedRefs.to_string());
+
+        if let Ok(metadata) = fs::metadata(&packed_refs_path) {
+            if let Ok(time) = metadata.modified() {
+                if let Some(last_modified) = self.packed_refs_last_modified {
+                    if last_modified == time {
+                        return Ok(());
+                    }
+                }
+
+                self.packed_refs_last_modified = Some(time);
+            }
+        }
+
+        if let Ok(refs) = fs::read_to_string(packed_refs_path) {
             let lines = refs.lines();
 
             for line in lines {

@@ -633,4 +633,69 @@ mod tests {
 
         assert_eq!(git_project.get_remote_branches().len(), 1);
     }
+
+    #[test]
+    fn test_packed_refs_twice() {
+        let folder = TempDir::new("test_packed_refs").unwrap();
+        let test_git_folder = folder.path().to_str().unwrap();
+
+        create_sample_git_folder(test_git_folder);
+        let mut git_project = open_git_project(test_git_folder).unwrap();
+        assert_eq!(git_project.get_remote_branches().len(), 0);
+
+        let mut packed_refs = fs::File::create(format!(
+            "{}/{}/{}",
+            test_git_folder,
+            GIT_FOLDER,
+            GitFiles::PackedRefs
+        ))
+        .unwrap();
+        packed_refs
+            .write_all("test_hash refs/remotes/test\n".as_bytes())
+            .unwrap();
+
+        let _ = git_project.fetch_packed_refs();
+        let _ = git_project.fetch_packed_refs();
+
+        assert_eq!(git_project.get_remote_branches().len(), 1);
+    }
+
+    #[test]
+    fn test_packed_refs_modified() {
+        let folder = TempDir::new("test_packed_refs").unwrap();
+        let test_git_folder = folder.path().to_str().unwrap();
+
+        create_sample_git_folder(test_git_folder);
+        let mut git_project = open_git_project(test_git_folder).unwrap();
+        assert_eq!(git_project.get_remote_branches().len(), 0);
+
+        let mut packed_refs = fs::File::create(format!(
+            "{}/{}/{}",
+            test_git_folder,
+            GIT_FOLDER,
+            GitFiles::PackedRefs
+        ))
+        .unwrap();
+        packed_refs
+            .write_all("test_hash refs/remotes/test\n".as_bytes())
+            .unwrap();
+
+        let _ = git_project.fetch_packed_refs();
+        let packed_refs_modified = packed_refs.metadata().unwrap().modified().unwrap();
+        assert_eq!(
+            git_project.packed_refs_last_modified,
+            Some(packed_refs_modified)
+        );
+
+        packed_refs
+            .write_all("test_hash refs/remotes/test2\n".as_bytes())
+            .unwrap();
+
+        let _ = git_project.fetch_packed_refs();
+        assert_ne!(
+            git_project.packed_refs_last_modified,
+            Some(packed_refs_modified)
+        );
+        assert_eq!(git_project.get_remote_branches().len(), 3);
+    }
 }
