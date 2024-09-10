@@ -2,4 +2,5 @@
 pub enum GitCommitError {
     DecompressionError,
     InvalidCommitFile,
+    FileReadError,
 }

@@ -3,7 +3,7 @@ use std::io::Read;
 use flate2::bufread::ZlibDecoder;
 use serde::{Deserialize, Serialize};
 use crate::errors::git_commit_error::GitCommitError;
-use super::git_commit_author::GitCommitAuthor;
+use super::{git_commit_author::GitCommitAuthor, git_folders::{GitFolders, GIT_FOLDER}, git_project::GitProject};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct GitCommit {
@@ -32,6 +32,16 @@ impl GitCommit {
             committer,
             message,
         }
+    }
+
+    pub fn from_file(
+        project: GitProject,
+        commit_hash: &str,
+    ) -> Result<GitCommit, GitCommitError> {
+        let objects_folder = format!("{}/{}/{}", project.get_directory(), GIT_FOLDER, GitFolders::OBJECTS);
+
+        let file_content = std::fs::read(format!("{}/{}/{}", objects_folder, &commit_hash[..2], &commit_hash[2..])).map_err(|_| GitCommitError::FileReadError)?;
+        GitCommit::from_string(commit_hash.to_string(), &file_content)
     }
 
     pub fn from_string(
