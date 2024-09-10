@@ -1,8 +1,10 @@
+use serde::{Deserialize, Serialize};
+
 use crate::errors::git_commit_error::GitCommitError;
 
 use super::git_user::GitUser;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct GitCommitAuthor {
     user: GitUser,
     pub date_seconds: i64,

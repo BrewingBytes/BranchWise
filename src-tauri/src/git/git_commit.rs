@@ -1,8 +1,10 @@
 use std::io::Read;
 use flate2::bufread::ZlibDecoder;
+use serde::{Deserialize, Serialize};
 use crate::errors::git_commit_error::GitCommitError;
 use super::git_commit_author::GitCommitAuthor;
 
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct GitCommit {
     hash: String,
     tree_hash: String,
@@ -158,12 +160,12 @@ mod tests {
         let encoded_file_content = create_encoded_commit_file(commiter.clone(), commiter.clone(), Some("50c8353444afbef3172c999ef6cff8d31309ac3e"), Vec::new(), "test commit");
 
         let git_commit = GitCommit::from_string(commit_hash.clone(), &encoded_file_content).unwrap();
-        assert_eq!(git_commit.hash, commit_hash);
-        assert_eq!(git_commit.parent_hashes, Vec::<String>::new());
-        assert_eq!(git_commit.tree_hash, "50c8353444afbef3172c999ef6cff8d31309ac3e");
-        assert_eq!(git_commit.message, "test commit");
-        assert_eq!(git_commit.author, commiter);
-        assert_eq!(git_commit.committer, commiter);
+        assert_eq!(*git_commit.get_hash(), commit_hash);
+        assert_eq!(*git_commit.get_parent_hashes(), Vec::<String>::new());
+        assert_eq!(git_commit.get_tree_hash(), "50c8353444afbef3172c999ef6cff8d31309ac3e");
+        assert_eq!(git_commit.get_message(), "test commit");
+        assert_eq!(*git_commit.get_author(), commiter);
+        assert_eq!(*git_commit.get_committer(), commiter);
     }
 
     #[test]
