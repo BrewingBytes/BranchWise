@@ -1,3 +1,4 @@
+use core::fmt;
 use std::io::Read;
 use flate2::bufread::ZlibDecoder;
 use serde::{Deserialize, Serialize};
@@ -76,26 +77,6 @@ impl GitCommit {
         ))
     }
 
-    pub fn to_string(&self) -> String {
-        let parent_hashes = self
-            .parent_hashes
-            .iter()
-            .map(|parent_hash| format!("parent {}\n", parent_hash))
-            .collect::<Vec<String>>()
-            .join("");
-
-        let content = format!(
-            "tree {}\n{}{}\n{}\n\n{}",
-            self.tree_hash,
-            parent_hashes,
-            self.author.to_string(true),
-            self.committer.to_string(false),
-            self.message
-        );
-
-        format!("commit {}\0{}", content.len(), content)
-    }
-
     pub fn get_hash(&self) -> &String {
         &self.hash
     }
@@ -118,6 +99,31 @@ impl GitCommit {
 
     pub fn get_message(&self) -> &String {
         &self.message
+    }
+}
+
+impl fmt::Display for GitCommit {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let parent_hashes = self
+            .parent_hashes
+            .iter()
+            .map(|parent_hash| format!("parent {}\n", parent_hash))
+            .collect::<Vec<String>>()
+            .join("");
+
+        let content = format!(
+            "tree {}\n{}{}\n{}\n\n{}",
+            self.tree_hash,
+            parent_hashes,
+            self.author.to_string(true),
+            self.committer.to_string(false),
+            self.message
+        );
+
+        write!(
+            f,
+            "commit {}\0{}", content.len(), content
+        )
     }
 }
 
