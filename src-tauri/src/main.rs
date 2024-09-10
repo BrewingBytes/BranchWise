@@ -40,8 +40,11 @@ async fn event_loop(app: AppHandle) {
                     let _ = DATABASE.lock().unwrap().update_project(project.clone());
                 }
                 Err(e) => {
-                    app.emit_all("project_update_error", GitErrorProject::new(e, project.clone()))
-                        .unwrap();
+                    app.emit_all(
+                        "project_update_error",
+                        GitErrorProject::new(e, project.clone()),
+                    )
+                    .unwrap();
 
                     let _ = DATABASE.lock().unwrap().update_project(project.clone());
                 }

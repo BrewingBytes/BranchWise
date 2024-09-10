@@ -3,7 +3,10 @@ use std::fs;
 use strum::IntoEnumIterator;
 
 use super::{
-    git_branch::GitBranch, git_files::GitFiles, git_folders::{GitBranchType, GitFolders, GitRefs, GIT_FOLDER}, git_project_state::GitProjectState
+    git_branch::GitBranch,
+    git_files::GitFiles,
+    git_folders::{GitBranchType, GitFolders, GitRefs, GIT_FOLDER},
+    git_project_state::GitProjectState,
 };
 use crate::errors::git_error::GitError;
 
@@ -139,15 +142,15 @@ impl GitProject {
                         };
 
                         match &branch_type {
-                            GitBranchType::Local => self.local_branches.push(
-                                GitBranch::new(full_branch_name, commit_hash),
-                            ),
-                            GitBranchType::Remote(upstream) => self.remote_branches.push(
-                                GitBranch::new(
+                            GitBranchType::Local => self
+                                .local_branches
+                                .push(GitBranch::new(full_branch_name, commit_hash)),
+                            GitBranchType::Remote(upstream) => {
+                                self.remote_branches.push(GitBranch::new(
                                     format!("{}/{}", upstream, full_branch_name),
                                     commit_hash,
-                                ),
-                            ),
+                                ))
+                            }
                             GitBranchType::Tags => self.tags.push(GitBranch::new(
                                 format!("tags/{}", full_branch_name),
                                 commit_hash,
@@ -166,7 +169,10 @@ impl GitProject {
 
     pub fn fetch_packed_refs(&mut self) -> Result<(), GitError> {
         if let Ok(refs) = fs::read_to_string(format!(
-            "{}/{}/{}", self.get_directory(), GIT_FOLDER, GitFiles::PackedRefs
+            "{}/{}/{}",
+            self.get_directory(),
+            GIT_FOLDER,
+            GitFiles::PackedRefs
         )) {
             let lines = refs.lines();
 

@@ -20,7 +20,7 @@ pub enum LoadError {
     JSONError(#[from] serde_json::Error),
 
     #[error("Project already exists")]
-    ProjectExists
+    ProjectExists,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -82,7 +82,7 @@ impl Database {
         if self.test_mode {
             return Ok(());
         }
-        
+
         let data = &read_to_string(self.path.clone())?;
 
         let db: Database = serde_json::from_str(data)?;
