@@ -3,7 +3,7 @@ use std::fs;
 use strum::IntoEnumIterator;
 
 use super::{
-    git_branch::GitBranch, git_files::GitFiles, git_folders::{GitBranchType, GitFolders, GitRefs, GIT_FOLDER}, git_project_state::GitProjectState
+    git_branch::GitBranch, git_commit::GitCommit, git_files::GitFiles, git_folders::{GitBranchType, GitFolders, GitRefs, GIT_FOLDER}, git_project_state::GitProjectState
 };
 use crate::errors::git_error::GitError;
 
