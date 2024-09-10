@@ -213,6 +213,8 @@ impl GitProject {
                     }
                 }
             }
+        } else {
+            GitError::PackedRefsError;
         }
 
         Ok(())

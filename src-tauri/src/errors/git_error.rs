@@ -11,6 +11,7 @@ pub enum GitError {
     CannotOpenFolder,
     NoGitFolder,
     NoLocalBranches,
+    PackedRefsError,
 }
 
 #[derive(Clone, Serialize)]
