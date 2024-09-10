@@ -214,7 +214,7 @@ impl GitProject {
                 }
             }
         } else {
-            GitError::PackedRefsError;
+            return Err(GitError::PackedRefsError);
         }
 
         Ok(())

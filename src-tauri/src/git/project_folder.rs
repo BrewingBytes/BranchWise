@@ -628,6 +628,7 @@ mod tests {
         packed_refs
             .write_all("test_hash refs/remotes/test\n".as_bytes())
             .unwrap();
+        drop(packed_refs);
 
         let _ = git_project.fetch_packed_refs();
 
@@ -653,6 +654,7 @@ mod tests {
         packed_refs
             .write_all("test_hash refs/remotes/test\n".as_bytes())
             .unwrap();
+        drop(packed_refs);
 
         let _ = git_project.fetch_packed_refs();
         let _ = git_project.fetch_packed_refs();
@@ -679,23 +681,33 @@ mod tests {
         packed_refs
             .write_all("test_hash refs/remotes/test\n".as_bytes())
             .unwrap();
+        let packed_refs_modified = packed_refs.metadata().unwrap().modified().unwrap();
+        drop(packed_refs);
 
         let _ = git_project.fetch_packed_refs();
-        let packed_refs_modified = packed_refs.metadata().unwrap().modified().unwrap();
+
         assert_eq!(
             git_project.packed_refs_last_modified,
             Some(packed_refs_modified)
         );
 
+        let mut packed_refs = fs::File::create(format!(
+            "{}/{}/{}",
+            test_git_folder,
+            GIT_FOLDER,
+            GitFiles::PackedRefs
+        ))
+        .unwrap();
         packed_refs
             .write_all("test_hash refs/remotes/test2\n".as_bytes())
             .unwrap();
+        drop(packed_refs);
 
         let _ = git_project.fetch_packed_refs();
         assert_ne!(
             git_project.packed_refs_last_modified,
             Some(packed_refs_modified)
         );
-        assert_eq!(git_project.get_remote_branches().len(), 3);
+        assert_eq!(git_project.get_remote_branches().len(), 2);
     }
 }
