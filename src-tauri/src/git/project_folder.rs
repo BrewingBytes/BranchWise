@@ -636,7 +636,7 @@ mod tests {
 
     #[test]
     fn test_packed_refs_twice() {
-        let folder = TempDir::new("test_packed_refs").unwrap();
+        let folder = TempDir::new("test_packed_refs_twice").unwrap();
         let test_git_folder = folder.path().to_str().unwrap();
 
         create_sample_git_folder(test_git_folder);
@@ -662,7 +662,7 @@ mod tests {
 
     #[test]
     fn test_packed_refs_modified() {
-        let folder = TempDir::new("test_packed_refs").unwrap();
+        let folder = TempDir::new("test_packed_refs_modified").unwrap();
         let test_git_folder = folder.path().to_str().unwrap();
 
         create_sample_git_folder(test_git_folder);
