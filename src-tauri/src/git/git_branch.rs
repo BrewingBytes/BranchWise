@@ -19,7 +19,9 @@ mod tests {
 
     #[test]
     fn test_git_branch_new() {
-        let branch = GitBranch::new("test".to_string(), "test".to_string());
+        let branch = GitBranch::new("test".to_string(),
+    "test".to_string()
+    );
         assert_eq!(branch.name, "test");
         assert_eq!(branch.commit, "test");
     }
