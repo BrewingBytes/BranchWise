@@ -39,6 +39,7 @@ impl GitProject {
         self.fetch_remotes_directories()?;
         self.fetch_branches(GitBranchType::Local)?;
         self.fetch_branches(GitBranchType::Tags)?;
+        self.fetch_packed_refs()?;
 
         let remotes = self.remotes.clone();
         for remote in remotes {
@@ -157,6 +158,41 @@ impl GitProject {
             } else {
                 self.state = GitProjectState::Invalid;
                 return Err(GitError::CannotOpenFolder);
+            }
+        }
+
+        Ok(())
+    }
+
+    pub fn fetch_packed_refs(&mut self) -> Result<(), GitError> {
+        if let Ok(refs) = fs::read_to_string(format!(
+            "{}/{}/{}", self.get_directory(), GIT_FOLDER, GitFiles::PackedRefs
+        )) {
+            let lines = refs.lines();
+
+            for line in lines {
+                let parts: Vec<&str> = line.split_whitespace().collect();
+                if parts.len() == 2 {
+                    let commit_hash = parts[0];
+                    let branch_name = parts[1];
+
+                    if branch_name.starts_with("refs/heads/") {
+                        self.local_branches.push(GitBranch::new(
+                            branch_name.replace("refs/heads/", ""),
+                            commit_hash.to_string(),
+                        ));
+                    } else if branch_name.starts_with("refs/remotes/") {
+                        self.remote_branches.push(GitBranch::new(
+                            branch_name.replace("refs/remotes/", ""),
+                            commit_hash.to_string(),
+                        ));
+                    } else if branch_name.starts_with("refs/tags/") {
+                        self.tags.push(GitBranch::new(
+                            branch_name.replace("refs/tags/", ""),
+                            commit_hash.to_string(),
+                        ));
+                    }
+                }
             }
         }
 

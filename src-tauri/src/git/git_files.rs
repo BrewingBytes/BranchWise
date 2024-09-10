@@ -5,6 +5,7 @@ use strum_macros::EnumIter;
 pub enum GitFiles {
     HEAD,
     CONFIG,
+    PackedRefs,
 }
 
 impl fmt::Display for GitFiles {
@@ -12,6 +13,7 @@ impl fmt::Display for GitFiles {
         match *self {
             GitFiles::HEAD => write!(f, "HEAD"),
             GitFiles::CONFIG => write!(f, "config"),
+            GitFiles::PackedRefs => write!(f, "packed-refs"),
         }
     }
 }

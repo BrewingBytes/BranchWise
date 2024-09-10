@@ -35,6 +35,7 @@ pub fn open_git_project(directory: &str) -> Result<GitProject, GitError> {
         let _ = git_project.fetch_branches(GitBranchType::Local);
         let _ = git_project.fetch_branches(GitBranchType::Tags);
         let _ = git_project.fetch_remotes_directories();
+        let _ = git_project.fetch_packed_refs();
 
         for remote in git_project.get_remote_upstreams().clone() {
             let _ = git_project.fetch_branches(GitBranchType::Remote(remote));
@@ -515,5 +516,26 @@ mod tests {
 
         let current_project = DATABASE.lock().unwrap().get_current_project();
         assert_eq!(current_project, None);
+    }
+
+    #[test]
+    fn test_packed_refs() {
+        let folder = TempDir::new("test_packed_refs").unwrap();
+        let test_git_folder = folder.path().to_str().unwrap();
+
+        create_sample_git_folder(test_git_folder);
+        let mut git_project = open_git_project(test_git_folder).unwrap();
+        assert_eq!(git_project.get_remote_branches().len(), 0);
+
+        let mut packed_refs = fs::File::create(format!(
+            "{}/{}/{}",
+            test_git_folder, GIT_FOLDER, GitFiles::PackedRefs
+        ))
+        .unwrap();
+    packed_refs.write_all("test_hash refs/remotes/test\n".as_bytes()).unwrap();
+
+        let _ = git_project.fetch_packed_refs();
+
+        assert_eq!(git_project.get_remote_branches().len(), 1);
     }
 }
