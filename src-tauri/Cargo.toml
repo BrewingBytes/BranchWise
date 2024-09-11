@@ -27,6 +27,8 @@ flate2 = { version = "1.0.33", features = ["zlib-ng"], default-features = false 
 custom-protocol = ["tauri/custom-protocol"]
 
 [profile.dev]
+opt-level = 2
+debug = true
 codegen-units = 16
 
 [profile.release]
