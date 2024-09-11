@@ -20,7 +20,7 @@ pub enum LoadError {
     JSONError(#[from] serde_json::Error),
 
     #[error("Project already exists")]
-    ProjectExists
+    ProjectExists,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -82,7 +82,7 @@ impl Database {
         if self.test_mode {
             return Ok(());
         }
-        
+
         let data = &read_to_string(self.path.clone())?;
 
         let db: Database = serde_json::from_str(data)?;
@@ -136,7 +136,7 @@ mod tests {
         let dir = TempDir::new("test_database").expect("Failed to create temp dir");
 
         let mut db = Database::new();
-        let _ = db.set_path(dir.path().to_str().unwrap().to_string());
+        _ = db.set_path(dir.path().to_str().unwrap().to_string());
         let project = GitProject::new("test");
         db.add_project(project.clone())
             .expect("Failed to add project");
@@ -152,7 +152,7 @@ mod tests {
         let dir = TempDir::new("test_database").expect("Failed to create temp dir");
 
         let mut db = Database::new();
-        let _ = db.set_path(dir.path().to_str().unwrap().to_string());
+        _ = db.set_path(dir.path().to_str().unwrap().to_string());
         let project = GitProject::new("test");
         db.add_project(project.clone())
             .expect("Failed to add project");
@@ -165,7 +165,7 @@ mod tests {
         let dir = TempDir::new("test_database").expect("Failed to create temp dir");
 
         let mut db = Database::new();
-        let _ = db.set_path(dir.path().to_str().unwrap().to_string());
+        _ = db.set_path(dir.path().to_str().unwrap().to_string());
         let project = GitProject::new("test");
         db.add_project(project.clone())
             .expect("Failed to add project");
@@ -180,7 +180,7 @@ mod tests {
         let dir = TempDir::new("test_database").expect("Failed to create temp dir");
 
         let mut db = Database::new();
-        let _ = db.set_path(dir.path().to_str().unwrap().to_string());
+        _ = db.set_path(dir.path().to_str().unwrap().to_string());
         db.set_test_mode(true);
         assert!(db.save().is_ok());
         assert!(db.load().is_ok());
@@ -191,7 +191,7 @@ mod tests {
         let dir = TempDir::new("test_database").expect("Failed to create temp dir");
 
         let mut db = Database::new();
-        let _ = db.set_path(dir.path().to_str().unwrap().to_string());
+        _ = db.set_path(dir.path().to_str().unwrap().to_string());
         let project = GitProject::new("test");
         db.add_project(project.clone())
             .expect("Failed to add project");

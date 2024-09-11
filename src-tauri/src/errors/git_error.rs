@@ -11,20 +11,18 @@ pub enum GitError {
     CannotOpenFolder,
     NoGitFolder,
     NoLocalBranches,
+    PackedRefsError,
 }
 
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GitErrorProject {
     pub error: GitError,
-    pub project: GitProject
+    pub project: GitProject,
 }
 
 impl GitErrorProject {
     pub fn new(error: GitError, project: GitProject) -> GitErrorProject {
-        GitErrorProject {
-            error,
-            project
-        }
+        GitErrorProject { error, project }
     }
 }

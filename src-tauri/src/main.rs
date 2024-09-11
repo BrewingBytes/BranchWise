@@ -17,7 +17,7 @@ async fn setup(app: AppHandle) {
     fs::create_dir_all(app.path_resolver().app_data_dir().unwrap())
         .expect("Failed to create app data directory");
 
-    let _ = DATABASE.lock().unwrap().set_path(
+    _ = DATABASE.lock().unwrap().set_path(
         app.path_resolver()
             .app_data_dir()
             .unwrap()
@@ -37,13 +37,16 @@ async fn event_loop(app: AppHandle) {
                 Ok(_) => {
                     app.emit_all("project_update", &project).unwrap();
 
-                    let _ = DATABASE.lock().unwrap().update_project(project.clone());
+                    _ = DATABASE.lock().unwrap().update_project(project.clone());
                 }
                 Err(e) => {
-                    app.emit_all("project_update_error", GitErrorProject::new(e, project.clone()))
-                        .unwrap();
+                    app.emit_all(
+                        "project_update_error",
+                        GitErrorProject::new(e, project.clone()),
+                    )
+                    .unwrap();
 
-                    let _ = DATABASE.lock().unwrap().update_project(project.clone());
+                    _ = DATABASE.lock().unwrap().update_project(project.clone());
                 }
             }
         }

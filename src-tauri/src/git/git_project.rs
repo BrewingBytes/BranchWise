@@ -1,9 +1,12 @@
 use serde::{Deserialize, Serialize};
-use std::fs;
+use std::{fs, path::PathBuf};
 use strum::IntoEnumIterator;
 
 use super::{
-    git_branch::GitBranch, git_files::GitFiles, git_folders::{GitBranchType, GitFolders, GitRefs, GIT_FOLDER}, git_project_state::GitProjectState
+    git_branch::GitBranch,
+    git_files::{GitFilesRequired, GitFilesOptional},
+    git_folders::{GitBranchType, GitFolders, GitRefs, GIT_FOLDER},
+    git_project_state::GitProjectState,
 };
 use crate::errors::git_error::GitError;
 
@@ -39,6 +42,7 @@ impl GitProject {
         self.fetch_remotes_directories()?;
         self.fetch_branches(GitBranchType::Local)?;
         self.fetch_branches(GitBranchType::Tags)?;
+        _ = self.fetch_packed_refs(); // Should be Ok if the file doesn't exist
 
         let remotes = self.remotes.clone();
         for remote in remotes {
@@ -138,15 +142,15 @@ impl GitProject {
                         };
 
                         match &branch_type {
-                            GitBranchType::Local => self.local_branches.push(
-                                GitBranch::new(full_branch_name, commit_hash),
-                            ),
-                            GitBranchType::Remote(upstream) => self.remote_branches.push(
-                                GitBranch::new(
+                            GitBranchType::Local => self
+                                .local_branches
+                                .push(GitBranch::new(full_branch_name, commit_hash)),
+                            GitBranchType::Remote(upstream) => {
+                                self.remote_branches.push(GitBranch::new(
                                     format!("{}/{}", upstream, full_branch_name),
                                     commit_hash,
-                                ),
-                            ),
+                                ))
+                            }
                             GitBranchType::Tags => self.tags.push(GitBranch::new(
                                 format!("tags/{}", full_branch_name),
                                 commit_hash,
@@ -163,9 +167,48 @@ impl GitProject {
         Ok(())
     }
 
+    pub fn fetch_packed_refs(&mut self) -> Result<(), GitError> {
+        let packed_refs_path = PathBuf::from(self.get_directory())
+            .join(GIT_FOLDER)
+            .join(GitFilesOptional::PackedRefs.to_string());
+
+        if let Ok(refs) = fs::read_to_string(packed_refs_path) {
+            let lines = refs.lines();
+
+            for line in lines {
+                let parts: Vec<&str> = line.split_whitespace().collect();
+                if parts.len() == 2 {
+                    let commit_hash = parts[0];
+                    let branch_name = parts[1];
+
+                    if branch_name.starts_with("refs/heads/") {
+                        self.local_branches.push(GitBranch::new(
+                            branch_name.replace("refs/heads/", ""),
+                            commit_hash.to_string(),
+                        ));
+                    } else if branch_name.starts_with("refs/remotes/") {
+                        self.remote_branches.push(GitBranch::new(
+                            branch_name.replace("refs/remotes/", ""),
+                            commit_hash.to_string(),
+                        ));
+                    } else if branch_name.starts_with("refs/tags/") {
+                        self.tags.push(GitBranch::new(
+                            branch_name.replace("refs/tags/", ""),
+                            commit_hash.to_string(),
+                        ));
+                    }
+                }
+            }
+
+            return Ok(());
+        }
+
+        Err(GitError::PackedRefsError)
+    }
+
     pub fn has_required_files(&self) -> Result<(), GitError> {
         let mut required_git_files: Vec<String> =
-            GitFiles::iter().map(|file| file.to_string()).collect();
+            GitFilesRequired::iter().map(|file| file.to_string()).collect();
 
         let mut required_git_folders: Vec<String> = GitFolders::iter()
             .map(|folder| folder.to_string())

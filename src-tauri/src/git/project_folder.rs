@@ -1,7 +1,5 @@
 use super::{
-    git_folders::GitBranchType,
-    git_project::GitProject,
-    git_project_state::GitProjectState,
+    git_folders::GitBranchType, git_project::GitProject, git_project_state::GitProjectState,
 };
 use crate::{database::storage::DATABASE, errors::git_error::GitError};
 use std::fs;
@@ -32,12 +30,13 @@ pub fn open_git_project(directory: &str) -> Result<GitProject, GitError> {
         git_project.has_required_files()?;
 
         git_project.set_state(GitProjectState::Valid);
-        let _ = git_project.fetch_branches(GitBranchType::Local);
-        let _ = git_project.fetch_branches(GitBranchType::Tags);
-        let _ = git_project.fetch_remotes_directories();
+        _ = git_project.fetch_branches(GitBranchType::Local);
+        _ = git_project.fetch_branches(GitBranchType::Tags);
+        _ = git_project.fetch_remotes_directories();
+        _ = git_project.fetch_packed_refs();
 
         for remote in git_project.get_remote_upstreams().clone() {
-            let _ = git_project.fetch_branches(GitBranchType::Remote(remote));
+            _ = git_project.fetch_branches(GitBranchType::Remote(remote));
         }
 
         // Add the project to the database (Note: This is not saved to disk)
@@ -72,7 +71,12 @@ mod tests {
     use std::io::{Read, Write};
 
     use crate::git::{
-        git_branch::GitBranch, git_commit::GitCommit, git_commit_author::GitCommitAuthor, git_files::GitFiles, git_folders::{GitFolders, GitRefs, GIT_FOLDER}, git_user::GitUser
+        git_branch::GitBranch,
+        git_commit::GitCommit,
+        git_commit_author::GitCommitAuthor,
+        git_files::{GitFilesOptional, GitFilesRequired},
+        git_folders::{GitFolders, GitRefs, GIT_FOLDER},
+        git_user::GitUser,
     };
     use strum::IntoEnumIterator;
     use tempdir::TempDir;
@@ -89,7 +93,7 @@ mod tests {
             fs::create_dir_all(format!("{}/{}", git_path, folder)).unwrap();
         }
 
-        for file in GitFiles::iter() {
+        for file in GitFilesRequired::iter() {
             fs::File::create(format!("{}/{}", git_path, file)).unwrap();
         }
 
@@ -161,7 +165,9 @@ mod tests {
             GitRefs::REMOTES,
             branch
         ))
-        .unwrap().write_all(commit.as_bytes()).unwrap();
+        .unwrap()
+        .write_all(commit.as_bytes())
+        .unwrap();
     }
 
     fn create_tag(git_directory: &str, tag: &str, commit: &str) {
@@ -173,22 +179,52 @@ mod tests {
             GitRefs::TAGS,
             tag
         ))
-        .unwrap().write_all(commit.as_bytes()).unwrap();
+        .unwrap()
+        .write_all(commit.as_bytes())
+        .unwrap();
     }
 
-    fn create_encoded_commit_content(author: GitCommitAuthor, commiter: GitCommitAuthor, tree: Option<&str>, parent_commits: Vec<&str>, message: &str) -> Vec<u8> {
+    fn create_encoded_commit_content(
+        author: GitCommitAuthor,
+        commiter: GitCommitAuthor,
+        tree: Option<&str>,
+        parent_commits: Vec<&str>,
+        message: &str,
+    ) -> Vec<u8> {
         let tree_line = match tree {
             Some(tree) => format!("tree {}\n", tree),
             None => "".to_string(),
         };
-        let parent_lines = parent_commits.iter().map(|parent_commit| format!("parent {}\n", parent_commit)).collect::<Vec<String>>().join("");
-        let author_line = format!("author {} <{}> {} {}\n", author.get_user().name, author.get_user().email, author.date_seconds, author.timezone);
-        let commiter_line = format!("commiter {} <{}> {} {}\n", commiter.get_user().name, commiter.get_user().email, commiter.date_seconds, commiter.timezone);
+        let parent_lines = parent_commits
+            .iter()
+            .map(|parent_commit| format!("parent {}\n", parent_commit))
+            .collect::<Vec<String>>()
+            .join("");
+        let author_line = format!(
+            "author {} <{}> {} {}\n",
+            author.get_user().name,
+            author.get_user().email,
+            author.date_seconds,
+            author.timezone
+        );
+        let commiter_line = format!(
+            "commiter {} <{}> {} {}\n",
+            commiter.get_user().name,
+            commiter.get_user().email,
+            commiter.date_seconds,
+            commiter.timezone
+        );
 
-        let file_content = format!("{}{}{}{}\n{}", tree_line, parent_lines, author_line, commiter_line, message);
+        let file_content = format!(
+            "{}{}{}{}\n{}",
+            tree_line, parent_lines, author_line, commiter_line, message
+        );
         let file_content_to_encode = format!("commit {}\0{}", file_content.len(), file_content);
-        
-        let mut zlib = flate2::bufread::ZlibEncoder::new(file_content_to_encode.as_bytes(), flate2::Compression::default());
+
+        let mut zlib = flate2::bufread::ZlibEncoder::new(
+            file_content_to_encode.as_bytes(),
+            flate2::Compression::default(),
+        );
         let mut encoded_file_content = Vec::new();
         zlib.read_to_end(&mut encoded_file_content).unwrap();
 
@@ -198,13 +234,26 @@ mod tests {
     fn create_commit(git_directory: &str, commit_hash: &str, commit_content: &[u8]) {
         fs::DirBuilder::new()
             .recursive(true)
-            .create(format!("{}/{}/{}/{}", git_directory, GIT_FOLDER, GitFolders::OBJECTS, &commit_hash[..2]))
+            .create(format!(
+                "{}/{}/{}/{}",
+                git_directory,
+                GIT_FOLDER,
+                GitFolders::OBJECTS,
+                &commit_hash[..2]
+            ))
             .unwrap();
-        
-        fs::File::create(format!("{}/{}/{}/{}/{}", git_directory, GIT_FOLDER, GitFolders::OBJECTS, &commit_hash[..2], &commit_hash[2..]))
-            .unwrap()
-            .write_all(commit_content)
-            .unwrap();
+
+        fs::File::create(format!(
+            "{}/{}/{}/{}/{}",
+            git_directory,
+            GIT_FOLDER,
+            GitFolders::OBJECTS,
+            &commit_hash[..2],
+            &commit_hash[2..]
+        ))
+        .unwrap()
+        .write_all(commit_content)
+        .unwrap();
     }
 
     #[test]
@@ -212,12 +261,25 @@ mod tests {
         let folder = TempDir::new("test_git_commit_from_file").unwrap();
         let test_git_folder = folder.path().to_str().unwrap();
 
-        let author_commiter = GitCommitAuthor::new(GitUser::new("Andrei Serban".to_string(), "andrei.serban@brewingbytes.com".to_string()), 100, "+03:00".to_string());
+        let author_commiter = GitCommitAuthor::new(
+            GitUser::new(
+                "Andrei Serban".to_string(),
+                "andrei.serban@brewingbytes.com".to_string(),
+            ),
+            100,
+            "+03:00".to_string(),
+        );
 
         create_sample_git_folder(test_git_folder);
         let git_project = open_git_project(test_git_folder).unwrap();
 
-        let content = create_encoded_commit_content(author_commiter.clone(), author_commiter.clone(), Some("tree"), Vec::new(), "test");
+        let content = create_encoded_commit_content(
+            author_commiter.clone(),
+            author_commiter.clone(),
+            Some("tree"),
+            Vec::new(),
+            "test",
+        );
         create_commit(git_project.get_directory(), "aabb", content.as_slice());
         let commit = GitCommit::from_file(&git_project, "aabb").unwrap();
 
@@ -234,14 +296,37 @@ mod tests {
         let folder = TempDir::new("test_git_commit_get_parent_commits").unwrap();
         let test_git_folder = folder.path().to_str().unwrap();
 
-        let author_commiter = GitCommitAuthor::new(GitUser::new("Andrei Serban".to_string(), "andrei.serban@brewingbytes.com".to_string()), 100, "+03:00".to_string());
-    
+        let author_commiter = GitCommitAuthor::new(
+            GitUser::new(
+                "Andrei Serban".to_string(),
+                "andrei.serban@brewingbytes.com".to_string(),
+            ),
+            100,
+            "+03:00".to_string(),
+        );
+
         create_sample_git_folder(test_git_folder);
         let git_project = open_git_project(test_git_folder).unwrap();
 
-        let parent_content = create_encoded_commit_content(author_commiter.clone(), author_commiter.clone(), Some("tree"), Vec::new(), "parent");
-        create_commit(git_project.get_directory(), "parent", parent_content.as_slice());
-        let content = create_encoded_commit_content(author_commiter.clone(), author_commiter.clone(), Some("tree"), vec!["parent"], "test");
+        let parent_content = create_encoded_commit_content(
+            author_commiter.clone(),
+            author_commiter.clone(),
+            Some("tree"),
+            Vec::new(),
+            "parent",
+        );
+        create_commit(
+            git_project.get_directory(),
+            "parent",
+            parent_content.as_slice(),
+        );
+        let content = create_encoded_commit_content(
+            author_commiter.clone(),
+            author_commiter.clone(),
+            Some("tree"),
+            vec!["parent"],
+            "test",
+        );
         create_commit(git_project.get_directory(), "aabb", content.as_slice());
         let commit = GitCommit::from_file(&git_project, "aabb").unwrap();
 
@@ -282,7 +367,7 @@ mod tests {
 
         assert!(projects.iter().any(|x| x == &git_project));
 
-        let _ = remove_database_project(git_project.clone());
+        _ = remove_database_project(git_project.clone());
 
         let projects = get_database_projects();
 
@@ -299,7 +384,7 @@ mod tests {
         create_remote_branch(test_git_folder, "test/main", "test_commit");
 
         let mut git_project = open_git_project(test_git_folder).unwrap();
-        let _ = git_project.fetch_remotes_directories();
+        _ = git_project.fetch_remotes_directories();
 
         assert!(git_project
             .get_remote_upstreams()
@@ -318,11 +403,12 @@ mod tests {
         create_remote_branch(test_git_folder, "origin/main", "origin_commit");
 
         let mut git_project = open_git_project(test_git_folder).unwrap();
-        let _ = git_project.fetch_branches(GitBranchType::Remote("origin".to_string()));
+        _ = git_project.fetch_branches(GitBranchType::Remote("origin".to_string()));
 
-        assert!(git_project
-            .get_remote_branches()
-            .contains(&GitBranch::new("origin/main".to_string(), "origin_commit".to_string())));
+        assert!(git_project.get_remote_branches().contains(&GitBranch::new(
+            "origin/main".to_string(),
+            "origin_commit".to_string()
+        )));
     }
 
     #[test]
@@ -334,11 +420,12 @@ mod tests {
         create_tag(test_git_folder, "tag1", "tag1_commit");
 
         let mut git_project = open_git_project(test_git_folder).unwrap();
-        let _ = git_project.fetch_branches(GitBranchType::Tags);
+        _ = git_project.fetch_branches(GitBranchType::Tags);
 
-        assert!(git_project
-            .get_tags()
-            .contains(&GitBranch::new("tags/tag1".to_string(), "tag1_commit".to_string())));
+        assert!(git_project.get_tags().contains(&GitBranch::new(
+            "tags/tag1".to_string(),
+            "tag1_commit".to_string()
+        )));
     }
 
     #[test]
@@ -361,7 +448,7 @@ mod tests {
         create_local_branch(test_git_folder, "main", "commit");
 
         let mut git_project = open_git_project(test_git_folder).unwrap();
-        let _ = git_project.fetch_branches(GitBranchType::Local);
+        _ = git_project.fetch_branches(GitBranchType::Local);
 
         assert!(git_project
             .get_local_branches()
@@ -377,11 +464,12 @@ mod tests {
         create_local_branch(test_git_folder, "feature/test", "test_commit");
 
         let mut git_project = open_git_project(test_git_folder).unwrap();
-        let _ = git_project.fetch_branches(GitBranchType::Local);
+        _ = git_project.fetch_branches(GitBranchType::Local);
 
-        assert!(git_project
-            .get_local_branches()
-            .contains(&GitBranch::new("feature/test".to_string(), "test_commit".to_string())));
+        assert!(git_project.get_local_branches().contains(&GitBranch::new(
+            "feature/test".to_string(),
+            "test_commit".to_string()
+        )));
     }
 
     #[test]
@@ -393,19 +481,21 @@ mod tests {
         create_local_branch(test_git_folder, "feature/test", "test_commit");
 
         let mut git_project = open_git_project(test_git_folder).unwrap();
-        let _ = git_project.fetch_branches(GitBranchType::Local);
+        _ = git_project.fetch_branches(GitBranchType::Local);
 
-        assert!(git_project
-            .get_local_branches()
-            .contains(&GitBranch::new("feature/test".to_string(), "test_commit".to_string())));
+        assert!(git_project.get_local_branches().contains(&GitBranch::new(
+            "feature/test".to_string(),
+            "test_commit".to_string()
+        )));
 
         create_local_branch(test_git_folder, "feature/test2", "test_commit");
         git_project.update().unwrap();
 
         assert_eq!(git_project.get_local_branches().len(), 2);
-        assert!(git_project
-            .get_local_branches()
-            .contains(&GitBranch::new("feature/test2".to_string(), "test_commit".to_string())));
+        assert!(git_project.get_local_branches().contains(&GitBranch::new(
+            "feature/test2".to_string(),
+            "test_commit".to_string()
+        )));
     }
 
     #[test]
@@ -417,19 +507,21 @@ mod tests {
         create_remote_branch(test_git_folder, "origin/main", "origin_commit");
 
         let mut git_project = open_git_project(test_git_folder).unwrap();
-        let _ = git_project.fetch_branches(GitBranchType::Remote("origin".to_string()));
+        _ = git_project.fetch_branches(GitBranchType::Remote("origin".to_string()));
 
-        assert!(git_project
-            .get_remote_branches()
-            .contains(&GitBranch::new("origin/main".to_string(), "origin_commit".to_string())));
+        assert!(git_project.get_remote_branches().contains(&GitBranch::new(
+            "origin/main".to_string(),
+            "origin_commit".to_string()
+        )));
 
         create_remote_branch(test_git_folder, "origin/main2", "origin_commit");
         git_project.update().unwrap();
 
         assert_eq!(git_project.get_remote_branches().len(), 2);
-        assert!(git_project
-            .get_remote_branches()
-            .contains(&GitBranch::new("origin/main2".to_string(), "origin_commit".to_string())));
+        assert!(git_project.get_remote_branches().contains(&GitBranch::new(
+            "origin/main2".to_string(),
+            "origin_commit".to_string()
+        )));
     }
 
     #[test]
@@ -515,5 +607,75 @@ mod tests {
 
         let current_project = DATABASE.lock().unwrap().get_current_project();
         assert_eq!(current_project, None);
+    }
+
+    #[test]
+    fn test_packed_refs() {
+        let folder = TempDir::new("test_packed_refs").unwrap();
+        let test_git_folder = folder.path().to_str().unwrap();
+
+        create_sample_git_folder(test_git_folder);
+        let mut git_project = open_git_project(test_git_folder).unwrap();
+        assert_eq!(git_project.get_remote_branches().len(), 0);
+
+        let mut packed_refs = fs::File::create(format!(
+            "{}/{}/{}",
+            test_git_folder,
+            GIT_FOLDER,
+            GitFilesOptional::PackedRefs
+        ))
+        .unwrap();
+        packed_refs
+            .write_all("test_hash refs/remotes/test\ntest_hash refs/heads/test\ntest_hash refs/tags/test\n".as_bytes())
+            .unwrap();
+        drop(packed_refs);
+
+        _ = git_project.fetch_packed_refs();
+
+        assert_eq!(git_project.get_remote_branches().len(), 1);
+        assert_eq!(git_project.get_local_branches().len(), 1);
+        assert_eq!(git_project.get_tags().len(), 1);
+    }
+
+    #[test]
+    fn test_packed_refs_twice() {
+        let folder = TempDir::new("test_packed_refs_twice").unwrap();
+        let test_git_folder = folder.path().to_str().unwrap();
+
+        create_sample_git_folder(test_git_folder);
+        let mut git_project = open_git_project(test_git_folder).unwrap();
+        assert_eq!(git_project.get_remote_branches().len(), 0);
+
+        let mut packed_refs = fs::File::create(format!(
+            "{}/{}/{}",
+            test_git_folder,
+            GIT_FOLDER,
+            GitFilesOptional::PackedRefs
+        ))
+        .unwrap();
+        packed_refs
+            .write_all("test_hash refs/remotes/test\n".as_bytes())
+            .unwrap();
+        drop(packed_refs);
+
+        _ = git_project.fetch_packed_refs();
+        assert_eq!(git_project.get_remote_branches().len(), 1);
+
+        _ = git_project.update();
+        assert_eq!(git_project.get_remote_branches().len(), 1);
+    }
+
+    #[test]
+    fn test_packed_refs_inexistent() {
+        let folder = TempDir::new("test_packed_refs_inexistent").unwrap();
+        let test_git_folder = folder.path().to_str().unwrap();
+
+        create_sample_git_folder(test_git_folder);
+
+        let mut git_project = open_git_project(test_git_folder).unwrap();
+        assert_eq!(
+            git_project.fetch_packed_refs(),
+            Err(GitError::PackedRefsError)
+        );
     }
 }
