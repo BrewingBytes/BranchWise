@@ -164,6 +164,29 @@ mod tests {
     use crate::git::git_user::GitUser;
     use flate2::write::ZlibEncoder;
 
+    fn mock_git_commit_author() -> GitCommitAuthor {
+        GitCommitAuthor::new(
+            GitUser {
+                name: "Test User".to_string(),
+                email: "test@example.com".to_string(),
+            },
+            1234567890,
+            "+0000".to_string(),
+        )
+    }
+
+    fn mock_git_commit() -> GitCommit {
+        let author = mock_git_commit_author();
+        GitCommit::new(
+            "hash",
+            "tree_hash",
+            &vec!["parent_hash1".to_string(), "parent_hash2".to_string()],
+            author.clone(),
+            author.clone(),
+            "commit message",
+        )
+    }
+
     fn create_encoded_commit_file(
         author: GitCommitAuthor,
         commiter: GitCommitAuthor,
@@ -214,14 +237,7 @@ mod tests {
 
     #[test]
     fn test_from_string() {
-        let commiter = GitCommitAuthor::new(
-            GitUser {
-                name: "Andrei Serban".to_string(),
-                email: "andrei.serban@brewingbytes.com".to_string(),
-            },
-            1725372312,
-            "+0300".to_string(),
-        );
+        let commiter = mock_git_commit_author();
 
         let commit_hash = "ae575432e84a11c11b8dc3e357806f65c50f4619".to_string();
         let encoded_file_content = create_encoded_commit_file(
@@ -257,14 +273,7 @@ mod tests {
 
     #[test]
     fn test_to_string_no_parent() {
-        let commiter = GitCommitAuthor::new(
-            GitUser {
-                name: "Andrei Serban".to_string(),
-                email: "andrei.serban@brewingbytes.com".to_string(),
-            },
-            1725372312,
-            "+0300".to_string(),
-        );
+        let commiter = mock_git_commit_author();
 
         let commit_hash = "ae575432e84a11c11b8dc3e357806f65c50f4619".to_string();
         let encoded_file_content = create_encoded_commit_file(
@@ -288,14 +297,7 @@ mod tests {
 
     #[test]
     fn test_to_string_with_parents() {
-        let commiter = GitCommitAuthor::new(
-            GitUser {
-                name: "Andrei Serban".to_string(),
-                email: "andrei.serban@brewingbytes.com".to_string(),
-            },
-            1725372312,
-            "+0300".to_string(),
-        );
+        let commiter = mock_git_commit_author();
 
         let commit_hash = "ae575432e84a11c11b8dc3e357806f65c50f4619".to_string();
         let parent_commit_hash = Vec::from([
@@ -323,14 +325,7 @@ mod tests {
 
     #[test]
     fn test_from_string_with_parents() {
-        let commiter = GitCommitAuthor::new(
-            GitUser {
-                name: "Andrei Serban".to_string(),
-                email: "andrei.serban@brewingbytes.com".to_string(),
-            },
-            1725372312,
-            "+0300".to_string(),
-        );
+        let commiter = mock_git_commit_author();
 
         let commit_hash = "ae575432e84a11c11b8dc3e357806f65c50f4619".to_string();
         let parent_commit_hash = Vec::from([
@@ -353,6 +348,29 @@ mod tests {
         assert_eq!(git_commit.tree_hash, commit_hash);
         assert_eq!(git_commit.message, "test commit");
         assert_eq!(git_commit.author, commiter);
+    }
+
+    #[test]
+    fn test_serialize_git_commit() {
+        let git_commit = mock_git_commit();
+        let serialized = serde_json::to_string(&git_commit).unwrap();
+        let expected = r#"{"hash":"hash","tree_hash":"tree_hash","parent_hashes":["parent_hash1","parent_hash2"],"author":{"user":{"name":"Test User","email":"test@example.com"},"date_seconds":1234567890,"timezone":"+0000"},"committer":{"user":{"name":"Test User","email":"test@example.com"},"date_seconds":1234567890,"timezone":"+0000"},"message":"commit message"}"#;
+        assert_eq!(serialized, expected);
+    }
+
+    #[test]
+    fn test_deserialize_git_commit() {
+        let json_str = r#"{"hash":"hash","tree_hash":"tree_hash","parent_hashes":["parent_hash1","parent_hash2"],"author":{"user":{"name":"Test User","email":"test@example.com"},"date_seconds":1234567890,"timezone":"+0000"},"committer":{"user":{"name":"Test User","email":"test@example.com"},"date_seconds":1234567890,"timezone":"+0000"},"message":"commit message"}"#;
+        let deserialized: GitCommit = serde_json::from_str(json_str).unwrap();
+        let expected = mock_git_commit();
+        assert_eq!(deserialized, expected);
+    }
+
+    #[test]
+    fn test_deserialize_invalid_json() {
+        let invalid_json_str = r#"{"hash":"hash","tree_hash":"tree_hash","parent_hashes":["parent_hash1","parent_hash2"],"author":{"user":{"name":"Test User","email":"test@example.com"},"date_seconds":1234567890,"timezone":"+0000"},"committer":{"user":{"name":"Test User","email":"test@example.com"},"date_seconds":1234567890,"timezone":"+0000"},"message":"commit message""#; // Missing closing brace
+        let result: Result<GitCommit, serde_json::Error> = serde_json::from_str(invalid_json_str);
+        assert!(result.is_err());
     }
 
     #[test]

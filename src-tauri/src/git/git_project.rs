@@ -199,11 +199,11 @@ impl GitProject {
                     }
                 }
             }
-        } else {
-            return Err(GitError::PackedRefsError);
+
+            return Ok(());
         }
 
-        Ok(())
+        Err(GitError::PackedRefsError)
     }
 
     pub fn has_required_files(&self) -> Result<(), GitError> {

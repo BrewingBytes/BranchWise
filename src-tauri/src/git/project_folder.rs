@@ -30,13 +30,13 @@ pub fn open_git_project(directory: &str) -> Result<GitProject, GitError> {
         git_project.has_required_files()?;
 
         git_project.set_state(GitProjectState::Valid);
-        let _ = git_project.fetch_branches(GitBranchType::Local);
-        let _ = git_project.fetch_branches(GitBranchType::Tags);
-        let _ = git_project.fetch_remotes_directories();
-        let _ = git_project.fetch_packed_refs();
+        _ = git_project.fetch_branches(GitBranchType::Local);
+        _ = git_project.fetch_branches(GitBranchType::Tags);
+        _ = git_project.fetch_remotes_directories();
+        _ = git_project.fetch_packed_refs();
 
         for remote in git_project.get_remote_upstreams().clone() {
-            let _ = git_project.fetch_branches(GitBranchType::Remote(remote));
+            _ = git_project.fetch_branches(GitBranchType::Remote(remote));
         }
 
         // Add the project to the database (Note: This is not saved to disk)
@@ -367,7 +367,7 @@ mod tests {
 
         assert!(projects.iter().any(|x| x == &git_project));
 
-        let _ = remove_database_project(git_project.clone());
+        _ = remove_database_project(git_project.clone());
 
         let projects = get_database_projects();
 
@@ -384,7 +384,7 @@ mod tests {
         create_remote_branch(test_git_folder, "test/main", "test_commit");
 
         let mut git_project = open_git_project(test_git_folder).unwrap();
-        let _ = git_project.fetch_remotes_directories();
+        _ = git_project.fetch_remotes_directories();
 
         assert!(git_project
             .get_remote_upstreams()
@@ -403,7 +403,7 @@ mod tests {
         create_remote_branch(test_git_folder, "origin/main", "origin_commit");
 
         let mut git_project = open_git_project(test_git_folder).unwrap();
-        let _ = git_project.fetch_branches(GitBranchType::Remote("origin".to_string()));
+        _ = git_project.fetch_branches(GitBranchType::Remote("origin".to_string()));
 
         assert!(git_project.get_remote_branches().contains(&GitBranch::new(
             "origin/main".to_string(),
@@ -420,7 +420,7 @@ mod tests {
         create_tag(test_git_folder, "tag1", "tag1_commit");
 
         let mut git_project = open_git_project(test_git_folder).unwrap();
-        let _ = git_project.fetch_branches(GitBranchType::Tags);
+        _ = git_project.fetch_branches(GitBranchType::Tags);
 
         assert!(git_project.get_tags().contains(&GitBranch::new(
             "tags/tag1".to_string(),
@@ -448,7 +448,7 @@ mod tests {
         create_local_branch(test_git_folder, "main", "commit");
 
         let mut git_project = open_git_project(test_git_folder).unwrap();
-        let _ = git_project.fetch_branches(GitBranchType::Local);
+        _ = git_project.fetch_branches(GitBranchType::Local);
 
         assert!(git_project
             .get_local_branches()
@@ -464,7 +464,7 @@ mod tests {
         create_local_branch(test_git_folder, "feature/test", "test_commit");
 
         let mut git_project = open_git_project(test_git_folder).unwrap();
-        let _ = git_project.fetch_branches(GitBranchType::Local);
+        _ = git_project.fetch_branches(GitBranchType::Local);
 
         assert!(git_project.get_local_branches().contains(&GitBranch::new(
             "feature/test".to_string(),
@@ -481,7 +481,7 @@ mod tests {
         create_local_branch(test_git_folder, "feature/test", "test_commit");
 
         let mut git_project = open_git_project(test_git_folder).unwrap();
-        let _ = git_project.fetch_branches(GitBranchType::Local);
+        _ = git_project.fetch_branches(GitBranchType::Local);
 
         assert!(git_project.get_local_branches().contains(&GitBranch::new(
             "feature/test".to_string(),
@@ -507,7 +507,7 @@ mod tests {
         create_remote_branch(test_git_folder, "origin/main", "origin_commit");
 
         let mut git_project = open_git_project(test_git_folder).unwrap();
-        let _ = git_project.fetch_branches(GitBranchType::Remote("origin".to_string()));
+        _ = git_project.fetch_branches(GitBranchType::Remote("origin".to_string()));
 
         assert!(git_project.get_remote_branches().contains(&GitBranch::new(
             "origin/main".to_string(),
@@ -626,13 +626,15 @@ mod tests {
         ))
         .unwrap();
         packed_refs
-            .write_all("test_hash refs/remotes/test\n".as_bytes())
+            .write_all("test_hash refs/remotes/test\ntest_hash refs/heads/test\ntest_hash refs/tags/test\n".as_bytes())
             .unwrap();
         drop(packed_refs);
 
-        let _ = git_project.fetch_packed_refs();
+        _ = git_project.fetch_packed_refs();
 
         assert_eq!(git_project.get_remote_branches().len(), 1);
+        assert_eq!(git_project.get_local_branches().len(), 1);
+        assert_eq!(git_project.get_tags().len(), 1);
     }
 
     #[test]
@@ -656,10 +658,31 @@ mod tests {
             .unwrap();
         drop(packed_refs);
 
-        let _ = git_project.fetch_packed_refs();
+        _ = git_project.fetch_packed_refs();
         assert_eq!(git_project.get_remote_branches().len(), 1);
 
-        let _ = git_project.update();
+        _ = git_project.update();
         assert_eq!(git_project.get_remote_branches().len(), 1);
+    }
+
+    #[test]
+    fn test_packed_refs_inexistent() {
+        let folder = TempDir::new("test_packed_refs_inexistent").unwrap();
+        let test_git_folder = folder.path().to_str().unwrap();
+
+        create_sample_git_folder(test_git_folder);
+        fs::remove_file(format!(
+            "{}/{}/{}",
+            test_git_folder,
+            GIT_FOLDER,
+            GitFiles::PackedRefs
+        ))
+        .unwrap();
+
+        let mut git_project = open_git_project(test_git_folder).unwrap();
+        assert_eq!(
+            git_project.fetch_packed_refs(),
+            Err(GitError::PackedRefsError)
+        );
     }
 }
