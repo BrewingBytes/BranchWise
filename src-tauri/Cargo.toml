@@ -25,3 +25,9 @@ flate2 = { version = "1.0.33", features = ["zlib-ng"], default-features = false 
 [features]
 # This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!
 custom-protocol = ["tauri/custom-protocol"]
+
+[profile.dev]
+codegen-units = 16
+
+[profile.release]
+codegen-units = 16
