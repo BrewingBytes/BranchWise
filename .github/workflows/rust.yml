@@ -39,7 +39,7 @@ jobs:
                 npm install --global yarn
                 yarn
 
-            - name: Configure sccache env var and set build profile to ephemeral build
+            - name: Configure sccache env var
               run: | 
                     echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
                     echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
