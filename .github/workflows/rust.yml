@@ -8,7 +8,7 @@ on:
 
 jobs:
     lint-build:
-        name: "Lint, Build and Test"
+        name: "Lint and Test Rust"
         runs-on: ubuntu-latest
         permissions:
             contents: read
@@ -57,9 +57,6 @@ jobs:
               run: |
                 cd src-tauri
                 cargo clippy
-
-            - name: "Build"
-              run: yarn tauri build
 
             - name: Install cargo-llvm-cov
               uses: taiki-e/install-action@cargo-llvm-cov
