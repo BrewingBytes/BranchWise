@@ -38,6 +38,7 @@ jobs:
 
                 npm install --global yarn
                 yarn
+                yarn build
 
             - name: Configure sccache env var
               run: | 
@@ -83,6 +84,7 @@ jobs:
 
                 npm install --global yarn
                 yarn
+                yarn build
 
             - name: Configure sccache env var
               run: | 
