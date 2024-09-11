@@ -4,7 +4,7 @@ use strum::IntoEnumIterator;
 
 use super::{
     git_branch::GitBranch,
-    git_files::GitFiles,
+    git_files::{GitFilesRequired, GitFilesOptional},
     git_folders::{GitBranchType, GitFolders, GitRefs, GIT_FOLDER},
     git_project_state::GitProjectState,
 };
@@ -42,7 +42,7 @@ impl GitProject {
         self.fetch_remotes_directories()?;
         self.fetch_branches(GitBranchType::Local)?;
         self.fetch_branches(GitBranchType::Tags)?;
-        self.fetch_packed_refs()?;
+        _ = self.fetch_packed_refs(); // Should be Ok if the file doesn't exist
 
         let remotes = self.remotes.clone();
         for remote in remotes {
@@ -170,7 +170,7 @@ impl GitProject {
     pub fn fetch_packed_refs(&mut self) -> Result<(), GitError> {
         let packed_refs_path = PathBuf::from(self.get_directory())
             .join(GIT_FOLDER)
-            .join(GitFiles::PackedRefs.to_string());
+            .join(GitFilesOptional::PackedRefs.to_string());
 
         if let Ok(refs) = fs::read_to_string(packed_refs_path) {
             let lines = refs.lines();
@@ -208,7 +208,7 @@ impl GitProject {
 
     pub fn has_required_files(&self) -> Result<(), GitError> {
         let mut required_git_files: Vec<String> =
-            GitFiles::iter().map(|file| file.to_string()).collect();
+            GitFilesRequired::iter().map(|file| file.to_string()).collect();
 
         let mut required_git_folders: Vec<String> = GitFolders::iter()
             .map(|folder| folder.to_string())

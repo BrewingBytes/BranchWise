@@ -74,7 +74,7 @@ mod tests {
         git_branch::GitBranch,
         git_commit::GitCommit,
         git_commit_author::GitCommitAuthor,
-        git_files::GitFiles,
+        git_files::{GitFilesOptional, GitFilesRequired},
         git_folders::{GitFolders, GitRefs, GIT_FOLDER},
         git_user::GitUser,
     };
@@ -93,7 +93,7 @@ mod tests {
             fs::create_dir_all(format!("{}/{}", git_path, folder)).unwrap();
         }
 
-        for file in GitFiles::iter() {
+        for file in GitFilesRequired::iter() {
             fs::File::create(format!("{}/{}", git_path, file)).unwrap();
         }
 
@@ -622,7 +622,7 @@ mod tests {
             "{}/{}/{}",
             test_git_folder,
             GIT_FOLDER,
-            GitFiles::PackedRefs
+            GitFilesOptional::PackedRefs
         ))
         .unwrap();
         packed_refs
@@ -650,7 +650,7 @@ mod tests {
             "{}/{}/{}",
             test_git_folder,
             GIT_FOLDER,
-            GitFiles::PackedRefs
+            GitFilesOptional::PackedRefs
         ))
         .unwrap();
         packed_refs
@@ -671,13 +671,6 @@ mod tests {
         let test_git_folder = folder.path().to_str().unwrap();
 
         create_sample_git_folder(test_git_folder);
-        fs::remove_file(format!(
-            "{}/{}/{}",
-            test_git_folder,
-            GIT_FOLDER,
-            GitFiles::PackedRefs
-        ))
-        .unwrap();
 
         let mut git_project = open_git_project(test_git_folder).unwrap();
         assert_eq!(
