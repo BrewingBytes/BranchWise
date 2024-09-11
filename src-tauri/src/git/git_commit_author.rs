@@ -138,4 +138,26 @@ mod tests {
         let git_commit_author = GitCommitAuthor::from_string("invalid").unwrap_err();
         assert_eq!(git_commit_author, GitCommitError::InvalidCommitFile);
     }
+
+    #[test]
+    fn test_serialize() {
+        let git_user = GitUser::new("name".to_string(), "email".to_string());
+        let git_commit_author = GitCommitAuthor::new(git_user, 1, "timezone".to_string());
+        let serialized = serde_json::to_string(&git_commit_author).unwrap();
+        assert_eq!(
+            serialized,
+            r#"{"user":{"name":"name","email":"email"},"date_seconds":1,"timezone":"timezone"}"#
+        );
+    }
+
+    #[test]
+    fn test_deserialize() {
+        let git_user = GitUser::new("name".to_string(), "email".to_string());
+        let git_commit_author = GitCommitAuthor::new(git_user, 1, "timezone".to_string());
+        let deserialized: GitCommitAuthor = serde_json::from_str(
+            r#"{"user":{"name":"name","email":"email"},"date_seconds":1,"timezone":"timezone"}"#,
+        )
+        .unwrap();
+        assert_eq!(deserialized, git_commit_author);
+    }
 }
