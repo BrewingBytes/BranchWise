@@ -7,8 +7,8 @@ on:
             - main
 
 jobs:
-    lint-build:
-        name: "Lint, Build and Test"
+    lint:
+        name: "Lint"
         runs-on: ubuntu-latest
         permissions:
             contents: read
@@ -16,6 +16,7 @@ jobs:
 
         steps:
             - uses: actions/checkout@v4
+
             - uses: actions/setup-node@v4
               with:
                 node-version: 20
@@ -37,14 +38,61 @@ jobs:
 
                 npm install --global yarn
                 yarn
+                yarn build
+
+            - name: Configure sccache env var
+              run: | 
+                    echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
+                    echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
+          
+            - name: Run sccache-cache
+              uses: mozilla-actions/sccache-action@v0.0.5
 
             - name: "Lint"
               run: |
                 cd src-tauri
-                cargo clippy
+                cargo clippy --all-features --workspace -- -D warnings
+  
+    coverage:
+        name: "Coverage"
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            pull-requests: write
 
-            - name: "Build"
-              run: yarn tauri build
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: actions/setup-node@v4
+              with:
+                node-version: 20
+
+            - name: "Install Dependencies"
+              run: |
+                sudo apt-get update
+                sudo apt-get install libwebkit2gtk-4.0-dev \
+                  build-essential \
+                  curl \
+                  wget \
+                  file \
+                  libssl-dev \
+                  libgtk-3-dev \
+                  libayatana-appindicator3-dev \
+                  librsvg2-dev
+
+                curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sh -s -- -y
+
+                npm install --global yarn
+                yarn
+                yarn build
+
+            - name: Configure sccache env var
+              run: | 
+                    echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
+                    echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
+          
+            - name: Run sccache-cache
+              uses: mozilla-actions/sccache-action@v0.0.5
 
             - name: Install cargo-llvm-cov
               uses: taiki-e/install-action@cargo-llvm-cov
