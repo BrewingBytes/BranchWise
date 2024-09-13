@@ -4,7 +4,7 @@ use strum::IntoEnumIterator;
 
 use super::{
     git_branch::GitBranch,
-    git_files::{GitFilesRequired, GitFilesOptional},
+    git_files::{GitFilesOptional, GitFilesRequired},
     git_folders::{GitBranchType, GitFolders, GitRefs, GIT_FOLDER},
     git_project_state::GitProjectState,
 };
@@ -207,8 +207,9 @@ impl GitProject {
     }
 
     pub fn has_required_files(&self) -> Result<(), GitError> {
-        let mut required_git_files: Vec<String> =
-            GitFilesRequired::iter().map(|file| file.to_string()).collect();
+        let mut required_git_files: Vec<String> = GitFilesRequired::iter()
+            .map(|file| file.to_string())
+            .collect();
 
         let mut required_git_folders: Vec<String> = GitFolders::iter()
             .map(|folder| folder.to_string())

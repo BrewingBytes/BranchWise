@@ -1,6 +1,9 @@
 #[derive(Debug, PartialEq)]
-pub enum GitCommitError {
+pub enum GitObjectError {
     DecompressionError,
     InvalidCommitFile,
+    InvalidBlobFile,
     FileReadError,
+    ParsingError,
+    ShaError,
 }

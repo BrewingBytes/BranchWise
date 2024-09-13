@@ -3,7 +3,7 @@ use super::{
     git_folders::{GitFolders, GIT_FOLDER},
     git_project::GitProject,
 };
-use crate::errors::git_commit_error::GitCommitError;
+use crate::errors::git_object_error::GitObjectError;
 use core::fmt;
 use flate2::bufread::ZlibDecoder;
 use serde::{Deserialize, Serialize};
@@ -38,7 +38,7 @@ impl GitCommit {
         }
     }
 
-    pub fn from_file(project: &GitProject, commit_hash: &str) -> Result<GitCommit, GitCommitError> {
+    pub fn from_hash(project: &GitProject, commit_hash: &str) -> Result<GitCommit, GitObjectError> {
         let objects_folder_path = Path::new(project.get_directory())
             .join(GIT_FOLDER)
             .join(GitFolders::OBJECTS.to_string());
@@ -47,30 +47,30 @@ impl GitCommit {
         let commit_file = &commit_hash[2..];
         let commit_file = objects_folder_path.join(commit_folder).join(commit_file);
 
-        let buf = std::fs::read(commit_file).map_err(|_| GitCommitError::FileReadError)?;
-        GitCommit::from_string(commit_hash.to_string(), &buf)
+        let buf = std::fs::read(commit_file).map_err(|_| GitObjectError::FileReadError)?;
+        GitCommit::from_encoded_data(commit_hash.to_string(), &buf)
     }
 
-    pub fn from_string(
+    pub fn from_encoded_data(
         commit_hash: String,
         encoded_file_content: &[u8],
-    ) -> Result<GitCommit, GitCommitError> {
+    ) -> Result<GitCommit, GitObjectError> {
         let mut zlib = ZlibDecoder::new(encoded_file_content);
         let mut decoded_file_content = String::new();
 
         zlib.read_to_string(&mut decoded_file_content)
-            .map_err(|_| GitCommitError::DecompressionError)?;
+            .map_err(|_| GitObjectError::DecompressionError)?;
 
         let mut lines = decoded_file_content.lines();
 
-        let tree_line = lines.next().ok_or(GitCommitError::InvalidCommitFile)?;
+        let tree_line = lines.next().ok_or(GitObjectError::InvalidCommitFile)?;
         let tree_line = tree_line
             .split("\0")
             .nth(1)
-            .ok_or(GitCommitError::InvalidCommitFile)?;
+            .ok_or(GitObjectError::InvalidCommitFile)?;
         let tree_hash = tree_line
             .strip_prefix("tree ")
-            .ok_or(GitCommitError::InvalidCommitFile)?;
+            .ok_or(GitObjectError::InvalidCommitFile)?;
 
         let parent_hashes = lines
             .clone()
@@ -79,10 +79,10 @@ impl GitCommit {
             .collect::<Vec<String>>();
 
         let mut lines = lines.skip_while(|line| line.starts_with("parent "));
-        let author_line = lines.next().ok_or(GitCommitError::InvalidCommitFile)?;
+        let author_line = lines.next().ok_or(GitObjectError::InvalidCommitFile)?;
         let author = GitCommitAuthor::from_string(author_line)?;
 
-        let committer_line = lines.next().ok_or(GitCommitError::InvalidCommitFile)?;
+        let committer_line = lines.next().ok_or(GitObjectError::InvalidCommitFile)?;
         let committer = GitCommitAuthor::from_string(committer_line)?;
 
         lines.next(); // skip empty line
@@ -125,10 +125,10 @@ impl GitCommit {
     pub fn get_parent_commits(
         &self,
         project: &GitProject,
-    ) -> Result<Vec<GitCommit>, GitCommitError> {
+    ) -> Result<Vec<GitCommit>, GitObjectError> {
         self.parent_hashes
             .iter()
-            .map(|parent_hash| GitCommit::from_file(project, parent_hash))
+            .map(|parent_hash| GitCommit::from_hash(project, parent_hash))
             .collect()
     }
 }
@@ -180,7 +180,7 @@ mod tests {
         GitCommit::new(
             "hash",
             "tree_hash",
-            &vec!["parent_hash1".to_string(), "parent_hash2".to_string()],
+            &["parent_hash1".to_string(), "parent_hash2".to_string()],
             author.clone(),
             author.clone(),
             "commit message",
@@ -193,7 +193,7 @@ mod tests {
         tree: Option<&str>,
         parent_commits: Vec<&str>,
         message: &str,
-    ) -> Result<Vec<u8>, GitCommitError> {
+    ) -> Result<Vec<u8>, GitObjectError> {
         let tree_line = match tree {
             Some(tree) => format!("tree {}\n", tree),
             None => "".to_string(),
@@ -230,7 +230,7 @@ mod tests {
         );
         let mut encoded_file_content = Vec::new();
         zlib.read_to_end(&mut encoded_file_content)
-            .map_err(|_| GitCommitError::DecompressionError)?;
+            .map_err(|_| GitObjectError::DecompressionError)?;
 
         Ok(encoded_file_content)
     }
@@ -250,7 +250,7 @@ mod tests {
         .unwrap();
 
         let git_commit =
-            GitCommit::from_string(commit_hash.clone(), &encoded_file_content).unwrap();
+            GitCommit::from_encoded_data(commit_hash.clone(), &encoded_file_content).unwrap();
         assert_eq!(*git_commit.get_hash(), commit_hash);
         assert_eq!(*git_commit.get_parent_hashes(), Vec::<String>::new());
         assert_eq!(
@@ -267,7 +267,8 @@ mod tests {
         let commit_hash = "50c8353444afbef3172c999ef6cff8d31309ac3e";
         let encoded_file_content = "invalid content".as_bytes();
 
-        let git_commit = GitCommit::from_string(commit_hash.to_string(), encoded_file_content);
+        let git_commit =
+            GitCommit::from_encoded_data(commit_hash.to_string(), encoded_file_content);
         assert!(git_commit.is_err());
     }
 
@@ -284,9 +285,11 @@ mod tests {
             "test commit",
         );
 
-        let git_commit =
-            GitCommit::from_string(commit_hash.clone(), encoded_file_content.as_ref().unwrap())
-                .unwrap();
+        let git_commit = GitCommit::from_encoded_data(
+            commit_hash.clone(),
+            encoded_file_content.as_ref().unwrap(),
+        )
+        .unwrap();
 
         let mut zlib = ZlibEncoder::new(Vec::new(), flate2::Compression::default());
         zlib.write_all(git_commit.to_string().as_bytes()).unwrap();
@@ -312,9 +315,11 @@ mod tests {
             "test commit",
         );
 
-        let git_commit =
-            GitCommit::from_string(commit_hash.clone(), encoded_file_content.as_ref().unwrap())
-                .unwrap();
+        let git_commit = GitCommit::from_encoded_data(
+            commit_hash.clone(),
+            encoded_file_content.as_ref().unwrap(),
+        )
+        .unwrap();
 
         let mut zlib = ZlibEncoder::new(Vec::new(), flate2::Compression::default());
         zlib.write_all(git_commit.to_string().as_bytes()).unwrap();
@@ -340,9 +345,11 @@ mod tests {
             "test commit",
         );
 
-        let git_commit =
-            GitCommit::from_string(commit_hash.clone(), encoded_file_content.as_ref().unwrap())
-                .unwrap();
+        let git_commit = GitCommit::from_encoded_data(
+            commit_hash.clone(),
+            encoded_file_content.as_ref().unwrap(),
+        )
+        .unwrap();
         assert_eq!(git_commit.hash, commit_hash);
         assert_eq!(git_commit.parent_hashes, parent_commit_hash);
         assert_eq!(git_commit.tree_hash, commit_hash);
