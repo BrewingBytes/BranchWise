@@ -70,13 +70,17 @@ pub fn remove_database_project(project: GitProject) -> Result<(), GitError> {
 mod tests {
     use std::io::{Read, Write};
 
-    use crate::git::{
-        git_branch::GitBranch,
-        git_commit::GitCommit,
-        git_commit_author::GitCommitAuthor,
-        git_files::{GitFilesOptional, GitFilesRequired},
-        git_folders::{GitFolders, GitRefs, GIT_FOLDER},
-        git_user::GitUser,
+    use crate::{
+        errors::git_object_error::GitObjectError,
+        git::{
+            git_blob::GitBlob,
+            git_branch::GitBranch,
+            git_commit::GitCommit,
+            git_commit_author::GitCommitAuthor,
+            git_files::{GitFilesOptional, GitFilesRequired},
+            git_folders::{GitFolders, GitRefs, GIT_FOLDER},
+            git_user::GitUser,
+        },
     };
     use strum::IntoEnumIterator;
     use tempdir::TempDir;
@@ -184,6 +188,21 @@ mod tests {
         .unwrap();
     }
 
+    fn create_encoded_blob_file(data: Option<String>) -> Result<Vec<u8>, GitObjectError> {
+        let file_content = data.unwrap_or_else(|| "test".to_string());
+        let file_content_to_encode = format!("blob {}\0{}", file_content.len(), file_content);
+
+        let mut zlib = flate2::bufread::ZlibEncoder::new(
+            file_content_to_encode.as_bytes(),
+            flate2::Compression::default(),
+        );
+        let mut encoded_file_content = Vec::new();
+        zlib.read_to_end(&mut encoded_file_content)
+            .map_err(|_| GitObjectError::DecompressionError)?;
+
+        Ok(encoded_file_content)
+    }
+
     fn create_encoded_commit_content(
         author: GitCommitAuthor,
         commiter: GitCommitAuthor,
@@ -231,7 +250,7 @@ mod tests {
         encoded_file_content
     }
 
-    fn create_commit(git_directory: &str, commit_hash: &str, commit_content: &[u8]) {
+    fn create_object(git_directory: &str, commit_hash: &str, commit_content: &[u8]) {
         fs::DirBuilder::new()
             .recursive(true)
             .create(format!(
@@ -254,6 +273,23 @@ mod tests {
         .unwrap()
         .write_all(commit_content)
         .unwrap();
+    }
+
+    #[test]
+    fn test_git_blob_from_file() {
+        let folder = TempDir::new("test_git_blob_from_file").unwrap();
+        let test_git_folder = folder.path().to_str().unwrap();
+
+        create_sample_git_folder(test_git_folder);
+        let git_project = open_git_project(test_git_folder).unwrap();
+
+        let content = create_encoded_blob_file(Some("test".to_string())).unwrap();
+        create_object(git_project.get_directory(), "aabb", content.as_slice());
+
+        let blob = GitBlob::from_hash(&git_project, "aabb").unwrap();
+
+        assert_eq!(blob.size(), 4);
+        assert_eq!(blob.data(), "test".as_bytes());
     }
 
     #[test]
@@ -280,7 +316,7 @@ mod tests {
             Vec::new(),
             "test",
         );
-        create_commit(git_project.get_directory(), "aabb", content.as_slice());
+        create_object(git_project.get_directory(), "aabb", content.as_slice());
         let commit = GitCommit::from_hash(&git_project, "aabb").unwrap();
 
         assert_eq!(commit.get_hash(), "aabb");
@@ -315,7 +351,7 @@ mod tests {
             Vec::new(),
             "parent",
         );
-        create_commit(
+        create_object(
             git_project.get_directory(),
             "parent",
             parent_content.as_slice(),
@@ -327,7 +363,7 @@ mod tests {
             vec!["parent"],
             "test",
         );
-        create_commit(git_project.get_directory(), "aabb", content.as_slice());
+        create_object(git_project.get_directory(), "aabb", content.as_slice());
         let commit = GitCommit::from_hash(&git_project, "aabb").unwrap();
 
         let parent_commits = commit.get_parent_commits(&git_project).unwrap();

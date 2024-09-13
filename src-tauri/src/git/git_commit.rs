@@ -180,7 +180,7 @@ mod tests {
         GitCommit::new(
             "hash",
             "tree_hash",
-            &vec!["parent_hash1".to_string(), "parent_hash2".to_string()],
+            &["parent_hash1".to_string(), "parent_hash2".to_string()],
             author.clone(),
             author.clone(),
             "commit message",
@@ -267,7 +267,8 @@ mod tests {
         let commit_hash = "50c8353444afbef3172c999ef6cff8d31309ac3e";
         let encoded_file_content = "invalid content".as_bytes();
 
-        let git_commit = GitCommit::from_encoded_data(commit_hash.to_string(), encoded_file_content);
+        let git_commit =
+            GitCommit::from_encoded_data(commit_hash.to_string(), encoded_file_content);
         assert!(git_commit.is_err());
     }
 
@@ -284,9 +285,11 @@ mod tests {
             "test commit",
         );
 
-        let git_commit =
-            GitCommit::from_encoded_data(commit_hash.clone(), encoded_file_content.as_ref().unwrap())
-                .unwrap();
+        let git_commit = GitCommit::from_encoded_data(
+            commit_hash.clone(),
+            encoded_file_content.as_ref().unwrap(),
+        )
+        .unwrap();
 
         let mut zlib = ZlibEncoder::new(Vec::new(), flate2::Compression::default());
         zlib.write_all(git_commit.to_string().as_bytes()).unwrap();
@@ -312,9 +315,11 @@ mod tests {
             "test commit",
         );
 
-        let git_commit =
-            GitCommit::from_encoded_data(commit_hash.clone(), encoded_file_content.as_ref().unwrap())
-                .unwrap();
+        let git_commit = GitCommit::from_encoded_data(
+            commit_hash.clone(),
+            encoded_file_content.as_ref().unwrap(),
+        )
+        .unwrap();
 
         let mut zlib = ZlibEncoder::new(Vec::new(), flate2::Compression::default());
         zlib.write_all(git_commit.to_string().as_bytes()).unwrap();
@@ -340,9 +345,11 @@ mod tests {
             "test commit",
         );
 
-        let git_commit =
-            GitCommit::from_encoded_data(commit_hash.clone(), encoded_file_content.as_ref().unwrap())
-                .unwrap();
+        let git_commit = GitCommit::from_encoded_data(
+            commit_hash.clone(),
+            encoded_file_content.as_ref().unwrap(),
+        )
+        .unwrap();
         assert_eq!(git_commit.hash, commit_hash);
         assert_eq!(git_commit.parent_hashes, parent_commit_hash);
         assert_eq!(git_commit.tree_hash, commit_hash);
