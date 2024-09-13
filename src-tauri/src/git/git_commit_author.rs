@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::errors::git_commit_error::GitCommitError;
+use crate::errors::git_object_error::GitObjectError;
 
 use super::git_user::GitUser;
 
@@ -24,44 +24,44 @@ impl GitCommitAuthor {
         &self.user
     }
 
-    pub fn from_string(author_line: &str) -> Result<GitCommitAuthor, GitCommitError> {
+    pub fn from_string(author_line: &str) -> Result<GitCommitAuthor, GitObjectError> {
         let stripped_author_line = match author_line {
             _ if author_line.starts_with("author ") => author_line
                 .strip_prefix("author ")
-                .ok_or(GitCommitError::InvalidCommitFile)?,
+                .ok_or(GitObjectError::InvalidCommitFile)?,
             _ if author_line.starts_with("commiter ") => author_line
                 .strip_prefix("commiter ")
-                .ok_or(GitCommitError::InvalidCommitFile)?,
-            _ => return Err(GitCommitError::InvalidCommitFile),
+                .ok_or(GitObjectError::InvalidCommitFile)?,
+            _ => return Err(GitObjectError::InvalidCommitFile),
         };
 
         let mut split_by_email = stripped_author_line.split("<");
         let name = split_by_email
             .next()
-            .ok_or(GitCommitError::InvalidCommitFile)?
+            .ok_or(GitObjectError::InvalidCommitFile)?
             .trim();
         let mut after_email = split_by_email
             .next()
-            .ok_or(GitCommitError::InvalidCommitFile)?
+            .ok_or(GitObjectError::InvalidCommitFile)?
             .split(">");
 
         let email = after_email
             .next()
-            .ok_or(GitCommitError::InvalidCommitFile)?
+            .ok_or(GitObjectError::InvalidCommitFile)?
             .trim();
         let mut date_timezone = after_email
             .next()
-            .ok_or(GitCommitError::InvalidCommitFile)?
+            .ok_or(GitObjectError::InvalidCommitFile)?
             .trim()
             .split(" ");
         let date_seconds = date_timezone
             .next()
-            .ok_or(GitCommitError::InvalidCommitFile)?
+            .ok_or(GitObjectError::InvalidCommitFile)?
             .parse::<i64>()
-            .map_err(|_| GitCommitError::InvalidCommitFile)?;
+            .map_err(|_| GitObjectError::InvalidCommitFile)?;
         let timezone = date_timezone
             .next()
-            .ok_or(GitCommitError::InvalidCommitFile)?;
+            .ok_or(GitObjectError::InvalidCommitFile)?;
 
         Ok(GitCommitAuthor::new(
             GitUser::new(name.to_string(), email.to_string()),
@@ -136,7 +136,7 @@ mod tests {
     #[test]
     fn test_from_string_invalid() {
         let git_commit_author = GitCommitAuthor::from_string("invalid").unwrap_err();
-        assert_eq!(git_commit_author, GitCommitError::InvalidCommitFile);
+        assert_eq!(git_commit_author, GitObjectError::InvalidCommitFile);
     }
 
     #[test]

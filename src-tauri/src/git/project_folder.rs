@@ -281,7 +281,7 @@ mod tests {
             "test",
         );
         create_commit(git_project.get_directory(), "aabb", content.as_slice());
-        let commit = GitCommit::from_file(&git_project, "aabb").unwrap();
+        let commit = GitCommit::from_hash(&git_project, "aabb").unwrap();
 
         assert_eq!(commit.get_hash(), "aabb");
         assert_eq!(commit.get_author(), &author_commiter);
@@ -328,7 +328,7 @@ mod tests {
             "test",
         );
         create_commit(git_project.get_directory(), "aabb", content.as_slice());
-        let commit = GitCommit::from_file(&git_project, "aabb").unwrap();
+        let commit = GitCommit::from_hash(&git_project, "aabb").unwrap();
 
         let parent_commits = commit.get_parent_commits(&git_project).unwrap();
         assert_eq!(parent_commits.len(), 1);
