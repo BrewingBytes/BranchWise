@@ -81,6 +81,7 @@ mod tests {
             git_folders::{GitFolders, GitRefs, GIT_FOLDER},
             git_tree::{GitTree, GitTreeEntry, GitTreeMode},
             git_user::GitUser,
+            object::GitObject,
         },
     };
     use strum::IntoEnumIterator;

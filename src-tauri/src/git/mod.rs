@@ -8,4 +8,5 @@ pub mod git_project;
 pub mod git_project_state;
 pub mod git_tree;
 pub mod git_user;
+pub mod object;
 pub mod project_folder;

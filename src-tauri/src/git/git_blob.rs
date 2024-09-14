@@ -1,14 +1,9 @@
-use std::{io::Read, path::PathBuf};
 
-use flate2::bufread::ZlibDecoder;
 use serde::{Deserialize, Serialize};
 
 use crate::errors::git_object_error::GitObjectError;
 
-use super::{
-    git_folders::{GitFolders, GIT_FOLDER},
-    git_project::GitProject,
-};
+use super::object::GitObject;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct GitBlob {
@@ -28,40 +23,14 @@ impl GitBlob {
     pub fn data(&self) -> &[u8] {
         &self.data
     }
+}
 
-    pub fn from_encoded_data(encoded_data: &[u8]) -> Result<Self, GitObjectError> {
-        let mut zlib = ZlibDecoder::new(encoded_data);
-        let mut decoded_file_content = String::new();
+impl GitObject for GitBlob {
+    fn from_encoded_data(encoded_data: &[u8]) -> Result<Self, GitObjectError> {
+        let decoded_data = Self::decode_data(encoded_data)?;
+        let (data, size) = Self::check_header_valid_and_get_data(&decoded_data)?;
 
-        zlib.read_to_string(&mut decoded_file_content)
-            .map_err(|_| GitObjectError::DecompressionError)?;
-
-        let mut lines = decoded_file_content.lines();
-
-        let blob_line = lines.next().ok_or(GitObjectError::InvalidBlobFile)?;
-        let blob_line = blob_line
-            .split("\0")
-            .nth(0)
-            .ok_or(GitObjectError::InvalidBlobFile)?;
-        let blob_size = blob_line
-            .strip_prefix("blob ")
-            .ok_or(GitObjectError::InvalidBlobFile)?
-            .parse::<usize>()
-            .map_err(|_| GitObjectError::ParsingError)?;
-
-        let data = decoded_file_content.as_bytes()[blob_line.len() + 1..].to_vec();
-        Ok(Self::new(blob_size, data))
-    }
-
-    pub fn from_hash(project: &GitProject, hash: &str) -> Result<Self, GitObjectError> {
-        let file_path = PathBuf::from(project.get_directory())
-            .join(GIT_FOLDER)
-            .join(GitFolders::OBJECTS.to_string())
-            .join(&hash[..2])
-            .join(&hash[2..]);
-
-        let data = std::fs::read(file_path).map_err(|_| GitObjectError::FileReadError)?;
-        Self::from_encoded_data(data.as_slice())
+        Ok(Self::new(size, data.as_bytes().to_vec()))
     }
 }
 
@@ -78,6 +47,9 @@ impl std::fmt::Display for GitBlob {
 
 #[cfg(test)]
 mod tests {
+    use std::io::Read;
+    use crate::errors::git_object_error::ObjectError;
+    
     use super::*;
 
     fn create_encoded_blob_file(data: Option<String>) -> Result<Vec<u8>, GitObjectError> {
@@ -133,7 +105,12 @@ mod tests {
         zlib.read_to_end(&mut encoded_file_content).unwrap();
 
         let result = GitBlob::from_encoded_data(encoded_file_content.as_slice());
-        assert_eq!(result, Err(GitObjectError::InvalidBlobFile));
+        assert_eq!(
+            result,
+            Err(GitObjectError::InvalidObjectFile(
+                ObjectError::InvalidHeader
+            ))
+        );
     }
 
     #[test]
