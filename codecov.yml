@@ -10,6 +10,10 @@ ignore:
 
 coverage:
   range: "90...100"
+  status:
+    project:
+      default:
+        threshold: 5
 
 comment:
   layout: "header, diff, flags, components"
