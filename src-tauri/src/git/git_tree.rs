@@ -1,13 +1,6 @@
-use std::{io::Read, path::PathBuf};
-
-use flate2::bufread::ZlibDecoder;
-
 use crate::errors::git_object_error::GitObjectError;
 
-use super::{
-    git_folders::{GitFolders, GIT_FOLDER},
-    git_project::GitProject,
-};
+use super::object::{GitObject, Header};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum GitTreeMode {
@@ -81,61 +74,6 @@ impl GitTree {
         &self.entries
     }
 
-    pub fn from_encoded_data(encoded_data: &[u8]) -> Result<Self, GitObjectError> {
-        let mut zlib = ZlibDecoder::new(encoded_data);
-        let mut decoded_file_content = String::new();
-
-        zlib.read_to_string(&mut decoded_file_content)
-            .map_err(|_| GitObjectError::DecompressionError)?;
-
-        let (tree_line, mut decoded_file_content) = decoded_file_content
-            .split_once('\0')
-            .ok_or(GitObjectError::InvalidTreeFile)?;
-
-        if tree_line
-            .split_whitespace()
-            .nth(0)
-            .ok_or(GitObjectError::InvalidTreeFile)?
-            != "tree"
-        {
-            return Err(GitObjectError::InvalidTreeFile);
-        }
-
-        let mut tree = Self::new();
-        while !decoded_file_content.is_empty() {
-            let (mode, rest_object) = decoded_file_content
-                .split_once(' ')
-                .ok_or(GitObjectError::InvalidTreeFile)?;
-            let (name, rest_object) = rest_object
-                .split_once('\0')
-                .ok_or(GitObjectError::InvalidTreeFile)?;
-            let hash = rest_object
-                .get(..40)
-                .ok_or(GitObjectError::InvalidTreeFile)?;
-
-            decoded_file_content = &rest_object[40..];
-
-            tree.add_entry(
-                GitTreeMode::from_mode_str(mode),
-                hash.to_string(),
-                name.to_string(),
-            );
-        }
-
-        Ok(tree)
-    }
-
-    pub fn from_hash(project: &GitProject, hash: &str) -> Result<Self, GitObjectError> {
-        let file_path = PathBuf::from(project.get_directory())
-            .join(GIT_FOLDER)
-            .join(GitFolders::OBJECTS.to_string())
-            .join(&hash[..2])
-            .join(&hash[2..]);
-
-        let data = std::fs::read(file_path).map_err(|_| GitObjectError::FileReadError)?;
-        Self::from_encoded_data(data.as_slice())
-    }
-
     pub fn get_entry_by_name(&self, name: &str) -> Option<&GitTreeEntry> {
         self.entries.iter().find(|entry| entry.name == name)
     }
@@ -159,8 +97,62 @@ impl GitTree {
     }
 }
 
+impl GitObject for GitTree {
+    fn get_type(&self) -> Header {
+        Header::Tree
+    }
+
+    fn get_data_string(&self) -> String {
+        let mut data = String::new();
+        for entry in &self.entries {
+            data.push_str(&format!(
+                "{} {}\0{}",
+                entry.mode.to_mode_str(),
+                entry.name,
+                entry.hash
+            ));
+        }
+
+        data
+    }
+
+    fn from_encoded_data(encoded_data: &[u8]) -> Result<Self, GitObjectError>
+    where
+        Self: Sized,
+    {
+        let decoded_data = Self::decode_data(encoded_data)?;
+        let (data, _) = Self::check_header_valid_and_get_data(&decoded_data)?;
+
+        let mut tree = Self::new();
+        let mut data = &data[..data.len() - 1];
+        while !data.is_empty() {
+            let (mode, rest_object) = data
+                .split_once(' ')
+                .ok_or(GitObjectError::InvalidTreeFile)?;
+            let (name, rest_object) = rest_object
+                .split_once('\0')
+                .ok_or(GitObjectError::InvalidTreeFile)?;
+            let hash = rest_object
+                .get(..40)
+                .ok_or(GitObjectError::InvalidTreeFile)?;
+
+            data = &rest_object[40..];
+
+            tree.add_entry(
+                GitTreeMode::from_mode_str(mode),
+                hash.to_string(),
+                name.to_string(),
+            );
+        }
+
+        Ok(tree)
+    }
+}
+
 #[cfg(test)]
 mod tests {
+    use std::io::Read;
+
     use super::*;
 
     fn create_encoded_tree_file(entries: Vec<GitTreeEntry>) -> Result<Vec<u8>, GitObjectError> {
@@ -174,7 +166,7 @@ mod tests {
             ));
         }
 
-        let file_content_to_encode = format!("tree {}\0{}", file_content.len(), file_content);
+        let file_content_to_encode = format!("tree {}\x00{}\n", file_content.len(), file_content);
         let mut zlib = flate2::bufread::ZlibEncoder::new(
             file_content_to_encode.as_bytes(),
             flate2::Compression::default(),

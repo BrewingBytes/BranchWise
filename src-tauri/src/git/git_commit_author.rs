@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::errors::git_object_error::GitObjectError;
+use crate::errors::git_object_error::{CommitError, GitObjectError};
 
 use super::git_user::GitUser;
 
@@ -25,53 +25,36 @@ impl GitCommitAuthor {
     }
 
     pub fn from_string(author_line: &str) -> Result<GitCommitAuthor, GitObjectError> {
-        let stripped_author_line = match author_line {
-            _ if author_line.starts_with("author ") => author_line
-                .strip_prefix("author ")
-                .ok_or(GitObjectError::InvalidCommitFile)?,
-            _ if author_line.starts_with("commiter ") => author_line
-                .strip_prefix("commiter ")
-                .ok_or(GitObjectError::InvalidCommitFile)?,
-            _ => return Err(GitObjectError::InvalidCommitFile),
-        };
-
-        let mut split_by_email = stripped_author_line.split("<");
-        let name = split_by_email
-            .next()
-            .ok_or(GitObjectError::InvalidCommitFile)?
-            .trim();
-        let mut after_email = split_by_email
-            .next()
-            .ok_or(GitObjectError::InvalidCommitFile)?
-            .split(">");
-
-        let email = after_email
-            .next()
-            .ok_or(GitObjectError::InvalidCommitFile)?
-            .trim();
-        let mut date_timezone = after_email
-            .next()
-            .ok_or(GitObjectError::InvalidCommitFile)?
-            .trim()
-            .split(" ");
-        let date_seconds = date_timezone
-            .next()
-            .ok_or(GitObjectError::InvalidCommitFile)?
-            .parse::<i64>()
-            .map_err(|_| GitObjectError::InvalidCommitFile)?;
-        let timezone = date_timezone
-            .next()
-            .ok_or(GitObjectError::InvalidCommitFile)?;
+        let (name, rest_line) =
+            author_line
+                .split_once(" <")
+                .ok_or(GitObjectError::InvalidCommitFile(
+                    CommitError::InvalidAuthor,
+                ))?;
+        let (email, rest_line) =
+            rest_line
+                .split_once("> ")
+                .ok_or(GitObjectError::InvalidCommitFile(
+                    CommitError::InvalidAuthor,
+                ))?;
+        let (date_seconds, timezone) =
+            rest_line
+                .split_once(" ")
+                .ok_or(GitObjectError::InvalidCommitFile(
+                    CommitError::InvalidAuthor,
+                ))?;
 
         Ok(GitCommitAuthor::new(
             GitUser::new(name.to_string(), email.to_string()),
-            date_seconds,
+            date_seconds
+                .parse()
+                .map_err(|_| GitObjectError::InvalidCommitFile(CommitError::InvalidAuthor))?,
             timezone.to_string(),
         ))
     }
 
     pub fn to_string(&self, author: bool) -> String {
-        let author_or_commiter = if author { "author" } else { "commiter" };
+        let author_or_commiter = if author { "author" } else { "committer" };
         format!(
             "{} {} <{}> {} {}",
             author_or_commiter, self.user.name, self.user.email, self.date_seconds, self.timezone
@@ -96,7 +79,7 @@ mod tests {
     #[test]
     fn test_from_string_author() {
         let git_commit_author =
-            GitCommitAuthor::from_string("author name name <email> 1 timezone").unwrap();
+            GitCommitAuthor::from_string("name name <email> 1 timezone").unwrap();
         assert_eq!(git_commit_author.get_user().name, "name name".to_string());
         assert_eq!(git_commit_author.get_user().email, "email".to_string());
         assert_eq!(git_commit_author.date_seconds, 1);
@@ -106,7 +89,7 @@ mod tests {
     #[test]
     fn test_from_string_commiter() {
         let git_commit_author =
-            GitCommitAuthor::from_string("commiter name name <email> 1 timezone").unwrap();
+            GitCommitAuthor::from_string("name name <email> 1 timezone").unwrap();
         assert_eq!(git_commit_author.get_user().name, "name name".to_string());
         assert_eq!(git_commit_author.get_user().email, "email".to_string());
         assert_eq!(git_commit_author.date_seconds, 1);
@@ -116,7 +99,7 @@ mod tests {
     #[test]
     fn test_from_to_string_author() {
         let git_commit_author =
-            GitCommitAuthor::from_string("author name name <email> 1 timezone").unwrap();
+            GitCommitAuthor::from_string("name name <email> 1 timezone").unwrap();
         assert_eq!(
             git_commit_author.to_string(true),
             "author name name <email> 1 timezone".to_string()
@@ -126,17 +109,20 @@ mod tests {
     #[test]
     fn test_from_to_string_commiter() {
         let git_commit_author =
-            GitCommitAuthor::from_string("commiter name name <email> 1 timezone").unwrap();
+            GitCommitAuthor::from_string("name name <email> 1 timezone").unwrap();
         assert_eq!(
             git_commit_author.to_string(false),
-            "commiter name name <email> 1 timezone".to_string()
+            "committer name name <email> 1 timezone".to_string()
         );
     }
 
     #[test]
     fn test_from_string_invalid() {
         let git_commit_author = GitCommitAuthor::from_string("invalid").unwrap_err();
-        assert_eq!(git_commit_author, GitObjectError::InvalidCommitFile);
+        assert_eq!(
+            git_commit_author,
+            GitObjectError::InvalidCommitFile(CommitError::InvalidAuthor)
+        );
     }
 
     #[test]

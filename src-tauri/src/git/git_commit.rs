@@ -1,17 +1,36 @@
 use super::{
     git_commit_author::GitCommitAuthor,
-    git_folders::{GitFolders, GIT_FOLDER},
     git_project::GitProject,
+    object::{GitObject, Header},
 };
-use crate::errors::git_object_error::GitObjectError;
+use crate::errors::git_object_error::{CommitError, GitObjectError};
 use core::fmt;
-use flate2::bufread::ZlibDecoder;
 use serde::{Deserialize, Serialize};
-use std::{io::Read, path::Path};
+
+pub enum CommitPrefix {
+    Tree,
+    Parent,
+    Author,
+    Committer,
+    Message,
+    Invalid,
+}
+
+impl From<&str> for CommitPrefix {
+    fn from(prefix: &str) -> Self {
+        match prefix {
+            "tree" => CommitPrefix::Tree,
+            "parent" => CommitPrefix::Parent,
+            "author" => CommitPrefix::Author,
+            "committer" => CommitPrefix::Committer,
+            "message" => CommitPrefix::Message,
+            _ => CommitPrefix::Invalid,
+        }
+    }
+}
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct GitCommit {
-    hash: String,
     tree_hash: String,
     parent_hashes: Vec<String>,
     author: GitCommitAuthor,
@@ -21,7 +40,6 @@ pub struct GitCommit {
 
 impl GitCommit {
     pub fn new(
-        hash: &str,
         tree_hash: &str,
         parent_hashes: &[String],
         author: GitCommitAuthor,
@@ -29,77 +47,12 @@ impl GitCommit {
         message: &str,
     ) -> GitCommit {
         GitCommit {
-            hash: hash.to_string(),
             tree_hash: tree_hash.to_string(),
             parent_hashes: parent_hashes.to_vec(),
             author,
             committer,
             message: message.to_string(),
         }
-    }
-
-    pub fn from_hash(project: &GitProject, commit_hash: &str) -> Result<GitCommit, GitObjectError> {
-        let objects_folder_path = Path::new(project.get_directory())
-            .join(GIT_FOLDER)
-            .join(GitFolders::OBJECTS.to_string());
-
-        let commit_folder = &commit_hash[..2];
-        let commit_file = &commit_hash[2..];
-        let commit_file = objects_folder_path.join(commit_folder).join(commit_file);
-
-        let buf = std::fs::read(commit_file).map_err(|_| GitObjectError::FileReadError)?;
-        GitCommit::from_encoded_data(commit_hash.to_string(), &buf)
-    }
-
-    pub fn from_encoded_data(
-        commit_hash: String,
-        encoded_file_content: &[u8],
-    ) -> Result<GitCommit, GitObjectError> {
-        let mut zlib = ZlibDecoder::new(encoded_file_content);
-        let mut decoded_file_content = String::new();
-
-        zlib.read_to_string(&mut decoded_file_content)
-            .map_err(|_| GitObjectError::DecompressionError)?;
-
-        let mut lines = decoded_file_content.lines();
-
-        let tree_line = lines.next().ok_or(GitObjectError::InvalidCommitFile)?;
-        let tree_line = tree_line
-            .split("\0")
-            .nth(1)
-            .ok_or(GitObjectError::InvalidCommitFile)?;
-        let tree_hash = tree_line
-            .strip_prefix("tree ")
-            .ok_or(GitObjectError::InvalidCommitFile)?;
-
-        let parent_hashes = lines
-            .clone()
-            .take_while(|line| line.starts_with("parent "))
-            .map(|line| line.strip_prefix("parent ").unwrap().to_string())
-            .collect::<Vec<String>>();
-
-        let mut lines = lines.skip_while(|line| line.starts_with("parent "));
-        let author_line = lines.next().ok_or(GitObjectError::InvalidCommitFile)?;
-        let author = GitCommitAuthor::from_string(author_line)?;
-
-        let committer_line = lines.next().ok_or(GitObjectError::InvalidCommitFile)?;
-        let committer = GitCommitAuthor::from_string(committer_line)?;
-
-        lines.next(); // skip empty line
-        let message = lines.collect::<Vec<&str>>().join("\n");
-
-        Ok(GitCommit::new(
-            commit_hash.as_str(),
-            tree_hash,
-            parent_hashes.as_slice(),
-            author,
-            committer,
-            message.as_str(),
-        ))
-    }
-
-    pub fn get_hash(&self) -> &String {
-        &self.hash
     }
 
     pub fn get_tree_hash(&self) -> &String {
@@ -133,6 +86,75 @@ impl GitCommit {
     }
 }
 
+impl GitObject for GitCommit {
+    fn from_encoded_data(encoded_data: &[u8]) -> Result<Self, GitObjectError> {
+        let decoded_data = Self::decode_data(encoded_data)?;
+        let (data, _) = Self::check_header_valid_and_get_data(&decoded_data)?;
+
+        let mut tree = String::new();
+        let mut parents = Vec::<String>::new();
+        let mut author = Option::<GitCommitAuthor>::None;
+        let mut committer = Option::<GitCommitAuthor>::None;
+        let mut message = String::new();
+
+        let mut data = &data[..data.len() - 1];
+        while !data.is_empty() {
+            let (line, remaining_data) =
+                data.split_once('\n')
+                    .ok_or(GitObjectError::InvalidCommitFile(
+                        CommitError::InvalidContent,
+                    ))?;
+
+            let prefix = line.split_whitespace().next().unwrap_or("message");
+
+            let value = line
+                .strip_prefix((String::from(prefix) + " ").as_str())
+                .unwrap_or(remaining_data);
+
+            match CommitPrefix::from(prefix) {
+                CommitPrefix::Tree => tree = value.to_string(),
+                CommitPrefix::Parent => parents.push(value.to_string()),
+                CommitPrefix::Author => author = Some(GitCommitAuthor::from_string(value)?),
+                CommitPrefix::Committer => committer = Some(GitCommitAuthor::from_string(value)?),
+                CommitPrefix::Message => {
+                    message = value.to_string();
+                    break;
+                }
+                CommitPrefix::Invalid => {
+                    return Err(GitObjectError::InvalidCommitFile(
+                        CommitError::InvalidContent,
+                    ));
+                }
+            }
+
+            data = remaining_data;
+        }
+
+        let author = author.ok_or(GitObjectError::InvalidCommitFile(
+            CommitError::InvalidHeader,
+        ))?;
+        let committer = committer.ok_or(GitObjectError::InvalidCommitFile(
+            CommitError::InvalidHeader,
+        ))?;
+
+        Ok(GitCommit::new(
+            &tree,
+            &parents,
+            author,
+            committer,
+            message.as_str(),
+        ))
+    }
+
+    fn get_type(&self) -> Header {
+        Header::Commit
+    }
+
+    fn get_data_string(&self) -> String {
+        self.to_string()
+    }
+}
+
 impl fmt::Display for GitCommit {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let parent_hashes = self
@@ -151,18 +173,17 @@ impl fmt::Display for GitCommit {
             self.message
         );
 
-        write!(f, "commit {}\0{}", content.len(), content)
+        write!(f, "{}", content)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use std::io::Write;
+    use std::io::Read;
 
     use super::*;
 
     use crate::git::git_user::GitUser;
-    use flate2::write::ZlibEncoder;
 
     fn mock_git_commit_author() -> GitCommitAuthor {
         GitCommitAuthor::new(
@@ -178,7 +199,6 @@ mod tests {
     fn mock_git_commit() -> GitCommit {
         let author = mock_git_commit_author();
         GitCommit::new(
-            "hash",
             "tree_hash",
             &["parent_hash1".to_string(), "parent_hash2".to_string()],
             author.clone(),
@@ -189,7 +209,7 @@ mod tests {
 
     fn create_encoded_commit_file(
         author: GitCommitAuthor,
-        commiter: GitCommitAuthor,
+        committer: GitCommitAuthor,
         tree: Option<&str>,
         parent_commits: Vec<&str>,
         message: &str,
@@ -210,19 +230,19 @@ mod tests {
             author.date_seconds,
             author.timezone
         );
-        let commiter_line = format!(
-            "commiter {} <{}> {} {}\n",
-            commiter.get_user().name,
-            commiter.get_user().email,
-            commiter.date_seconds,
-            commiter.timezone
+        let committer_line = format!(
+            "committer {} <{}> {} {}\n",
+            committer.get_user().name,
+            committer.get_user().email,
+            committer.date_seconds,
+            committer.timezone
         );
 
         let file_content = format!(
             "{}{}{}{}\n{}",
-            tree_line, parent_lines, author_line, commiter_line, message
+            tree_line, parent_lines, author_line, committer_line, message
         );
-        let file_content_to_encode = format!("commit {}\0{}", file_content.len(), file_content);
+        let file_content_to_encode = format!("commit {}\x00{}\n", file_content.len(), file_content);
 
         let mut zlib = flate2::bufread::ZlibEncoder::new(
             file_content_to_encode.as_bytes(),
@@ -237,20 +257,19 @@ mod tests {
 
     #[test]
     fn test_from_string() {
-        let commiter = mock_git_commit_author();
+        let committer = mock_git_commit_author();
 
-        let commit_hash = "ae575432e84a11c11b8dc3e357806f65c50f4619".to_string();
+        let commit_hash = "25723a3e66cd8dcbaf085ed83b86a8007df7ff32".to_string();
         let encoded_file_content = create_encoded_commit_file(
-            commiter.clone(),
-            commiter.clone(),
+            committer.clone(),
+            committer.clone(),
             Some("50c8353444afbef3172c999ef6cff8d31309ac3e"),
             Vec::new(),
             "test commit",
         )
         .unwrap();
 
-        let git_commit =
-            GitCommit::from_encoded_data(commit_hash.clone(), &encoded_file_content).unwrap();
+        let git_commit = GitCommit::from_encoded_data(&encoded_file_content).unwrap();
         assert_eq!(*git_commit.get_hash(), commit_hash);
         assert_eq!(*git_commit.get_parent_hashes(), Vec::<String>::new());
         assert_eq!(
@@ -258,116 +277,102 @@ mod tests {
             "50c8353444afbef3172c999ef6cff8d31309ac3e"
         );
         assert_eq!(git_commit.get_message(), "test commit");
-        assert_eq!(*git_commit.get_author(), commiter);
-        assert_eq!(*git_commit.get_committer(), commiter);
+        assert_eq!(*git_commit.get_author(), committer);
+        assert_eq!(*git_commit.get_committer(), committer);
     }
 
     #[test]
     fn test_from_string_invalid() {
-        let commit_hash = "50c8353444afbef3172c999ef6cff8d31309ac3e";
         let encoded_file_content = "invalid content".as_bytes();
 
-        let git_commit =
-            GitCommit::from_encoded_data(commit_hash.to_string(), encoded_file_content);
+        let git_commit = GitCommit::from_encoded_data(encoded_file_content);
         assert!(git_commit.is_err());
     }
 
     #[test]
     fn test_to_string_no_parent() {
-        let commiter = mock_git_commit_author();
+        let committer = mock_git_commit_author();
 
-        let commit_hash = "ae575432e84a11c11b8dc3e357806f65c50f4619".to_string();
         let encoded_file_content = create_encoded_commit_file(
-            commiter.clone(),
-            commiter.clone(),
+            committer.clone(),
+            committer.clone(),
             Some("50c8353444afbef3172c999ef6cff8d31309ac3e"),
             Vec::new(),
             "test commit",
         );
 
-        let git_commit = GitCommit::from_encoded_data(
-            commit_hash.clone(),
-            encoded_file_content.as_ref().unwrap(),
-        )
-        .unwrap();
+        let git_commit =
+            GitCommit::from_encoded_data(encoded_file_content.as_ref().unwrap()).unwrap();
 
-        let mut zlib = ZlibEncoder::new(Vec::new(), flate2::Compression::default());
-        zlib.write_all(git_commit.to_string().as_bytes()).unwrap();
-
-        let encoded_git_commit = zlib.finish().unwrap();
-        assert_eq!(encoded_git_commit, encoded_file_content.unwrap());
+        assert_eq!(
+            git_commit.get_encoded_data().unwrap(),
+            encoded_file_content.unwrap()
+        );
     }
 
     #[test]
     fn test_to_string_with_parents() {
-        let commiter = mock_git_commit_author();
+        let committer = mock_git_commit_author();
 
-        let commit_hash = "ae575432e84a11c11b8dc3e357806f65c50f4619".to_string();
         let parent_commit_hash = Vec::from([
             "50c8353444afbef3172c999ef6cff8d31309ac3e",
             "50c8353444afbef3172c999ef6cff8d31309ac33",
         ]);
         let encoded_file_content = create_encoded_commit_file(
-            commiter.clone(),
-            commiter.clone(),
+            committer.clone(),
+            committer.clone(),
             Some("50c8353444afbef3172c999ef6cff8d31309ac3e"),
             parent_commit_hash.clone(),
             "test commit",
         );
 
-        let git_commit = GitCommit::from_encoded_data(
-            commit_hash.clone(),
-            encoded_file_content.as_ref().unwrap(),
-        )
-        .unwrap();
+        let git_commit =
+            GitCommit::from_encoded_data(encoded_file_content.as_ref().unwrap()).unwrap();
 
-        let mut zlib = ZlibEncoder::new(Vec::new(), flate2::Compression::default());
-        zlib.write_all(git_commit.to_string().as_bytes()).unwrap();
-
-        let encoded_git_commit = zlib.finish().unwrap();
-        assert_eq!(encoded_git_commit, encoded_file_content.unwrap());
+        assert_eq!(
+            git_commit.get_encoded_data().unwrap(),
+            encoded_file_content.unwrap()
+        );
     }
 
     #[test]
     fn test_from_string_with_parents() {
-        let commiter = mock_git_commit_author();
+        let committer = mock_git_commit_author();
 
-        let commit_hash = "ae575432e84a11c11b8dc3e357806f65c50f4619".to_string();
+        let commit_hash = "daf7a8b618ed4c68f4eee690b3ef761d24643b86".to_string();
+        let tree_hash = "50c8353444afbef3172c999ef6cff8d31309ac3e";
         let parent_commit_hash = Vec::from([
             "50c8353444afbef3172c999ef6cff8d31309ac3e",
             "50c8353444afbef3172c999ef6cff8d31309ac33",
         ]);
         let encoded_file_content = create_encoded_commit_file(
-            commiter.clone(),
-            commiter.clone(),
-            Some(&commit_hash),
+            committer.clone(),
+            committer.clone(),
+            Some(tree_hash),
             parent_commit_hash.clone(),
             "test commit",
         );
 
-        let git_commit = GitCommit::from_encoded_data(
-            commit_hash.clone(),
-            encoded_file_content.as_ref().unwrap(),
-        )
-        .unwrap();
-        assert_eq!(git_commit.hash, commit_hash);
+        let git_commit =
+            GitCommit::from_encoded_data(encoded_file_content.as_ref().unwrap()).unwrap();
+        assert_eq!(git_commit.get_hash(), commit_hash);
         assert_eq!(git_commit.parent_hashes, parent_commit_hash);
-        assert_eq!(git_commit.tree_hash, commit_hash);
+        assert_eq!(git_commit.tree_hash, tree_hash);
         assert_eq!(git_commit.message, "test commit");
-        assert_eq!(git_commit.author, commiter);
+        assert_eq!(git_commit.author, committer);
     }
 
     #[test]
     fn test_serialize_git_commit() {
         let git_commit = mock_git_commit();
         let serialized = serde_json::to_string(&git_commit).unwrap();
-        let expected = r#"{"hash":"hash","tree_hash":"tree_hash","parent_hashes":["parent_hash1","parent_hash2"],"author":{"user":{"name":"Test User","email":"test@example.com"},"date_seconds":1234567890,"timezone":"+0000"},"committer":{"user":{"name":"Test User","email":"test@example.com"},"date_seconds":1234567890,"timezone":"+0000"},"message":"commit message"}"#;
+        let expected = r#"{"tree_hash":"tree_hash","parent_hashes":["parent_hash1","parent_hash2"],"author":{"user":{"name":"Test User","email":"test@example.com"},"date_seconds":1234567890,"timezone":"+0000"},"committer":{"user":{"name":"Test User","email":"test@example.com"},"date_seconds":1234567890,"timezone":"+0000"},"message":"commit message"}"#;
         assert_eq!(serialized, expected);
     }
 
     #[test]
     fn test_deserialize_git_commit() {
-        let json_str = r#"{"hash":"hash","tree_hash":"tree_hash","parent_hashes":["parent_hash1","parent_hash2"],"author":{"user":{"name":"Test User","email":"test@example.com"},"date_seconds":1234567890,"timezone":"+0000"},"committer":{"user":{"name":"Test User","email":"test@example.com"},"date_seconds":1234567890,"timezone":"+0000"},"message":"commit message"}"#;
+        let json_str = r#"{"tree_hash":"tree_hash","parent_hashes":["parent_hash1","parent_hash2"],"author":{"user":{"name":"Test User","email":"test@example.com"},"date_seconds":1234567890,"timezone":"+0000"},"committer":{"user":{"name":"Test User","email":"test@example.com"},"date_seconds":1234567890,"timezone":"+0000"},"message":"commit message"}"#;
         let deserialized: GitCommit = serde_json::from_str(json_str).unwrap();
         let expected = mock_git_commit();
         assert_eq!(deserialized, expected);
@@ -387,19 +392,19 @@ mod tests {
         let git_user = GitUser::new(name.clone(), email.clone());
         let timezone = "timezone".to_string();
         let git_commit_author = GitCommitAuthor::new(git_user, 1, timezone.clone());
-        let hash = "hash";
+        let hash = "4117a140fb7fa0247d619593079cc0a4ef39a8aa";
+        let tree_hash = "tree_hash";
         let parent_hash = Vec::new();
         let message = "message";
         let git_commit = GitCommit::new(
-            hash,
-            hash,
+            tree_hash,
             parent_hash.as_slice(),
             git_commit_author.clone(),
             git_commit_author.clone(),
             message,
         );
-        assert_eq!(git_commit.hash, hash);
-        assert_eq!(git_commit.tree_hash, hash);
+        assert_eq!(git_commit.get_hash(), hash);
+        assert_eq!(git_commit.tree_hash, tree_hash);
         assert_eq!(git_commit.parent_hashes, parent_hash);
         assert_eq!(git_commit.author.get_user().name, name);
         assert_eq!(git_commit.author.get_user().email, email);
