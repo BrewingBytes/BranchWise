@@ -16,6 +16,7 @@ use super::{
 
 pub const HASH_SIZE: usize = 20;
 
+#[derive(Debug, PartialEq)]
 pub enum Header {
     Tree,
     Commit,
@@ -157,4 +158,25 @@ pub trait GitObject {
     fn from_encoded_data(encoded_data: &[u8]) -> Result<Self, GitObjectError>
     where
         Self: Sized;
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_from_header() {
+        assert_eq!(Header::from("tree"), Header::Tree);
+        assert_eq!(Header::from("commit"), Header::Commit);
+        assert_eq!(Header::from("blob"), Header::Blob);
+        assert_eq!(Header::from("other"), Header::Invalid);
+    }
+
+    #[test]
+    fn test_display_header() {
+        assert_eq!(Header::Tree.to_string(), "tree");
+        assert_eq!(Header::Commit.to_string(), "commit");
+        assert_eq!(Header::Blob.to_string(), "blob");
+        assert_eq!(Header::Invalid.to_string(), "invalid");
+    }
 }
