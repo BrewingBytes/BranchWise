@@ -216,7 +216,7 @@ mod tests {
             ));
         }
 
-        let file_content_to_encode = format!("tree {}\0{}", file_content.len(), file_content);
+        let file_content_to_encode = format!("tree {}\x00{}\n", file_content.len(), file_content);
         let mut zlib = flate2::bufread::ZlibEncoder::new(
             file_content_to_encode.as_bytes(),
             flate2::Compression::default(),
@@ -302,6 +302,41 @@ mod tests {
     }
 
     #[test]
+    fn test_git_tree_to_file() {
+        let folder = TempDir::new("test_git_tree_to_file").unwrap();
+        let test_git_folder = folder.path().to_str().unwrap();
+
+        create_sample_git_folder(test_git_folder);
+        let git_project = open_git_project(test_git_folder).unwrap();
+
+        let mut tree = GitTree::new();
+        tree.add_entry(
+            GitTreeMode::File,
+            "df6773ea47ed3fce3b3bb14e3d1101963e77ef08".to_string(),
+            "test1".to_string(),
+        );
+        tree.add_entry(
+            GitTreeMode::File,
+            "df6773ea47ed3fce3b3bb14e3d1101963e77ef09".to_string(),
+            "test2".to_string(),
+        );
+        tree.write_object(&git_project).unwrap();
+
+        let tree = GitTree::from_hash(&git_project, &tree.get_hash()).unwrap();
+
+        assert_eq!(tree.get_entry_by_name("test1").unwrap().name, "test1");
+        assert_eq!(
+            tree.get_entry_by_name("test1").unwrap().hash,
+            "df6773ea47ed3fce3b3bb14e3d1101963e77ef08"
+        );
+        assert_eq!(tree.get_entry_by_name("test2").unwrap().name, "test2");
+        assert_eq!(
+            tree.get_entry_by_name("test2").unwrap().hash,
+            "df6773ea47ed3fce3b3bb14e3d1101963e77ef09"
+        );
+    }
+
+    #[test]
     fn test_git_tree_from_file() {
         let folder = TempDir::new("test_git_tree_from_file").unwrap();
         let test_git_folder = folder.path().to_str().unwrap();
@@ -322,9 +357,14 @@ mod tests {
             },
         ];
         let content = create_encoded_tree_file(entries).unwrap();
-        create_object(git_project.get_directory(), "aabb", content.as_slice());
+        create_object(
+            git_project.get_directory(),
+            "df6773ea47ed3fce3b3bb14e3d1101963e77ef08",
+            content.as_slice(),
+        );
 
-        let tree = GitTree::from_hash(&git_project, "aabb").unwrap();
+        let tree =
+            GitTree::from_hash(&git_project, "df6773ea47ed3fce3b3bb14e3d1101963e77ef08").unwrap();
 
         assert_eq!(tree.get_entry_by_name("test1").unwrap().name, "test1");
         assert_eq!(
