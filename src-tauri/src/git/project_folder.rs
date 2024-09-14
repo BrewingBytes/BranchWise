@@ -192,7 +192,7 @@ mod tests {
 
     fn create_encoded_blob_file(data: Option<String>) -> Result<Vec<u8>, GitObjectError> {
         let file_content = data.unwrap_or_else(|| "test".to_string());
-        let file_content_to_encode = format!("blob {}\0{}", file_content.len(), file_content);
+        let file_content_to_encode = format!("blob {}\x00{}\n", file_content.len(), file_content);
 
         let mut zlib = flate2::bufread::ZlibEncoder::new(
             file_content_to_encode.as_bytes(),
@@ -346,9 +346,31 @@ mod tests {
         let git_project = open_git_project(test_git_folder).unwrap();
 
         let content = create_encoded_blob_file(Some("test".to_string())).unwrap();
-        create_object(git_project.get_directory(), "aabb", content.as_slice());
+        create_object(
+            git_project.get_directory(),
+            "9daeafb9864cf43055ae93beb0afd6c7d144bfa4",
+            content.as_slice(),
+        );
 
-        let blob = GitBlob::from_hash(&git_project, "aabb").unwrap();
+        let blob =
+            GitBlob::from_hash(&git_project, "9daeafb9864cf43055ae93beb0afd6c7d144bfa4").unwrap();
+
+        assert_eq!(blob.size(), 4);
+        assert_eq!(blob.data(), "test".as_bytes());
+    }
+
+    #[test]
+    fn test_git_blob_to_file() {
+        let folder = TempDir::new("test_git_blot_to_file").unwrap();
+        let test_git_folder = folder.path().to_str().unwrap();
+
+        create_sample_git_folder(test_git_folder);
+        let git_project = open_git_project(test_git_folder).unwrap();
+
+        let blob = GitBlob::new(4, "test".as_bytes().to_vec());
+        blob.write_object(&git_project).unwrap();
+
+        let blob = GitBlob::from_hash(&git_project, &blob.get_hash()).unwrap();
 
         assert_eq!(blob.size(), 4);
         assert_eq!(blob.data(), "test".as_bytes());

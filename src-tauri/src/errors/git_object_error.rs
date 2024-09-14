@@ -1,5 +1,6 @@
 #[derive(Debug, PartialEq)]
 pub enum GitObjectError {
+    CompressionError,
     DecompressionError,
     InvalidObjectFile(ObjectError),
     InvalidCommitFile,
@@ -8,10 +9,17 @@ pub enum GitObjectError {
     FileReadError,
     ParsingError,
     ShaError,
+    InvalidHash,
 }
 
 #[derive(Debug, PartialEq)]
 pub enum ObjectError {
+    InvalidHeader,
+    InvalidContent,
+}
+
+#[derive(Debug, PartialEq)]
+pub enum CommitError {
     InvalidHeader,
     InvalidContent,
 }
