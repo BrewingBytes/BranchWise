@@ -3,6 +3,7 @@ pub enum GitObjectError {
     DecompressionError,
     InvalidCommitFile,
     InvalidBlobFile,
+    InvalidTreeFile,
     FileReadError,
     ParsingError,
     ShaError,
