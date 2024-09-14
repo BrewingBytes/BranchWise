@@ -3,7 +3,7 @@ pub enum GitObjectError {
     CompressionError,
     DecompressionError,
     InvalidObjectFile(ObjectError),
-    InvalidCommitFile,
+    InvalidCommitFile(CommitError),
     InvalidBlobFile,
     InvalidTreeFile,
     FileReadError,
@@ -22,4 +22,6 @@ pub enum ObjectError {
 pub enum CommitError {
     InvalidHeader,
     InvalidContent,
+    InvalidAuthor,
+    InvalidCommiter,
 }

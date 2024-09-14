@@ -230,11 +230,11 @@ mod tests {
 
     fn create_encoded_commit_content(
         author: GitCommitAuthor,
-        commiter: GitCommitAuthor,
+        committer: GitCommitAuthor,
         tree: Option<&str>,
         parent_commits: Vec<&str>,
         message: &str,
-    ) -> Vec<u8> {
+    ) -> Result<Vec<u8>, GitObjectError> {
         let tree_line = match tree {
             Some(tree) => format!("tree {}\n", tree),
             None => "".to_string(),
@@ -251,28 +251,29 @@ mod tests {
             author.date_seconds,
             author.timezone
         );
-        let commiter_line = format!(
-            "commiter {} <{}> {} {}\n",
-            commiter.get_user().name,
-            commiter.get_user().email,
-            commiter.date_seconds,
-            commiter.timezone
+        let committer_line = format!(
+            "committer {} <{}> {} {}\n",
+            committer.get_user().name,
+            committer.get_user().email,
+            committer.date_seconds,
+            committer.timezone
         );
 
         let file_content = format!(
             "{}{}{}{}\n{}",
-            tree_line, parent_lines, author_line, commiter_line, message
+            tree_line, parent_lines, author_line, committer_line, message
         );
-        let file_content_to_encode = format!("commit {}\0{}", file_content.len(), file_content);
+        let file_content_to_encode = format!("commit {}\x00{}\n", file_content.len(), file_content);
 
         let mut zlib = flate2::bufread::ZlibEncoder::new(
             file_content_to_encode.as_bytes(),
             flate2::Compression::default(),
         );
         let mut encoded_file_content = Vec::new();
-        zlib.read_to_end(&mut encoded_file_content).unwrap();
+        zlib.read_to_end(&mut encoded_file_content)
+            .map_err(|_| GitObjectError::DecompressionError)?;
 
-        encoded_file_content
+        Ok(encoded_file_content)
     }
 
     fn create_object(git_directory: &str, commit_hash: &str, commit_content: &[u8]) {
@@ -377,6 +378,37 @@ mod tests {
     }
 
     #[test]
+    fn test_git_commit_to_file() {
+        let folder = TempDir::new("test_git_blot_to_file").unwrap();
+        let test_git_folder = folder.path().to_str().unwrap();
+
+        create_sample_git_folder(test_git_folder);
+        let git_project = open_git_project(test_git_folder).unwrap();
+
+        let author_commiter = GitCommitAuthor::new(
+            GitUser::new("Test User".to_string(), "test.user@email.com".to_string()),
+            100,
+            "+03:00".to_string(),
+        );
+
+        let commit = GitCommit::new(
+            "tree",
+            Vec::<String>::new().as_slice(),
+            author_commiter.clone(),
+            author_commiter.clone(),
+            "test message",
+        );
+        commit.write_object(&git_project).unwrap();
+
+        let commit = GitCommit::from_hash(&git_project, &commit.get_hash()).unwrap();
+        assert_eq!(commit.get_tree_hash(), "tree");
+        assert_eq!(commit.get_parent_hashes(), &Vec::<String>::new());
+        assert_eq!(commit.get_author(), &author_commiter);
+        assert_eq!(commit.get_committer(), &author_commiter);
+        assert_eq!(commit.get_message(), "test message");
+    }
+
+    #[test]
     fn test_git_commit_from_file() {
         let folder = TempDir::new("test_git_commit_from_file").unwrap();
         let test_git_folder = folder.path().to_str().unwrap();
@@ -400,10 +432,18 @@ mod tests {
             Vec::new(),
             "test",
         );
-        create_object(git_project.get_directory(), "aabb", content.as_slice());
-        let commit = GitCommit::from_hash(&git_project, "aabb").unwrap();
+        create_object(
+            git_project.get_directory(),
+            "6e18e0fdeac4932d71ad981dc4dc497c49f3c606",
+            content.unwrap().as_slice(),
+        );
+        let commit =
+            GitCommit::from_hash(&git_project, "6e18e0fdeac4932d71ad981dc4dc497c49f3c606").unwrap();
 
-        assert_eq!(commit.get_hash(), "aabb");
+        assert_eq!(
+            commit.get_hash(),
+            "6e18e0fdeac4932d71ad981dc4dc497c49f3c606"
+        );
         assert_eq!(commit.get_author(), &author_commiter);
         assert_eq!(commit.get_committer(), &author_commiter);
         assert_eq!(commit.get_tree_hash(), "tree");
@@ -437,24 +477,32 @@ mod tests {
         );
         create_object(
             git_project.get_directory(),
-            "parent",
-            parent_content.as_slice(),
+            "6e18e0fdeac4932d71ad981dc4dc497c49f3c606",
+            parent_content.unwrap().as_slice(),
         );
         let content = create_encoded_commit_content(
             author_commiter.clone(),
             author_commiter.clone(),
             Some("tree"),
-            vec!["parent"],
+            vec!["6e18e0fdeac4932d71ad981dc4dc497c49f3c606"],
             "test",
         );
-        create_object(git_project.get_directory(), "aabb", content.as_slice());
-        let commit = GitCommit::from_hash(&git_project, "aabb").unwrap();
+        create_object(
+            git_project.get_directory(),
+            "88f877967c8c63e23979f07f50f93daf9b2ae872",
+            content.unwrap().as_slice(),
+        );
+        let commit =
+            GitCommit::from_hash(&git_project, "88f877967c8c63e23979f07f50f93daf9b2ae872").unwrap();
 
         let parent_commits = commit.get_parent_commits(&git_project).unwrap();
         assert_eq!(parent_commits.len(), 1);
 
         let parent_commit = parent_commits.first().unwrap();
-        assert_eq!(parent_commit.get_hash(), "parent");
+        assert_eq!(
+            parent_commit.get_hash(),
+            "88f877967c8c63e23979f07f50f93daf9b2ae872"
+        );
         assert_eq!(parent_commit.get_author(), &author_commiter);
         assert_eq!(parent_commit.get_committer(), &author_commiter);
         assert_eq!(parent_commit.get_tree_hash(), "tree");

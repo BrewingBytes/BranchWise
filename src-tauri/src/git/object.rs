@@ -56,6 +56,7 @@ pub trait GitObject {
     fn get_hash(&self) -> String {
         let data = self.get_data_string();
         let file_to_hash = format!("{} {}\x00{}\n", self.get_type(), data.len() + 1, data);
+
         let mut hasher = Sha1::new();
 
         hasher.update(file_to_hash.as_bytes());
@@ -87,7 +88,7 @@ pub trait GitObject {
         Self::from_encoded_data(data.as_slice())
     }
 
-    fn write_object(&self, project: &GitProject) -> Result<(), GitObjectError> {
+    fn get_encoded_data(&self) -> Result<Vec<u8>, GitObjectError> {
         let data = self.get_data_string();
         let file_to_hash = format!("{} {}\x00{}\n", self.get_type(), data.len(), data);
 
@@ -95,9 +96,11 @@ pub trait GitObject {
         zlib.write_all(file_to_hash.as_bytes())
             .map_err(|_| GitObjectError::CompressionError)?;
 
-        let contents = zlib
-            .finish()
-            .map_err(|_| GitObjectError::CompressionError)?;
+        zlib.finish().map_err(|_| GitObjectError::CompressionError)
+    }
+
+    fn write_object(&self, project: &GitProject) -> Result<(), GitObjectError> {
+        let encoded_data = self.get_encoded_data()?;
 
         let hash = self.get_hash();
         let file_path = PathBuf::from(project.get_directory())
@@ -108,7 +111,7 @@ pub trait GitObject {
 
         std::fs::create_dir_all(file_path.parent().unwrap())
             .map_err(|_| GitObjectError::FileReadError)?;
-        std::fs::write(file_path, contents).map_err(|_| GitObjectError::FileReadError)
+        std::fs::write(file_path, encoded_data).map_err(|_| GitObjectError::FileReadError)
     }
 
     fn decode_data(encoded_data: &[u8]) -> Result<String, GitObjectError> {
