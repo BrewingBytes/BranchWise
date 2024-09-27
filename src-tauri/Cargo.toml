@@ -1,6 +1,6 @@
 [package]
 name = "branchwise"
-version = "0.0.4"
+version = "0.0.3"
 description = "Git was never easier"
 authors = ["hateofhades"]
 edition = "2021"
