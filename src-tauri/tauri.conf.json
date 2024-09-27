@@ -19,7 +19,7 @@
         "installerArgs": []
       },
       "endpoints": [
-        "https://raw.githubusercontent.com/BrewingBytes/BranchWise/refs/heads/main/updates.json"
+        "https://github.com/brewingbytes/branchwise/releases/latest/download/latest.json"
       ]
     },
     "allowlist": {
