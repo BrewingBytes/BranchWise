@@ -6,7 +6,7 @@
     "distDir": "../dist"
   },
   "package": {
-    "productName": "branchwise",
+    "productName": "BranchWise",
     "version": "0.0.3"
   },
   "tauri": {
