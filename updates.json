@@ -1,0 +1,11 @@
+{
+    "version": "v0.0.3",
+    "notes": "Test version",
+    "pub_date": "2024-09-27T16:25:57Z",
+    "platforms": {
+      "darwin-aarch64": {
+        "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUMDkzS3RLYkJxdmk1UEoxZ0RISzNhRmYvTGVPM0NqODVnL0c1UEUyNlNWMjJoQWpVWVc3Y2RVbFZaRzVVLzliZ3lvdEVwak42OFdTc3g1ZytYMnVrTHk3OUlBc1pRVWdnPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzI3NDQzODUyCWZpbGU6YnJhbmNod2lzZS5hcHAudGFyLmd6CkxPZXRwcy9xTjVmOFhMT1BUay9IQm9rUFVVWEtQUEs4MFRSZld2WVorY09Xam5HdEpuY3hFNzJtaC9NelVtKzBYa0Zrd29BSEVYQ0xKTnB3N0ZhOUNnPT0K",
+        "url": "https://github.com/BrewingBytes/BranchWise/releases/download/v0.0.test/branchwise.app.tar.gz"
+      }
+    }
+  }
