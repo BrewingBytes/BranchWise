@@ -7,9 +7,21 @@
   },
   "package": {
     "productName": "branchwise",
-    "version": "0.0.3"
+    "version": "0.0.4"
   },
   "tauri": {
+    "updater": {
+      "active": true,
+      "dialog": true,
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEJFNkFCMDI5QUQ3MkY3RjQKUldUMDkzS3RLYkJxdmdMZGZXNzQyTUo2MjNBNXVzcjQyK2ZsWGZaVXoyRmlERnVXdCtEWDI5V1oK",
+      "windows": {
+        "installMode": "passive",
+        "installerArgs": []
+      },
+      "endpoints": [
+        "https://raw.githubusercontent.com/BrewingBytes/BranchWise/refs/heads/main/updates.json"
+      ]
+    },
     "allowlist": {
       "all": false,
       "shell": {
