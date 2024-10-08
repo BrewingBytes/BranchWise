@@ -13,7 +13,7 @@
     "tauri": "tauri"
   },
   "dependencies": {
-    "@tauri-apps/api": "^1",
+    "@tauri-apps/api": "^2",
     "pinia": "^2.2.3",
     "pinia-plugin-persistedstate": "^4.1.1",
     "vue": "^3.5.11",
