@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { DEFAULT_USER } from "../types/user";
 import { IGitProject } from "../types/gitProject";
-import { invoke } from "@tauri-apps/api";
+import { invoke } from "@tauri-apps/api/core";
 
 export const useAppStore = defineStore('app', {
     state: () => (

@@ -20,7 +20,7 @@ import { defineComponent, provide } from "vue";
 import ToolbarComponent from "./components/ToolbarComponent.vue";
 import NavbarComponent from "./components/NavbarComponent.vue";
 import { GitError } from "./types/gitErrors";
-import { invoke } from "@tauri-apps/api";
+import { invoke } from "@tauri-apps/api/core";
 import { useAppStore } from "./stores/app";
 import { mapState } from "pinia";
 import { listen, UnlistenFn } from "@tauri-apps/api/event";
