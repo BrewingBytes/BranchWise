@@ -14,7 +14,7 @@ use git::project_folder::{
 use tauri::{AppHandle, Manager};
 
 async fn setup(app: AppHandle) {
-    fs::create_dir_all(app.path_resolver().app_data_dir().unwrap())
+    fs::create_dir_all(app_data_dir().unwrap())
         .expect("Failed to create app data directory");
 
     _ = DATABASE.lock().unwrap().set_path(
@@ -55,9 +55,13 @@ async fn event_loop(app: AppHandle) {
 
 fn main() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_shell::init())
         .setup(|app| {
-            tauri::async_runtime::block_on(setup(app.handle()));
-            tauri::async_runtime::spawn(event_loop(app.handle()));
+            tauri::async_runtime::block_on(setup(app.handle().clone()));
+            tauri::async_runtime::spawn(event_loop(app.handle().clone()));
 
             Ok(())
         })

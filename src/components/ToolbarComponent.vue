@@ -115,8 +115,9 @@
 import { CreateComponentPublicInstance, defineComponent } from "vue";
 import { useAppStore } from "../stores/app";
 import { mapState } from "pinia";
-import { exit } from "@tauri-apps/api/process";
-import { appWindow } from "@tauri-apps/api/window";
+import { exit } from "@tauri-apps/plugin-process";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+const appWindow = getCurrentWebviewWindow()
 
 type ClickCallback = (event: Event) => void;
 
