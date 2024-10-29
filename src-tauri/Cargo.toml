@@ -19,7 +19,7 @@ strum_macros = "0.26.4"
 tempdir = "0.3.7"
 thiserror = "1.0.65"
 lazy_static = "1.5.0"
-tokio = "1.40.0"
+tokio = "1.41.0"
 flate2 = { version = "1.0.34", features = ["zlib-ng"], default-features = false }
 sha-1 = "0.10.1"
 tauri-plugin-shell = "2"
