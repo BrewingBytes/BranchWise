@@ -42,7 +42,7 @@
         </v-list-item>
       </template>
       <v-spacer />
-      <v-list-item @click="deleteProject">
+      <v-list-item v-if="isProjectSelected" @click="deleteProject">
         <v-row>
           <v-col cols="3">
             <v-icon icon="mdi:mdi-delete" />
