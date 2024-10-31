@@ -152,7 +152,7 @@ impl GitProject {
                                 ))
                             }
                             GitBranchType::Tags => self.tags.push(GitBranch::new(
-                                format!("{}", full_branch_name),
+                                full_branch_name,
                                 commit_hash,
                             )),
                         }
