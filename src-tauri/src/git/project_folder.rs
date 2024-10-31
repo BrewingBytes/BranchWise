@@ -631,7 +631,7 @@ mod tests {
         _ = git_project.fetch_branches(GitBranchType::Tags);
 
         assert!(git_project.get_tags().contains(&GitBranch::new(
-            "tags/tag1".to_string(),
+            "tag1".to_string(),
             "tag1_commit".to_string()
         )));
     }
