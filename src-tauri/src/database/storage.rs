@@ -42,13 +42,16 @@ impl Database {
     }
 
     pub fn add_project(&mut self, project: GitProject) -> Result<()> {
+        // Check if the project already exists
         if self
             .projects
             .iter()
             .any(|p| p.get_directory() == project.get_directory())
         {
+            // Return an error if the project already exists
             Err(LoadError::ProjectExists)
         } else {
+            // Add the project to the database and save it
             self.projects.push(project);
             self.save()?;
 
@@ -57,6 +60,7 @@ impl Database {
     }
 
     pub fn remove_project(&mut self, project: GitProject) -> Result<()> {
+        // Remove the project from the database and save it
         self.projects.retain(|p| p != &project);
         self.save()?;
 
@@ -72,6 +76,7 @@ impl Database {
             return Ok(());
         }
 
+        // Serialize the database and write it to the file
         let data = serde_json::to_string(&self)?;
         std::fs::write(self.path.clone(), data)?;
 
@@ -85,6 +90,7 @@ impl Database {
 
         let data = &read_to_string(self.path.clone())?;
 
+        // Deserialize the database and set the projects
         let db: Database = serde_json::from_str(data)?;
         self.projects = db.projects.clone();
 
@@ -92,6 +98,7 @@ impl Database {
     }
 
     pub fn set_path(&mut self, path: String) -> Result<()> {
+        // Set the path and load the database
         self.path = format!("{}/database.json", path);
         self.load()?;
 
