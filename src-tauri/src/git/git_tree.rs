@@ -12,6 +12,13 @@ pub enum GitTreeMode {
 }
 
 impl GitTreeMode {
+    /**
+     * Create a new GitTreeMode from a mode string
+     *
+     * mode: The mode string to create the GitTreeMode from
+     *
+     * Returns the GitTreeMode
+     */
     pub fn from_mode_str(mode: &str) -> Self {
         match mode {
             "100644" => GitTreeMode::File,
@@ -23,6 +30,11 @@ impl GitTreeMode {
         }
     }
 
+    /**
+     * Get the mode string of the GitTreeMode
+     *
+     * Returns the mode string
+     */
     pub fn to_mode_str(&self) -> &str {
         match self {
             GitTreeMode::File => "100644",
@@ -66,6 +78,13 @@ impl GitTree {
         }
     }
 
+    /**
+     * Add a new entry to the GitTree
+     *
+     * mode: The mode of the entry
+     * hash: The hash of the entry
+     * name: The name of the entry
+     */
     pub fn add_entry(&mut self, mode: GitTreeMode, hash: String, name: String) {
         self.entries.push(GitTreeEntry { mode, hash, name });
     }
@@ -74,14 +93,33 @@ impl GitTree {
         &self.entries
     }
 
+    /**
+     * Get the entry from the GitTree by the name of the entry
+     *
+     * name: The name of the entry to get
+     *
+     * Returns the entry
+     */
     pub fn get_entry_by_name(&self, name: &str) -> Option<&GitTreeEntry> {
         self.entries.iter().find(|entry| entry.name == name)
     }
 
+    /**
+     * Get the entry from the GitTree by the hash of the entry
+     *
+     * hash: The hash of the entry to get
+     *
+     * Returns the entry
+     */
     pub fn get_entry_by_hash(&self, hash: &str) -> Option<&GitTreeEntry> {
         self.entries.iter().find(|entry| entry.hash == hash)
     }
 
+    /**
+     * Get all the tree entries in the GitTree
+     *
+     * Returns the tree entries
+     */
     pub fn get_trees(&self) -> Vec<&GitTreeEntry> {
         self.entries
             .iter()
@@ -89,6 +127,11 @@ impl GitTree {
             .collect()
     }
 
+    /**
+     * Get all the blob entries in the GitTree
+     *
+     * Returns the blob entries
+     */
     pub fn get_blobs(&self) -> Vec<&GitTreeEntry> {
         self.entries
             .iter()
@@ -102,6 +145,11 @@ impl GitObject for GitTree {
         Header::Tree
     }
 
+    /**
+     * Get the data of the GitTree as a string
+     *
+     * Returns the data as a string
+     */
     fn get_data_string(&self) -> String {
         let mut data = String::new();
         for entry in &self.entries {
@@ -116,13 +164,22 @@ impl GitObject for GitTree {
         data
     }
 
+    /**
+     * Create a new GitTree from the encoded data
+     *
+     * encoded_data: The encoded data to create the GitTree from
+     *
+     * Returns the GitTree
+     */
     fn from_encoded_data(encoded_data: &[u8]) -> Result<Self, GitObjectError>
     where
         Self: Sized,
     {
+        // Decode the data and check if the header is valid
         let decoded_data = Self::decode_data(encoded_data)?;
         let (data, _) = Self::check_header_valid_and_get_data(&decoded_data)?;
 
+        // Parse the tree entries
         let mut tree = Self::new();
         let mut data = &data[..data.len() - 1];
         while !data.is_empty() {

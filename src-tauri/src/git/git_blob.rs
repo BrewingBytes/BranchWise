@@ -25,6 +25,13 @@ impl GitBlob {
 }
 
 impl GitObject for GitBlob {
+    /**
+     * Create a new GitBlob from the encoded data
+     *
+     * encoded_data: The encoded data to create the GitBlob from
+     *
+     * Returns the GitBlob
+     */
     fn from_encoded_data(encoded_data: &[u8]) -> Result<Self, GitObjectError> {
         let decoded_data = Self::decode_data(encoded_data)?;
         let (data, size) = Self::check_header_valid_and_get_data(&decoded_data)?;
@@ -37,6 +44,12 @@ impl GitObject for GitBlob {
         Header::Blob
     }
 
+    /**
+     * Get the data of the GitBlob as a string
+     * A GitBlob is a binary file, so the data is returned as a string
+     *
+     * Returns the data as a string
+     */
     fn get_data_string(&self) -> String {
         self.data
             .iter()

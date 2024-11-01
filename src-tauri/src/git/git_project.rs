@@ -22,6 +22,14 @@ pub struct GitProject {
 }
 
 impl GitProject {
+    /**
+     * Create a new GitProject
+     *
+     * # Arguments
+     * directory - The directory of the git project
+     * # Returns
+     * A new GitProject
+     */
     pub fn new(directory: &str) -> GitProject {
         GitProject {
             directory: String::from(directory),
@@ -33,17 +41,27 @@ impl GitProject {
         }
     }
 
+    /**
+     * Update the git project
+     *
+     * # Returns
+     * Ok if the git project was updated successfully
+     * Err if there was an error updating the git project
+     */
     pub fn update(&mut self) -> Result<(), GitError> {
+        // Clear the current branches and remotes
         self.local_branches.clear();
         self.remotes.clear();
         self.remote_branches.clear();
         self.tags.clear();
 
+        // Fetch the branches and remotes
         self.fetch_remotes_directories()?;
         self.fetch_branches(GitBranchType::Local)?;
         self.fetch_branches(GitBranchType::Tags)?;
         _ = self.fetch_packed_refs(); // Should be Ok if the file doesn't exist
 
+        // Fetch the branches for each remote
         let remotes = self.remotes.clone();
         for remote in remotes {
             self.fetch_branches(GitBranchType::Remote(remote))?;
@@ -54,12 +72,20 @@ impl GitProject {
         Ok(())
     }
 
+    /**
+     * Fetch the remotes directories
+     *
+     * # Returns
+     * Ok if the remotes directories were fetched successfully
+     * Err if there was an error fetching the remotes directories
+     */
     pub fn fetch_remotes_directories(&mut self) -> Result<(), GitError> {
         self.has_required_files().map_err(|_| {
             self.state = GitProjectState::Invalid;
             GitError::InvalidGitFolder
         })?;
 
+        // Get the remotes directory path
         let remotes_dir = format!(
             "{}/{}/{}/{}",
             self.directory,
@@ -68,6 +94,7 @@ impl GitProject {
             GitRefs::REMOTES
         );
 
+        // Read the remotes directory and add the remotes to the project
         fs::read_dir(remotes_dir)
             .map(|entries| {
                 for entry in entries.flatten() {
@@ -86,18 +113,26 @@ impl GitProject {
         Ok(())
     }
 
+    // Fetch the branches for the git project
     pub fn fetch_branches(&mut self, branch_type: GitBranchType) -> Result<(), GitError> {
+        // Check if the git project has the required files
+        // If not return an error and set the state to invalid
         self.has_required_files().map_err(|_| {
             self.state = GitProjectState::Invalid;
             GitError::InvalidGitFolder
         })?;
 
+        // Get the directory for the branch type
+        // Local branches are in the heads directory
+        // Remote branches are in the remotes directory with the remote name
+        // Tags are in the tags directory
         let branch_dir = match &branch_type {
             GitBranchType::Local => GitRefs::HEADS.to_string(),
             GitBranchType::Remote(remote_dir) => GitRefs::REMOTES.to_string() + "/" + remote_dir,
             GitBranchType::Tags => GitRefs::TAGS.to_string(),
         };
 
+        // Create a list of directories to check
         let mut dirs_to_check: Vec<String> = vec![format!(
             "{}/{}/{}/{}",
             self.directory,
@@ -110,14 +145,19 @@ impl GitProject {
             if let Ok(entries) = fs::read_dir(&current_dir) {
                 let mut entries_iter = entries.into_iter();
 
+                // Iterate over the entries in the directory
                 while let Some(Ok(entry)) = entries_iter.next() {
                     let path = entry.path();
+
+                    // If the entry is a directory add it to the list of directories to check
                     if path.is_dir() {
                         dirs_to_check.push(path.to_str().unwrap().to_string());
                     } else {
+                        // If the entry is a file, add the branch to the project
                         let branch_name = path.file_name().unwrap().to_str().unwrap().to_string();
                         let commit_hash = fs::read_to_string(path).unwrap();
 
+                        // Get the full branch name, including the remote name if it is a remote branch
                         let full_branch_name = if current_dir
                             != format!(
                                 "{}/{}/{}/{}",
@@ -141,6 +181,7 @@ impl GitProject {
                             branch_name
                         };
 
+                        // Add the branch to the project based on the branch type
                         match &branch_type {
                             GitBranchType::Local => self
                                 .local_branches
@@ -151,10 +192,9 @@ impl GitProject {
                                     commit_hash,
                                 ))
                             }
-                            GitBranchType::Tags => self.tags.push(GitBranch::new(
-                                full_branch_name,
-                                commit_hash,
-                            )),
+                            GitBranchType::Tags => self
+                                .tags
+                                .push(GitBranch::new(full_branch_name, commit_hash)),
                         }
                     }
                 }
@@ -167,7 +207,15 @@ impl GitProject {
         Ok(())
     }
 
+    /**
+     * Fetch content from the packed refs file
+     *
+     * # Returns
+     * Ok if the packed refs file was fetched successfully
+     * Err if there was an error fetching the packed refs file
+     */
     pub fn fetch_packed_refs(&mut self) -> Result<(), GitError> {
+        // Read the packed refs file
         let packed_refs_path = PathBuf::from(self.get_directory())
             .join(GIT_FOLDER)
             .join(GitFilesOptional::PackedRefs.to_string());
@@ -176,11 +224,13 @@ impl GitProject {
             let lines = refs.lines();
 
             for line in lines {
+                // Split the line into parts, the commit hash and the branch name
                 let parts: Vec<&str> = line.split_whitespace().collect();
                 if parts.len() == 2 {
                     let commit_hash = parts[0];
                     let branch_name = parts[1];
 
+                    // Add the branch to the project based on the branch type
                     if branch_name.starts_with("refs/heads/") {
                         self.local_branches.push(GitBranch::new(
                             branch_name.replace("refs/heads/", ""),
@@ -206,18 +256,25 @@ impl GitProject {
         Err(GitError::PackedRefsError)
     }
 
+    /**
+     * Check if the git project has the required files
+     */
     pub fn has_required_files(&self) -> Result<(), GitError> {
+        // Check if the git project has the required git files from the GitFilesRequired enum
         let mut required_git_files: Vec<String> = GitFilesRequired::iter()
             .map(|file| file.to_string())
             .collect();
 
+        // Check if the git project has the required git folders from the GitFolders enum
         let mut required_git_folders: Vec<String> = GitFolders::iter()
             .map(|folder| folder.to_string())
             .collect();
 
+        // Read the git folder entries
         let git_folder_entries =
             fs::read_dir(format!("{}/{}", self.directory, GIT_FOLDER)).unwrap();
 
+        // Iterate over the entries in the git folder and check if the required files and folders exist
         for entry in git_folder_entries {
             entry
                 .map(|x| {
@@ -239,6 +296,7 @@ impl GitProject {
                 .map_err(|_| GitError::InvalidGitFolder)?;
         }
 
+        // If the required files or folders are not empty, return an error, it means the git project is invalid
         if !required_git_files.is_empty() || !required_git_folders.is_empty() {
             return Err(GitError::InvalidGitFolder);
         }
