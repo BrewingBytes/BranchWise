@@ -24,19 +24,37 @@ impl GitCommitAuthor {
         &self.user
     }
 
+    /**
+     * Create a new GitCommitAuthor from a string
+     *
+     * Valid format: "author name <email> date_seconds timezone"
+     * Valid format: "committer name <email> date_seconds timezone"
+     *
+     * author_line: The string to create the GitCommitAuthor from
+     */
     pub fn from_string(author_line: &str) -> Result<GitCommitAuthor, GitObjectError> {
+        // Split the author line into name, email, date_seconds, and timezone
+
+        // First split the author line into name and the rest of the line
+        // Check if the name is valid, if not return an error
         let (name, rest_line) =
             author_line
                 .split_once(" <")
                 .ok_or(GitObjectError::InvalidCommitFile(
                     CommitError::InvalidAuthor,
                 ))?;
+
+        // Split the rest of the line into email and the rest of the line
+        // Check if the email is valid, if not return an error
         let (email, rest_line) =
             rest_line
                 .split_once("> ")
                 .ok_or(GitObjectError::InvalidCommitFile(
                     CommitError::InvalidAuthor,
                 ))?;
+
+        // Split the rest of the line into date_seconds and timezone
+        // Check if the date_seconds is valid, if not return an error
         let (date_seconds, timezone) =
             rest_line
                 .split_once(" ")
@@ -53,6 +71,14 @@ impl GitCommitAuthor {
         ))
     }
 
+    /**
+     * Convert the GitCommitAuthor to a string
+     *
+     * Format: "author name <email> date_seconds timezone"
+     * Format: "committer name <email> date_seconds timezone"
+     *
+     * author: If true, the string will start with "author", if false, the string will start with "committer"
+     */
     pub fn to_string(&self, author: bool) -> String {
         let author_or_commiter = if author { "author" } else { "committer" };
         format!(

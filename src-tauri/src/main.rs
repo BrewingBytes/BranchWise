@@ -31,7 +31,7 @@ async fn event_loop(app: AppHandle) {
     loop {
         interval.tick().await;
 
-        // Lock the database to get the current project  
+        // Lock the database to get the current project
         let mutex = DATABASE.lock().unwrap();
         if let Some(mut project) = mutex.get_current_project() {
             drop(mutex);

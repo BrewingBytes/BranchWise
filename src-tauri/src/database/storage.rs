@@ -118,6 +118,7 @@ impl Database {
     }
 
     pub fn update_project(&mut self, project: GitProject) -> Result<()> {
+        // Search for the project in the database and update it
         let index = self
             .projects
             .iter()

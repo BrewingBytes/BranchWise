@@ -87,30 +87,46 @@ impl GitCommit {
 }
 
 impl GitObject for GitCommit {
+    /**
+     * Create a new GitCommit from the encoded data
+     *
+     * encoded_data: The encoded data to create the GitCommit from
+     *
+     * Returns the GitCommit
+     */
     fn from_encoded_data(encoded_data: &[u8]) -> Result<Self, GitObjectError> {
         let decoded_data = Self::decode_data(encoded_data)?;
         let (data, _) = Self::check_header_valid_and_get_data(&decoded_data)?;
 
+        // The data must contain a tree hash, either an author or committer,
+        // none or more parent commits, and a message
         let mut tree = String::new();
         let mut parents = Vec::<String>::new();
         let mut author = Option::<GitCommitAuthor>::None;
         let mut committer = Option::<GitCommitAuthor>::None;
         let mut message = String::new();
 
+        // Remove the last newline character
         let mut data = &data[..data.len() - 1];
         while !data.is_empty() {
+            // Get the next line
             let (line, remaining_data) =
                 data.split_once('\n')
                     .ok_or(GitObjectError::InvalidCommitFile(
                         CommitError::InvalidContent,
                     ))?;
 
+            // Get the prefix of the line, which is the first word
+            // If there is none, use "message" as the prefix
             let prefix = line.split_whitespace().next().unwrap_or("message");
 
             let value = line
                 .strip_prefix((String::from(prefix) + " ").as_str())
                 .unwrap_or(remaining_data);
 
+            // Match the prefix and assign the value to the correct field
+            // If the prefix is invalid, return an error
+            // If the prefix is Author or Committer, parse the value into a GitCommitAuthor
             match CommitPrefix::from(prefix) {
                 CommitPrefix::Tree => tree = value.to_string(),
                 CommitPrefix::Parent => parents.push(value.to_string()),
@@ -130,6 +146,7 @@ impl GitObject for GitCommit {
             data = remaining_data;
         }
 
+        // Check that the author and committer are valid
         let author = author.ok_or(GitObjectError::InvalidCommitFile(
             CommitError::InvalidHeader,
         ))?;
