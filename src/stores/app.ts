@@ -11,7 +11,7 @@ export const useAppStore = defineStore('app', {
             projects: [] as IGitProject[],
             isNavbarOpen: false,
             selectedProject: null as IGitProject | null,
-            appVersion: "0.0.6",
+            appVersion: "0.0.7",
         }),
     getters: {
         getProjects(): IGitProject[] {
