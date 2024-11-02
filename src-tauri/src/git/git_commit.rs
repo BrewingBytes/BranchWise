@@ -1,5 +1,5 @@
 use super::{
-    git_commit_author::GitCommitAuthor,
+    git_commit_author::{GitCommitAuthor, GitCommitAuthorType},
     git_project::GitProject,
     object::{GitObject, Header},
 };
@@ -130,8 +130,18 @@ impl GitObject for GitCommit {
             match CommitPrefix::from(prefix) {
                 CommitPrefix::Tree => tree = value.to_string(),
                 CommitPrefix::Parent => parents.push(value.to_string()),
-                CommitPrefix::Author => author = Some(GitCommitAuthor::from_string(value)?),
-                CommitPrefix::Committer => committer = Some(GitCommitAuthor::from_string(value)?),
+                CommitPrefix::Author => {
+                    author = Some(GitCommitAuthor::from_string(
+                        value,
+                        GitCommitAuthorType::Author,
+                    )?)
+                }
+                CommitPrefix::Committer => {
+                    committer = Some(GitCommitAuthor::from_string(
+                        value,
+                        GitCommitAuthorType::Committer,
+                    )?)
+                }
                 CommitPrefix::Message => {
                     message = value.to_string();
                     break;
@@ -185,8 +195,8 @@ impl fmt::Display for GitCommit {
             "tree {}\n{}{}\n{}\n\n{}",
             self.tree_hash,
             parent_hashes,
-            self.author.to_string(true),
-            self.committer.to_string(false),
+            self.author.to_string(),
+            self.committer.to_string(),
             self.message
         );
 
@@ -210,6 +220,19 @@ mod tests {
             },
             1234567890,
             "+0000".to_string(),
+            GitCommitAuthorType::Author,
+        )
+    }
+
+    fn mock_git_commit_committer() -> GitCommitAuthor {
+        GitCommitAuthor::new(
+            GitUser {
+                name: "Test User".to_string(),
+                email: "test@example.com".to_string(),
+            },
+            1234567890,
+            "+0000".to_string(),
+            GitCommitAuthorType::Committer,
         )
     }
 
@@ -274,11 +297,12 @@ mod tests {
 
     #[test]
     fn test_from_string() {
-        let committer = mock_git_commit_author();
+        let author = mock_git_commit_author();
+        let committer = mock_git_commit_committer();
 
         let commit_hash = "25723a3e66cd8dcbaf085ed83b86a8007df7ff32".to_string();
         let encoded_file_content = create_encoded_commit_file(
-            committer.clone(),
+            author.clone(),
             committer.clone(),
             Some("50c8353444afbef3172c999ef6cff8d31309ac3e"),
             Vec::new(),
@@ -294,7 +318,7 @@ mod tests {
             "50c8353444afbef3172c999ef6cff8d31309ac3e"
         );
         assert_eq!(git_commit.get_message(), "test commit");
-        assert_eq!(*git_commit.get_author(), committer);
+        assert_eq!(*git_commit.get_author(), author);
         assert_eq!(*git_commit.get_committer(), committer);
     }
 
@@ -383,13 +407,13 @@ mod tests {
     fn test_serialize_git_commit() {
         let git_commit = mock_git_commit();
         let serialized = serde_json::to_string(&git_commit).unwrap();
-        let expected = r#"{"tree_hash":"tree_hash","parent_hashes":["parent_hash1","parent_hash2"],"author":{"user":{"name":"Test User","email":"test@example.com"},"date_seconds":1234567890,"timezone":"+0000"},"committer":{"user":{"name":"Test User","email":"test@example.com"},"date_seconds":1234567890,"timezone":"+0000"},"message":"commit message"}"#;
+        let expected = r#"{"tree_hash":"tree_hash","parent_hashes":["parent_hash1","parent_hash2"],"author":{"user":{"name":"Test User","email":"test@example.com"},"date_seconds":1234567890,"timezone":"+0000","type_":"Author"},"committer":{"user":{"name":"Test User","email":"test@example.com"},"date_seconds":1234567890,"timezone":"+0000","type_":"Author"},"message":"commit message"}"#;
         assert_eq!(serialized, expected);
     }
 
     #[test]
     fn test_deserialize_git_commit() {
-        let json_str = r#"{"tree_hash":"tree_hash","parent_hashes":["parent_hash1","parent_hash2"],"author":{"user":{"name":"Test User","email":"test@example.com"},"date_seconds":1234567890,"timezone":"+0000"},"committer":{"user":{"name":"Test User","email":"test@example.com"},"date_seconds":1234567890,"timezone":"+0000"},"message":"commit message"}"#;
+        let json_str = r#"{"tree_hash":"tree_hash","parent_hashes":["parent_hash1","parent_hash2"],"author":{"user":{"name":"Test User","email":"test@example.com"},"date_seconds":1234567890,"timezone":"+0000","type_":"Author"},"committer":{"user":{"name":"Test User","email":"test@example.com"},"date_seconds":1234567890,"timezone":"+0000","type_":"Author"},"message":"commit message"}"#;
         let deserialized: GitCommit = serde_json::from_str(json_str).unwrap();
         let expected = mock_git_commit();
         assert_eq!(deserialized, expected);
@@ -408,7 +432,10 @@ mod tests {
         let email = "email".to_string();
         let git_user = GitUser::new(name.clone(), email.clone());
         let timezone = "timezone".to_string();
-        let git_commit_author = GitCommitAuthor::new(git_user, 1, timezone.clone());
+        let author =
+            GitCommitAuthor::new(git_user.clone(), 1, timezone.clone(), GitCommitAuthorType::Author);
+        let committer =
+            GitCommitAuthor::new(git_user, 1, timezone.clone(), GitCommitAuthorType::Committer);
         let hash = "4117a140fb7fa0247d619593079cc0a4ef39a8aa";
         let tree_hash = "tree_hash";
         let parent_hash = Vec::new();
@@ -416,8 +443,8 @@ mod tests {
         let git_commit = GitCommit::new(
             tree_hash,
             parent_hash.as_slice(),
-            git_commit_author.clone(),
-            git_commit_author.clone(),
+            author.clone(),
+            committer.clone(),
             message,
         );
         assert_eq!(git_commit.get_hash(), hash);

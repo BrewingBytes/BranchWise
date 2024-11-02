@@ -22,6 +22,7 @@ pub enum Header {
     Tree,
     Commit,
     Blob,
+    Tag,
     Invalid,
 }
 
@@ -31,6 +32,7 @@ impl From<&str> for Header {
             "tree" => Header::Tree,
             "commit" => Header::Commit,
             "blob" => Header::Blob,
+            "tag" => Header::Tag,
             _ => Header::Invalid,
         }
     }
@@ -42,6 +44,7 @@ impl std::fmt::Display for Header {
             Header::Tree => "tree",
             Header::Commit => "commit",
             Header::Blob => "blob",
+            Header::Tag => "tag",
             Header::Invalid => "invalid",
         };
 
@@ -194,6 +197,7 @@ pub trait GitObject {
             Header::Tree => {}
             Header::Commit => {}
             Header::Blob => {}
+            Header::Tag => {}
             Header::Invalid => {
                 return Err(GitObjectError::InvalidObjectFile(
                     ObjectError::InvalidHeader,
