@@ -193,11 +193,7 @@ impl fmt::Display for GitCommit {
 
         let content = format!(
             "tree {}\n{}{}\n{}\n\n{}",
-            self.tree_hash,
-            parent_hashes,
-            self.author.to_string(),
-            self.committer.to_string(),
-            self.message
+            self.tree_hash, parent_hashes, self.author, self.committer, self.message
         );
 
         write!(f, "{}", content)
@@ -432,10 +428,18 @@ mod tests {
         let email = "email".to_string();
         let git_user = GitUser::new(name.clone(), email.clone());
         let timezone = "timezone".to_string();
-        let author =
-            GitCommitAuthor::new(git_user.clone(), 1, timezone.clone(), GitCommitAuthorType::Author);
-        let committer =
-            GitCommitAuthor::new(git_user, 1, timezone.clone(), GitCommitAuthorType::Committer);
+        let author = GitCommitAuthor::new(
+            git_user.clone(),
+            1,
+            timezone.clone(),
+            GitCommitAuthorType::Author,
+        );
+        let committer = GitCommitAuthor::new(
+            git_user,
+            1,
+            timezone.clone(),
+            GitCommitAuthorType::Committer,
+        );
         let hash = "4117a140fb7fa0247d619593079cc0a4ef39a8aa";
         let tree_hash = "tree_hash";
         let parent_hash = Vec::new();

@@ -159,14 +159,127 @@ impl GitObject for GitTag {
 impl fmt::Display for GitTag {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let content = format!(
-            "object {}\ntype {}\ntag {}\ntagger {}\n\n{}",
-            self.object_hash,
-            self.type_,
-            self.tag,
-            self.tagger.to_string(),
-            self.message
+            "object {}\ntype {}\ntag {}\n{}\n\n{}",
+            self.object_hash, self.type_, self.tag, self.tagger, self.message
         );
 
         write!(f, "{}", content)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::git::git_user::GitUser;
+    use std::io::Read;
+
+    use super::*;
+
+    fn mock_git_tagger() -> GitCommitAuthor {
+        GitCommitAuthor::new(
+            GitUser {
+                name: "Test User".to_string(),
+                email: "test@example.com".to_string(),
+            },
+            1234567890,
+            "+0000".to_string(),
+            GitCommitAuthorType::Tagger,
+        )
+    }
+
+    fn mock_git_tag() -> GitTag {
+        GitTag::new(
+            "1234567890abcdef1234567890abcdef12345678",
+            "commit",
+            "v1.0.0",
+            mock_git_tagger(),
+            "This is a test tag",
+        )
+    }
+
+    fn create_encoded_git_tag(
+        object_hash: &str,
+        type_: &str,
+        name: &str,
+        tagger: GitCommitAuthor,
+        message: &str,
+    ) -> Result<Vec<u8>, GitObjectError> {
+        let file_content = format!(
+            "object {}\ntype {}\ntag {}\n{}\n\n{}",
+            object_hash,
+            type_,
+            name,
+            tagger.to_string(),
+            message
+        );
+
+        let file_to_encode = format!("tag {}\x00{}\n", file_content.len(), file_content);
+
+        let mut zlib = flate2::bufread::ZlibEncoder::new(
+            file_to_encode.as_bytes(),
+            flate2::Compression::default(),
+        );
+        let mut encoded_file_content = Vec::new();
+        zlib.read_to_end(&mut encoded_file_content)
+            .map_err(|_| GitObjectError::DecompressionError)?;
+
+        Ok(encoded_file_content)
+    }
+
+    #[test]
+    fn test_from_string() {
+        let tagger = mock_git_tagger();
+
+        let encoded = create_encoded_git_tag(
+            "25723a3e66cd8dcbaf085ed83b86a8007df7ff32",
+            "commit",
+            "test",
+            tagger.clone(),
+            "hi",
+        )
+        .unwrap();
+
+        let git_tag = GitTag::from_encoded_data(&encoded).unwrap();
+        assert!(git_tag.get_object_hash() == "25723a3e66cd8dcbaf085ed83b86a8007df7ff32");
+        assert!(git_tag.get_type() == "commit");
+        assert!(git_tag.get_tag_name() == "test");
+        assert!(git_tag.get_tagger() == &tagger);
+        assert!(git_tag.get_message() == "hi");
+    }
+
+    #[test]
+    fn test_from_string_invalid() {
+        let encoded_file_content = "invalid content".as_bytes();
+
+        let git_tag = GitTag::from_encoded_data(encoded_file_content);
+        assert!(git_tag.is_err());
+    }
+
+    #[test]
+    fn test_to_string() {
+        let git_tag = mock_git_tag();
+        let expected = "object 1234567890abcdef1234567890abcdef12345678\ntype commit\ntag v1.0.0\ntagger Test User <test@example.com> 1234567890 +0000\n\nThis is a test tag";
+
+        assert!(git_tag.to_string() == expected);
+    }
+
+    #[test]
+    fn test_serialize() {
+        let git_tag = mock_git_tag();
+        let serialized = serde_json::to_string(&git_tag).unwrap();
+        let expected = "{\"object_hash\":\"1234567890abcdef1234567890abcdef12345678\",\"type_\":\"commit\",\"tag\":\"v1.0.0\",\"tagger\":{\"user\":{\"name\":\"Test User\",\"email\":\"test@example.com\"},\"date_seconds\":1234567890,\"timezone\":\"+0000\",\"type_\":\"Tagger\"},\"message\":\"This is a test tag\"}";
+
+        assert!(serialized == expected);
+    }
+
+    #[test]
+    fn test_deserialize() {
+        let serialized = "{\"object_hash\":\"1234567890abcdef1234567890abcdef12345678\",\"type_\":\"commit\",\"tag\":\"v1.0.0\",\"tagger\":{\"user\":{\"name\":\"Test User\",\"email\":\"test@example.com\"},\"date_seconds\":1234567890,\"timezone\":\"+0000\",\"type_\":\"Tagger\"},\"message\":\"This is a test tag\"}";
+        let git_tag: GitTag = serde_json::from_str(serialized).unwrap();
+
+        assert!(git_tag.get_object_hash() == "1234567890abcdef1234567890abcdef12345678");
+        assert!(git_tag.get_type() == "commit");
+        assert!(git_tag.get_tag_name() == "v1.0.0");
+        assert!(git_tag.get_tagger() == &mock_git_tagger());
+        assert!(git_tag.get_message() == "This is a test tag");
     }
 }
