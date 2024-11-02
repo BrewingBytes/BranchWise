@@ -76,7 +76,7 @@ mod tests {
             git_blob::GitBlob,
             git_branch::GitBranch,
             git_commit::GitCommit,
-            git_commit_author::GitCommitAuthor,
+            git_commit_author::{GitCommitAuthor, GitCommitAuthorType},
             git_files::{GitFilesOptional, GitFilesRequired},
             git_folders::{GitFolders, GitRefs, GIT_FOLDER},
             git_tree::{GitTree, GitTreeEntry, GitTreeMode},
@@ -302,6 +302,18 @@ mod tests {
     }
 
     #[test]
+    fn test_from_hash_invalid() {
+        let folder = TempDir::new("test_from_hash_invalid").unwrap();
+        let test_git_folder = folder.path().to_str().unwrap();
+
+        create_sample_git_folder(test_git_folder);
+        let git_project = open_git_project(test_git_folder).unwrap();
+
+        let blob = GitBlob::from_hash(&git_project, "invalid");
+        assert!(blob.is_err());
+    }
+
+    #[test]
     fn test_git_tree_to_file() {
         let folder = TempDir::new("test_git_tree_to_file").unwrap();
         let test_git_folder = folder.path().to_str().unwrap();
@@ -425,17 +437,25 @@ mod tests {
         create_sample_git_folder(test_git_folder);
         let git_project = open_git_project(test_git_folder).unwrap();
 
-        let author_commiter = GitCommitAuthor::new(
+        let author = GitCommitAuthor::new(
             GitUser::new("Test User".to_string(), "test.user@email.com".to_string()),
             100,
             "+03:00".to_string(),
+            GitCommitAuthorType::Author,
+        );
+
+        let commiter = GitCommitAuthor::new(
+            GitUser::new("Test User".to_string(), "test.user@email.com".to_string()),
+            100,
+            "+03:00".to_string(),
+            GitCommitAuthorType::Committer,
         );
 
         let commit = GitCommit::new(
             "tree",
             Vec::<String>::new().as_slice(),
-            author_commiter.clone(),
-            author_commiter.clone(),
+            author.clone(),
+            commiter.clone(),
             "test message",
         );
         commit.write_object(&git_project).unwrap();
@@ -443,8 +463,8 @@ mod tests {
         let commit = GitCommit::from_hash(&git_project, &commit.get_hash()).unwrap();
         assert_eq!(commit.get_tree_hash(), "tree");
         assert_eq!(commit.get_parent_hashes(), &Vec::<String>::new());
-        assert_eq!(commit.get_author(), &author_commiter);
-        assert_eq!(commit.get_committer(), &author_commiter);
+        assert_eq!(commit.get_author(), &author);
+        assert_eq!(commit.get_committer(), &commiter);
         assert_eq!(commit.get_message(), "test message");
     }
 
@@ -453,21 +473,32 @@ mod tests {
         let folder = TempDir::new("test_git_commit_from_file").unwrap();
         let test_git_folder = folder.path().to_str().unwrap();
 
-        let author_commiter = GitCommitAuthor::new(
+        let author = GitCommitAuthor::new(
             GitUser::new(
                 "Andrei Serban".to_string(),
                 "andrei.serban@brewingbytes.com".to_string(),
             ),
             100,
             "+03:00".to_string(),
+            GitCommitAuthorType::Author,
+        );
+
+        let commiter = GitCommitAuthor::new(
+            GitUser::new(
+                "Andrei Serban".to_string(),
+                "andrei.serban@brewingbytes.com".to_string(),
+            ),
+            100,
+            "+03:00".to_string(),
+            GitCommitAuthorType::Committer,
         );
 
         create_sample_git_folder(test_git_folder);
         let git_project = open_git_project(test_git_folder).unwrap();
 
         let content = create_encoded_commit_content(
-            author_commiter.clone(),
-            author_commiter.clone(),
+            author.clone(),
+            commiter.clone(),
             Some("tree"),
             Vec::new(),
             "test",
@@ -484,8 +515,8 @@ mod tests {
             commit.get_hash(),
             "6e18e0fdeac4932d71ad981dc4dc497c49f3c606"
         );
-        assert_eq!(commit.get_author(), &author_commiter);
-        assert_eq!(commit.get_committer(), &author_commiter);
+        assert_eq!(commit.get_author(), &author);
+        assert_eq!(commit.get_committer(), &commiter);
         assert_eq!(commit.get_tree_hash(), "tree");
         assert_eq!(commit.get_parent_hashes(), &Vec::<String>::new());
         assert_eq!(commit.get_message(), "test");
@@ -496,21 +527,32 @@ mod tests {
         let folder = TempDir::new("test_git_commit_get_parent_commits").unwrap();
         let test_git_folder = folder.path().to_str().unwrap();
 
-        let author_commiter = GitCommitAuthor::new(
+        let author = GitCommitAuthor::new(
             GitUser::new(
                 "Andrei Serban".to_string(),
                 "andrei.serban@brewingbytes.com".to_string(),
             ),
             100,
             "+03:00".to_string(),
+            GitCommitAuthorType::Author,
+        );
+
+        let committer = GitCommitAuthor::new(
+            GitUser::new(
+                "Andrei Serban".to_string(),
+                "andrei.serban@brewingbytes.com".to_string(),
+            ),
+            100,
+            "+03:00".to_string(),
+            GitCommitAuthorType::Committer,
         );
 
         create_sample_git_folder(test_git_folder);
         let git_project = open_git_project(test_git_folder).unwrap();
 
         let parent_content = create_encoded_commit_content(
-            author_commiter.clone(),
-            author_commiter.clone(),
+            author.clone(),
+            committer.clone(),
             Some("tree"),
             Vec::new(),
             "parent",
@@ -521,8 +563,8 @@ mod tests {
             parent_content.unwrap().as_slice(),
         );
         let content = create_encoded_commit_content(
-            author_commiter.clone(),
-            author_commiter.clone(),
+            author.clone(),
+            committer.clone(),
             Some("tree"),
             vec!["6e18e0fdeac4932d71ad981dc4dc497c49f3c606"],
             "test",
@@ -543,8 +585,8 @@ mod tests {
             parent_commit.get_hash(),
             "88f877967c8c63e23979f07f50f93daf9b2ae872"
         );
-        assert_eq!(parent_commit.get_author(), &author_commiter);
-        assert_eq!(parent_commit.get_committer(), &author_commiter);
+        assert_eq!(parent_commit.get_author(), &author);
+        assert_eq!(parent_commit.get_committer(), &committer);
         assert_eq!(parent_commit.get_tree_hash(), "tree");
         assert_eq!(parent_commit.get_parent_hashes(), &Vec::<String>::new());
         assert_eq!(parent_commit.get_message(), "parent");

@@ -22,6 +22,7 @@ pub enum Header {
     Tree,
     Commit,
     Blob,
+    Tag,
     Invalid,
 }
 
@@ -31,6 +32,7 @@ impl From<&str> for Header {
             "tree" => Header::Tree,
             "commit" => Header::Commit,
             "blob" => Header::Blob,
+            "tag" => Header::Tag,
             _ => Header::Invalid,
         }
     }
@@ -42,6 +44,7 @@ impl std::fmt::Display for Header {
             Header::Tree => "tree",
             Header::Commit => "commit",
             Header::Blob => "blob",
+            Header::Tag => "tag",
             Header::Invalid => "invalid",
         };
 
@@ -194,6 +197,7 @@ pub trait GitObject {
             Header::Tree => {}
             Header::Commit => {}
             Header::Blob => {}
+            Header::Tag => {}
             Header::Invalid => {
                 return Err(GitObjectError::InvalidObjectFile(
                     ObjectError::InvalidHeader,
@@ -224,6 +228,7 @@ mod tests {
         assert_eq!(Header::from("tree"), Header::Tree);
         assert_eq!(Header::from("commit"), Header::Commit);
         assert_eq!(Header::from("blob"), Header::Blob);
+        assert_eq!(Header::from("tag"), Header::Tag);
         assert_eq!(Header::from("other"), Header::Invalid);
     }
 
@@ -232,6 +237,7 @@ mod tests {
         assert_eq!(Header::Tree.to_string(), "tree");
         assert_eq!(Header::Commit.to_string(), "commit");
         assert_eq!(Header::Blob.to_string(), "blob");
+        assert_eq!(Header::Tag.to_string(), "tag");
         assert_eq!(Header::Invalid.to_string(), "invalid");
     }
 }
