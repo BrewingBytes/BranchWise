@@ -23,6 +23,7 @@ jobs:
                 filters: |
                   src:
                     - 'src/**'
+                    - '.github/workflows/**'
 
             - uses: actions/setup-node@v4
               if: steps.changes.outputs.src == 'true'
@@ -82,6 +83,7 @@ jobs:
                 filters: |
                   src:
                     - 'src/**'
+                    - '.github/workflows/**'
 
             - uses: actions/setup-node@v4
               if: steps.changes.outputs.src == 'true'

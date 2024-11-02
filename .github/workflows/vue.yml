@@ -20,6 +20,8 @@ jobs:
                 filters: |
                   src:
                     - 'src/**'
+                    - '.github/workflows/**'
+                    - 'package.json'
 
             - uses: actions/setup-node@v4
               if: steps.changes.outputs.src == 'true'
