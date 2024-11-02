@@ -302,6 +302,18 @@ mod tests {
     }
 
     #[test]
+    fn test_from_hash_invalid() {
+        let folder = TempDir::new("test_from_hash_invalid").unwrap();
+        let test_git_folder = folder.path().to_str().unwrap();
+
+        create_sample_git_folder(test_git_folder);
+        let git_project = open_git_project(test_git_folder).unwrap();
+
+        let blob = GitBlob::from_hash(&git_project, "invalid");
+        assert!(blob.is_err());
+    }
+
+    #[test]
     fn test_git_tree_to_file() {
         let folder = TempDir::new("test_git_tree_to_file").unwrap();
         let test_git_folder = folder.path().to_str().unwrap();

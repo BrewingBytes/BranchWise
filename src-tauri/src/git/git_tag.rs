@@ -58,7 +58,7 @@ impl GitTag {
         &self.object_hash
     }
 
-    pub fn get_type(&self) -> &String {
+    pub fn get_type_(&self) -> &String {
         &self.type_
     }
 
@@ -148,7 +148,7 @@ impl GitObject for GitTag {
     }
 
     fn get_type(&self) -> Header {
-        Header::Commit
+        Header::Tag
     }
 
     fn get_data_string(&self) -> String {
@@ -240,10 +240,11 @@ mod tests {
 
         let git_tag = GitTag::from_encoded_data(&encoded).unwrap();
         assert!(git_tag.get_object_hash() == "25723a3e66cd8dcbaf085ed83b86a8007df7ff32");
-        assert!(git_tag.get_type() == "commit");
+        assert!(git_tag.get_type_() == "commit");
         assert!(git_tag.get_tag_name() == "test");
         assert!(git_tag.get_tagger() == &tagger);
         assert!(git_tag.get_message() == "hi");
+        assert_eq!(git_tag.get_type(), Header::Tag);
     }
 
     #[test]
@@ -277,7 +278,7 @@ mod tests {
         let git_tag: GitTag = serde_json::from_str(serialized).unwrap();
 
         assert!(git_tag.get_object_hash() == "1234567890abcdef1234567890abcdef12345678");
-        assert!(git_tag.get_type() == "commit");
+        assert!(git_tag.get_type_() == "commit");
         assert!(git_tag.get_tag_name() == "v1.0.0");
         assert!(git_tag.get_tagger() == &mock_git_tagger());
         assert!(git_tag.get_message() == "This is a test tag");
