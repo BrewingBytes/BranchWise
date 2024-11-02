@@ -13,17 +13,31 @@ jobs:
 
         steps:
             - uses: actions/checkout@v4
+
+            - uses: dorny/paths-filter@v3
+              id: changes
+              with:
+                filters: |
+                  src:
+                    - 'src/**'
+                    - '.github/workflows/**'
+                    - 'package.json'
+
             - uses: actions/setup-node@v4
+              if: steps.changes.outputs.src == 'true'
               with:
                 node-version: 20
 
             - name: "Install Dependencies"
+              if: steps.changes.outputs.src == 'true'
               run: |
                 npm install --global yarn
                 yarn
 
             - name: "Lint"
+              if: steps.changes.outputs.src == 'true'
               run: yarn lint
 
             - name: "Build"
+              if: steps.changes.outputs.src == 'true'
               run: yarn build

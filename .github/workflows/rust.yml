@@ -17,11 +17,21 @@ jobs:
         steps:
             - uses: actions/checkout@v4
 
+            - uses: dorny/paths-filter@v3
+              id: changes
+              with:
+                filters: |
+                  src:
+                    - 'src-tauri/**'
+                    - '.github/workflows/**'
+
             - uses: actions/setup-node@v4
+              if: steps.changes.outputs.src == 'true'
               with:
                 node-version: 20
 
             - name: "Install Dependencies"
+              if: steps.changes.outputs.src == 'true'
               run: |
                 sudo apt-get update
                 sudo apt-get install libwebkit2gtk-4.1-dev \
@@ -42,14 +52,17 @@ jobs:
                 yarn build
 
             - name: Configure sccache env var
+              if: steps.changes.outputs.src == 'true'
               run: | 
                     echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
                     echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
           
             - name: Run sccache-cache
+              if: steps.changes.outputs.src == 'true'
               uses: mozilla-actions/sccache-action@v0.0.6
 
             - name: "Lint"
+              if: steps.changes.outputs.src == 'true'
               run: |
                 cd src-tauri
                 cargo clippy --all-features --workspace -- -D warnings
@@ -64,11 +77,21 @@ jobs:
         steps:
             - uses: actions/checkout@v4
 
+            - uses: dorny/paths-filter@v3
+              id: changes
+              with:
+                filters: |
+                  src:
+                    - 'src-tauri/**'
+                    - '.github/workflows/**'
+
             - uses: actions/setup-node@v4
+              if: steps.changes.outputs.src == 'true'
               with:
                 node-version: 20
 
             - name: "Install Dependencies"
+              if: steps.changes.outputs.src == 'true'
               run: |
                 sudo apt-get update
                 sudo apt-get install libwebkit2gtk-4.1-dev \
@@ -89,21 +112,26 @@ jobs:
                 yarn build
 
             - name: Configure sccache env var
+              if: steps.changes.outputs.src == 'true'
               run: | 
                     echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
                     echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
           
             - name: Run sccache-cache
+              if: steps.changes.outputs.src == 'true'
               uses: mozilla-actions/sccache-action@v0.0.6
 
             - name: Install cargo-llvm-cov
+              if: steps.changes.outputs.src == 'true'
               uses: taiki-e/install-action@cargo-llvm-cov
 
             - name: Generate code coverage
+              if: steps.changes.outputs.src == 'true'
               working-directory: src-tauri
               run: cargo llvm-cov --all-features --workspace --lcov --output-path lcov.info
 
             - name: Upload coverage to Codecov
+              if: steps.changes.outputs.src == 'true'
               uses: codecov/codecov-action@v4
               with:
                 files: lcov.info
