@@ -13,7 +13,17 @@ jobs:
 
         steps:
             - uses: actions/checkout@v4
+
+            - name: "Changes"
+              uses: dorny/paths-filter@v3
+              id: changes
+              with:
+                filters: |
+                  src:
+                    - 'src/**'
+
             - uses: actions/setup-node@v4
+              if: steps.changes.outputs.src == 'true'
               with:
                 node-version: 20
 
