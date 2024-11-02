@@ -33,6 +33,16 @@ pub struct GitCommitAuthor {
     type_: GitCommitAuthorType,
 }
 
+impl Display for GitCommitAuthor {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{} {} <{}> {} {}",
+            self.type_, self.user.name, self.user.email, self.date_seconds, self.timezone
+        )
+    }
+}
+
 impl GitCommitAuthor {
     pub fn new(
         user: GitUser,
@@ -101,21 +111,6 @@ impl GitCommitAuthor {
             timezone.to_string(),
             type_,
         ))
-    }
-
-    /**
-     * Convert the GitCommitAuthor to a string
-     *
-     * Format: "author name <email> date_seconds timezone"
-     * Format: "committer name <email> date_seconds timezone"
-     *
-     * author: If true, the string will start with "author", if false, the string will start with "committer"
-     */
-    pub fn to_string(&self) -> String {
-        format!(
-            "{} {} <{}> {} {}",
-            self.type_, self.user.name, self.user.email, self.date_seconds, self.timezone
-        )
     }
 }
 
