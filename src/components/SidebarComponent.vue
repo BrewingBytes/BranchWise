@@ -103,7 +103,9 @@
               icon
               @click="showExitDialog = true"
             >
-              <v-icon color="red">mdi:mdi-power</v-icon>
+              <v-icon color="red">
+                mdi:mdi-power
+              </v-icon>
             </v-btn>
           </v-col>
         </v-row>
