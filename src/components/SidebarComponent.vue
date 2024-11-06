@@ -1,28 +1,12 @@
 <template>
   <v-navigation-drawer :model-value="isOpen">
     <v-list style="height:100%; display: flex; flex-direction: column">
-      <v-list-item>
-        <v-row
-          align="center"
-          no-gutters
-        >
-          <v-btn
-            variant="plain"
-            icon
-          >
-            <v-icon @click="closeMe">
-              mdi-arrow-left
-            </v-icon>
-          </v-btn>
-          <v-spacer />
-          <v-btn
-            variant="plain"
-            icon
-          >
-            <v-icon>mdi-bell</v-icon>
-          </v-btn>
-        </v-row>
-      </v-list-item>
+      <SidebarItem
+        prepend-icon="mdi-arrow-left"
+        text=""
+        append-icon="mdi-bell"
+        @prepend-click="closeMe"
+      />
       <v-divider />
       <SidebarItem
         prepend-color="red"
@@ -45,40 +29,15 @@
         @click="deleteProject"
       />
       <v-divider />
-      <v-list-item class="pa-0 pt-4"> 
-        <v-row no-gutters>
-          <v-col
-            cols="3"
-            align="center"
-          >
-            <v-avatar>
-              <v-img :src="user.avatar" />
-            </v-avatar>
-          </v-col>
-          <v-col cols="6">
-            <p class="text-subtitle-1">
-              {{ user.name }}
-            </p>
-            <p class="text-caption font-weight-thin">
-              Version {{ getAppVersion }}
-            </p>
-          </v-col>
-          <v-col
-            cols="3"
-            align="center"
-          >
-            <v-btn
-              size="small"
-              icon
-              @click="showExitDialog = true"
-            >
-              <v-icon color="red">
-                mdi:mdi-power
-              </v-icon>
-            </v-btn>
-          </v-col>
-        </v-row>
-      </v-list-item>
+      <SidebarItem
+        :prepend-icon="user.avatar"
+        :prepend-variant="PrependVariant.AVATAR"
+        :text="user.name"
+        :subtitle="appVersion"
+        append-icon="mdi-power"
+        append-color="red"
+        @append-click="showExitDialog = true"
+      />
     </v-list>
   </v-navigation-drawer>
   <v-dialog
@@ -114,6 +73,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { exit } from "@tauri-apps/plugin-process";
 import { mapState } from "pinia";
 import { defineComponent } from "vue";
+import { PrependVariant } from "../enums/prependVariant";
 import { useAppStore } from "../stores/app";
 import SidebarItem from "./Sidebar/SidebarItem.vue";
 
@@ -131,11 +91,15 @@ export default defineComponent({
   data() {
     return {
       showExitDialog: false,
+      PrependVariant,
     };
   },
   computed: {
     isProjectSelected() {
       return useAppStore().getSelectedProject !== null;
+    },
+    appVersion() {
+      return `Version ${this.getAppVersion}`;
     },
     ...mapState(useAppStore, ["user", "getAppVersion"])
   },
