@@ -24,57 +24,26 @@
         </v-row>
       </v-list-item>
       <v-divider />
-      <v-list-item @click="goHome">
-        <v-row>
-          <v-col cols="3">
-            <v-icon
-              color="green"
-              icon="mdi:mdi-home"
-            />
-          </v-col>
-          <v-col cols="9">
-            <p class="text-h5">
-              Projects
-            </p>
-          </v-col>
-        </v-row>
-      </v-list-item>
-      <template v-if="isProjectSelected">
-        <v-list-item>
-          <v-row>
-            <v-col cols="3">
-              <v-icon
-                color="blue"
-                icon="mdi:mdi-source-branch"
-              />
-            </v-col>
-            <v-col cols="9">
-              <p class="text-h5">
-                Branches
-              </p>
-            </v-col>
-          </v-row>
-        </v-list-item>
-      </template>
+      <SidebarItem
+        prepend-color="red"
+        prepend-icon="mdi-home"
+        text="Projects"
+        @click="goHome"
+      />
+      <SidebarItem
+        v-if="isProjectSelected"
+        prepend-color="blue"
+        prepend-icon="mdi-source-branch"
+        text="Branches"
+      />
       <v-spacer />
-      <v-list-item
-        v-if="isProjectSelected" 
+      <SidebarItem
+        v-if="isProjectSelected"
+        prepend-color="red"
+        prepend-icon="mdi-delete"
+        text="Delete Project"
         @click="deleteProject"
-      >
-        <v-row>
-          <v-col cols="3">
-            <v-icon
-              color="red"
-              icon="mdi:mdi-delete"
-            />
-          </v-col>
-          <v-col cols="9">
-            <p class="text-h5">
-              Delete Project
-            </p>
-          </v-col>
-        </v-row>
-      </v-list-item>
+      />
       <v-divider />
       <v-list-item class="pa-0 pt-4"> 
         <v-row no-gutters>
@@ -146,9 +115,13 @@ import { exit } from "@tauri-apps/plugin-process";
 import { mapState } from "pinia";
 import { defineComponent } from "vue";
 import { useAppStore } from "../stores/app";
+import SidebarItem from "./Sidebar/SidebarItem.vue";
 
 export default defineComponent({
   name: "SidebarComponent",
+  components: {
+    SidebarItem,
+  },
   props: {
     isOpen: {
       type: Boolean,
