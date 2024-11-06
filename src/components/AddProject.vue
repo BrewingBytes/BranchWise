@@ -21,11 +21,11 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, inject } from "vue";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
-import { IGitProject } from "../types/gitProject";
+import { defineComponent, inject } from "vue";
 import { useAppStore } from "../stores/app";
+import { IGitProject } from "../types/gitProject";
 
 export default defineComponent({
     name: "AddProject",

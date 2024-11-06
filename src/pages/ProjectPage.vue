@@ -94,8 +94,8 @@ import { defineComponent } from "vue";
 
 import { mapState } from "pinia";
 import { useAppStore } from "../stores/app";
-import { BranchType } from "../types/gitProject";
 import { IGitBranch } from "../types/gitBranch";
+import { BranchType } from "../types/gitProject";
 
 interface IDirectory {
   name: string;

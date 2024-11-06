@@ -26,9 +26,9 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 
+import { mapState } from "pinia";
 import AddProject from "../components/AddProject.vue";
 import Project from "../components/Project.vue";
-import { mapState } from "pinia";
 import { useAppStore } from "../stores/app";
 
 export default defineComponent({
