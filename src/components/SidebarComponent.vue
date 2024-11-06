@@ -36,36 +36,10 @@
         :subtitle="appVersion"
         append-icon="mdi-power"
         append-color="red"
-        @append-click="showExitDialog = true"
+        @append-click="confirmExit"
       />
     </v-list>
   </v-navigation-drawer>
-  <v-dialog
-    v-model="showExitDialog"
-    persistent
-  >
-    <v-card>
-      <v-card-title class="headline">
-        Exit Application
-      </v-card-title>
-      <v-card-text>Are you sure you want to exit the application?</v-card-text>
-      <v-card-actions>
-        <v-spacer />
-        <v-btn
-          rounded
-          @click="showExitDialog = false"
-        >
-          Cancel
-        </v-btn>
-        <v-btn
-          rounded
-          @click="exit(0)"
-        >
-          Exit
-        </v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
 </template>
 
 <script lang="ts">
@@ -76,6 +50,7 @@ import { defineComponent } from "vue";
 import { PrependVariant } from "../enums/prependVariant";
 import { useAppStore } from "../stores/app";
 import SidebarItem from "./Sidebar/SidebarItem.vue";
+import { useDialogStore } from "../stores/dialogs";
 
 export default defineComponent({
   name: "SidebarComponent",
@@ -122,7 +97,15 @@ export default defineComponent({
         console.error(e);
       }
     },
-    exit
+    confirmExit() {
+      useDialogStore().openConfirmationDialog({
+        title: "Exit",
+        message: "Are you sure you want to exit?",
+        onConfirm: () => {
+          exit();
+        },
+      });
+    }
   }
 });
 </script>

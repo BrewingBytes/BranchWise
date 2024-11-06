@@ -3,8 +3,17 @@ import { defineStore } from "pinia";
 import { IGitProject } from "../types/gitProject";
 import { DEFAULT_USER } from "../types/user";
 
+interface IAppState {
+    title: string;
+    user: typeof DEFAULT_USER;
+    projects: IGitProject[];
+    isNavbarOpen: boolean;
+    selectedProject: IGitProject | null;
+    appVersion: string;
+}
+
 export const useAppStore = defineStore('app', {
-    state: () => (
+    state: (): IAppState => (
         {
             title: "BranchWise",
             user: DEFAULT_USER,
