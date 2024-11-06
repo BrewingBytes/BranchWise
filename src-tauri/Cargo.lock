@@ -333,7 +333,7 @@ dependencies = [
 
 [[package]]
 name = "branchwise"
-version = "0.0.7"
+version = "0.0.8"
 dependencies = [
  "flate2",
  "lazy_static",
