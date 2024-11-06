@@ -31,9 +31,9 @@ jobs:
                 node-version: 20
 
             - name: install Rust stable
-              uses: dtolnay/rust-toolchain@stable
+              uses: actions-rs/toolchain@v1
               with:
-                targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+                toolchain: stable
 
             - name: Install Platform Dependecies
               if: matrix.platform == 'ubuntu-22.04' # This must match the platform value defined above.
