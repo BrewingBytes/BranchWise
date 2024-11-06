@@ -1,7 +1,7 @@
 <template>
   <v-app>
-    <NavbarComponent :is-open="isNavbarOpen" />
-    <ToolbarComponent />
+    <SidebarComponent :is-open="isNavbarOpen" />
+    <TopbarComponent />
     <v-main>
       <router-view />
     </v-main>
@@ -16,21 +16,21 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, provide } from "vue";
-import ToolbarComponent from "./components/ToolbarComponent.vue";
-import NavbarComponent from "./components/NavbarComponent.vue";
-import { GitError } from "./types/gitErrors";
 import { invoke } from "@tauri-apps/api/core";
-import { useAppStore } from "./stores/app";
-import { mapState } from "pinia";
 import { listen, UnlistenFn } from "@tauri-apps/api/event";
+import { mapState } from "pinia";
+import { defineComponent, provide } from "vue";
+import SidebarComponent from "./components/SidebarComponent.vue";
+import TopbarComponent from "./components/TopbarComponent.vue";
+import { useAppStore } from "./stores/app";
+import { GitError } from "./types/gitErrors";
 import { IGitProject } from "./types/gitProject";
 
 export default defineComponent({
   name: "AppComponent",
   components: {
-    ToolbarComponent,
-    NavbarComponent,
+    SidebarComponent,
+    TopbarComponent,
   },
   data() {
     return {
