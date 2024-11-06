@@ -19,7 +19,7 @@
   },
   "productName": "BranchWise",
   "mainBinaryName": "BranchWise",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "identifier": "com.brewingbytes.branchwise",
   "plugins": {
     "updater": {
