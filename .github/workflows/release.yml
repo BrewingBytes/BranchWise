@@ -13,9 +13,7 @@ jobs:
             matrix:
                 include:
                 - platform: 'macos-latest'
-                  args: '--target aarch64-apple-darwin'
-                - platform: 'macos-latest'
-                  args: '--target x86_64-apple-darwin'
+                  args: '--target universal-apple-darwin'
                 - platform: 'ubuntu-22.04'
                   args: ''
                 - platform: 'windows-latest'
@@ -30,12 +28,17 @@ jobs:
               with:
                 node-version: 20
 
-            - name: install Rust stable
-              uses: dtolnay/rust-toolchain@stable
+            - name: Install Rust stable
+              uses: actions-rs/toolchain@v1
               with:
-                targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+                toolchain: stable
+            
+            - name: Install Platform Dependecies (MacOS)
+              if: matrix.platform == 'macos-latest' # This must match the platform value defined above.
+              run: |
+                rustup target add x86_64-apple-darwin
 
-            - name: Install Platform Dependecies
+            - name: Install Platform Dependecies (Linux)
               if: matrix.platform == 'ubuntu-22.04' # This must match the platform value defined above.
               run: |
                 sudo apt-get update
