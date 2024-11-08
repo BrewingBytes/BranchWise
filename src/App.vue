@@ -76,3 +76,8 @@ export default defineComponent({
   },
 });
 </script>
+
+<style>
+@import '@vue-flow/core/dist/style.css';
+@import '@vue-flow/core/dist/theme-default.css';
+</style>
