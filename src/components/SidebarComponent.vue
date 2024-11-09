@@ -51,6 +51,7 @@ import { PrependVariant } from "../enums/prependVariant";
 import { useAppStore } from "../stores/app";
 import SidebarItem from "./Sidebar/SidebarItem.vue";
 import { useDialogStore } from "../stores/dialogs";
+import { useProjectStore } from "../stores/project";
 
 export default defineComponent({
   name: "SidebarComponent",
@@ -71,7 +72,7 @@ export default defineComponent({
   },
   computed: {
     isProjectSelected() {
-      return useAppStore().getSelectedProject !== null;
+      return useProjectStore().getSelectedProject !== null;
     },
     appVersion() {
       return `Version ${this.getAppVersion}`;
@@ -88,10 +89,10 @@ export default defineComponent({
     async deleteProject() {
       try {
         await invoke("remove_database_project", {
-          project: useAppStore().getSelectedProject,
+          project: useProjectStore().getSelectedProject,
         });
 
-        useAppStore().removeProject();
+        useProjectStore().removeProject();
         this.$router.push("/");
       } catch (e) {
         console.error(e);

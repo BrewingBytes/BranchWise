@@ -27,6 +27,7 @@ import TopbarComponent from "./components/TopbarComponent.vue";
 import { useAppStore } from "./stores/app";
 import { GitError } from "./types/gitErrors";
 import { IGitProject } from "./types/gitProject";
+import { useProjectStore } from "./stores/project";
 
 export default defineComponent({
   name: "AppComponent",
@@ -53,13 +54,13 @@ export default defineComponent({
     provide("showError", this.showError);
 
     try {
-      useAppStore().setProjects(await invoke("get_database_projects"));
+      useProjectStore().setProjects(await invoke("get_database_projects"));
     } catch (error) {
       this.showError(error as string);
     }
 
     const unlisten = await listen("project_update", (event) => {
-      useAppStore().updateProject(event.payload as IGitProject);
+      useProjectStore().updateProject(event.payload as IGitProject);
     });
 
     this.listeners.push(unlisten);

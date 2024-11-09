@@ -15,6 +15,17 @@
             :icon="itemIcon"
           />
         </template>
+        <template #title="{ item }">
+          <p
+            v-if="!item.children"
+            @click="setCurrentBranch"
+          >
+            {{ item.title }}
+          </p>
+          <p v-else>
+            {{ item.title }}
+          </p>
+        </template>
       </v-treeview>
     </v-expansion-panel-text>
   </v-expansion-panel>

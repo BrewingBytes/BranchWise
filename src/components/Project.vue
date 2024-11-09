@@ -24,8 +24,8 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import { useAppStore } from "../stores/app";
 import { IGitProject } from "../types/gitProject";
+import { useProjectStore } from "../stores/project";
 
 export default defineComponent({
     name: "ProjectComponent",
@@ -42,7 +42,7 @@ export default defineComponent({
     },
     methods: {
         openProjectPage() {
-            useAppStore().setCurrentProject(this.project);
+            useProjectStore().setCurrentProject(this.project);
             this.$router.push("/project");
         }
     }

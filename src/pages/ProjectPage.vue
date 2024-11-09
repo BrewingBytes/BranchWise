@@ -12,6 +12,7 @@ import { mapState } from "pinia";
 import { defineComponent } from "vue";
 import BranchesSidebar from "../components/BranchesSidebar.vue";
 import { useAppStore } from "../stores/app";
+import { useProjectStore } from "../stores/project";
 
 export default defineComponent({
   name: "ProjectPage",
@@ -22,7 +23,7 @@ export default defineComponent({
     projectName(): string {
       return this.project?.directory.split("/").pop() || "";
     },
-    ...mapState(useAppStore, {
+    ...mapState(useProjectStore, {
       project: "getSelectedProject",
     }),
   },
