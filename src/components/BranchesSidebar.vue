@@ -76,7 +76,7 @@ export default defineComponent({
       let tree: IDirectory = {
         name: "",
         children: [],
-        branches: []
+        branches: [],
       };
 
       let branches: IGitBranch[] = [];
@@ -100,13 +100,13 @@ export default defineComponent({
             const newDirectory: IDirectory = {
               name: directoryName,
               children: [],
-              branches: []
+              branches: [],
             };
             currentDirectory.children.push(newDirectory);
             currentDirectory = newDirectory;
           }
         }
-        currentDirectory.branches.push(branchParts[branchParts.length - 1]);
+        currentDirectory.branches.push({ ...branch, dir_name: branchParts[branchParts.length - 1] });
       });
 
       return tree;
@@ -134,7 +134,8 @@ export default defineComponent({
         directory.branches.forEach((branch) => {
           item.children?.push({
             id: treeItems.length,
-            title: branch,
+            title: branch.dir_name,
+            branch: { ...branch }
           });
         });
       };

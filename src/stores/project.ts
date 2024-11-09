@@ -1,7 +1,7 @@
-import { defineStore } from "pinia";
-import { IGitProject } from "../types/gitProject";
-import { IGitBranch } from "../types/gitBranch";
 import { invoke } from "@tauri-apps/api/core";
+import { defineStore } from "pinia";
+import { IGitBranch } from "../types/gitBranch";
+import { IGitProject } from "../types/gitProject";
 
 interface IProjectState {
     projects: IGitProject[];
@@ -25,6 +25,13 @@ export const useProjectStore = defineStore('project', {
         },
         getBranch(): IGitBranch | null {
             return this.branch;
+        },
+        getBranches(): IGitBranch[] {
+            if (this.selectedProject === null) {
+                return [];
+            }
+
+            return this.selectedProject.localBranches.concat(this.selectedProject.remoteBranches).concat(this.selectedProject.tags);
         }
     },
     actions: {
@@ -32,7 +39,16 @@ export const useProjectStore = defineStore('project', {
             this.selectedProject = project;
         },
         setBranch(branch: IGitBranch) {
-            this.branch = branch;
+            if (this.selectedProject === null) {
+                return;
+            }
+
+            const branchObj = this.getBranches.find(b => b.name === branch.name);
+            if (branchObj === undefined) {
+                return;
+            }
+
+            this.branch = branchObj;
         },
         addProject(git: IGitProject) {
             this.projects.push(git);

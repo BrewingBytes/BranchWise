@@ -12,6 +12,8 @@ app.mount("#app");
 
 app.config.globalProperties.$router = router;
 
+router.push("/");
+
 declare module '@vue/runtime-core' {
     export interface ComponentCustomProperties {
         $router: import('vue-router').Router;

@@ -13,12 +13,14 @@
           <v-icon
             v-if="!item.children"
             :icon="itemIcon"
+            :class="getSelectedClass(item.branch)"
           />
         </template>
         <template #title="{ item }">
           <p
             v-if="!item.children"
-            @click="setCurrentBranch"
+            :class="getSelectedClass(item.branch)"
+            @click="setBranch(item.branch)"
           >
             {{ item.title }}
           </p>
@@ -33,7 +35,9 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
+import { useProjectStore } from '../../../stores/project';
 import { IBranchTreeItem } from '../../../types/branchTreeItem';
+import { IGitBranch } from '../../../types/gitBranch';
 
 export default defineComponent({
   name: 'ExpansionPanel',
@@ -63,6 +67,27 @@ export default defineComponent({
       type: String,
       default: '',
     },
+  },
+  methods: {
+    setBranch(branch: IGitBranch | undefined) {
+      if (!branch) {
+        return;
+      }
+
+      useProjectStore().setBranch(branch);
+    },
+    getSelectedClass(branch: IGitBranch | undefined) {
+      return {
+        'selected-branch': branch?.name === useProjectStore().branch?.name,
+      };
+    },
   }
 });
 </script>
+
+<style scoped>
+.selected-branch {
+  font-weight: bold;
+  color: #1976d2;
+}
+</style>
