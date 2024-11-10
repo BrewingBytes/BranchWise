@@ -36,8 +36,8 @@
 import { defineComponent } from 'vue';
 import { IBranchTreeItem } from '../types/branchTreeItem';
 import { IDirectory } from '../types/directory';
-import { IGitBranch } from '../types/gitBranch';
-import { BranchType, IGitProject } from '../types/gitProject';
+import { BranchType, IGitBranch } from '../types/gitBranch';
+import { IGitProject } from '../types/gitProject';
 import ExpansionPanel from './Sidebar/Branches/ExpansionPanel.vue';
 
 export default defineComponent({
@@ -53,10 +53,10 @@ export default defineComponent({
   },
   computed: {
     localProjectBranchesTree() {
-      return this.branchTreeToTreeview(BranchType.LOCAL);
+      return this.branchTreeToTreeview(BranchType.HEADS);
     },
     remoteProjectBranchesTree() {
-      const tree = this.branchTreeToTreeview(BranchType.REMOTE);
+      const tree = this.branchTreeToTreeview(BranchType.REMOTES);
       if (!tree) {
         return [];
       }
@@ -80,9 +80,9 @@ export default defineComponent({
       };
 
       let branches: IGitBranch[] = [];
-      if (branchType === BranchType.LOCAL) {
+      if (branchType === BranchType.HEADS) {
         branches = this.project?.localBranches || [];
-      } else if (branchType === BranchType.REMOTE) {
+      } else if (branchType === BranchType.REMOTES) {
         branches = this.project?.remoteBranches || [];
       } else if (branchType === BranchType.TAGS) {
         branches = this.project?.tags || [];

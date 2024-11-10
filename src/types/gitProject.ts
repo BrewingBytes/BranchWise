@@ -1,12 +1,6 @@
 import { IGitBranch } from "./gitBranch";
 import { GitProjectState } from "./gitProjectState";
 
-export enum BranchType {
-    LOCAL = "local",
-    REMOTE = "remote",
-    TAGS = "tags",
-}
-
 export interface GitHead {
     Branch?: string[],
     Hash?: string,

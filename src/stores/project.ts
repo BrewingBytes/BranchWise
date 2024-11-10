@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { defineStore } from "pinia";
-import { IGitBranch } from "../types/gitBranch";
+import { BranchType, IGitBranch } from "../types/gitBranch";
 import { IGitProject } from "../types/gitProject";
 
 interface IProjectState {
@@ -35,9 +35,6 @@ export const useProjectStore = defineStore('project', {
         }
     },
     actions: {
-        setSelectedProject(project: IGitProject) {
-            this.selectedProject = project;
-        },
         setBranch(branch: IGitBranch) {
             if (this.selectedProject === null) {
                 return;
@@ -73,9 +70,30 @@ export const useProjectStore = defineStore('project', {
             this.addProject(git);
             this.setCurrentProject(git);
         },
-        setCurrentProject(git: IGitProject | null) {
-            this.selectedProject = git;
-            invoke("set_current_project", { project: git });
+        setCurrentProject(project: IGitProject | null) {
+            this.selectedProject = project;
+            invoke("set_current_project", { project: project });
+
+            if (project === null) {
+                this.branch = null;
+                return;
+            }
+
+            if (project.head.Branch !== undefined) {
+                const name = project.head.Branch[1];
+
+                switch (project.head.Branch[0].toLowerCase() as BranchType) {
+                    case BranchType.HEADS:
+                        this.branch = project.localBranches.find(b => b.name === name) || null;
+                        break;
+                    case BranchType.REMOTES:
+                        this.branch = project.remoteBranches.find(b => b.name === name) || null;
+                        break;
+                    case BranchType.TAGS:
+                        this.branch = project.tags.find(b => b.name === name) || null;
+                        break;
+                }
+            }
         },
     }
 });
