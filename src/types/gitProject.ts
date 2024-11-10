@@ -1,10 +1,6 @@
 import { IGitBranch } from "./gitBranch";
+import { GitHead } from "./gitHead";
 import { GitProjectState } from "./gitProjectState";
-
-export interface GitHead {
-    Branch?: string[],
-    Hash?: string,
-}
 
 export interface IGitProject {
     directory: string,
