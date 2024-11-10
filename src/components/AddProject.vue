@@ -23,29 +23,13 @@
 <script lang="ts">
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
-import { defineComponent, inject } from "vue";
+import { defineComponent } from "vue";
 import { IGitProject } from "../types/gitProject";
 import { useProjectStore } from "../stores/project";
+import { useDialogStore } from "../stores/dialogs";
 
 export default defineComponent({
     name: "AddProject",
-    data() {
-        const showError: (event: string) => void = (e) => {
-            console.error(e);
-        };
-
-        return {
-            showError
-        }
-    },
-    mounted() {
-        const showError = inject<(event: string) => void>("showError");
-        if (showError) {
-            this.showError = showError;
-        } else {
-            throw new Error("showError not provided");
-        }
-    },
     methods: {
         async openNewProject() {
             const result = await open({
@@ -58,7 +42,7 @@ export default defineComponent({
                     const project: IGitProject = await invoke("open_git_project", { directory: result });
                     useProjectStore().addProject(project);
                 } catch (error) {
-                    this.showError(error as string);
+                    useDialogStore().openSnackbar({ text: error as string, color: "error" });
                 }
             }
         }
