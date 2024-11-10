@@ -70,11 +70,10 @@ pub fn remove_database_project(project: GitProject) -> Result<(), GitError> {
 #[tauri::command]
 pub fn get_commit_history(
     project: GitProject,
-    commit_hash: &str,
+    hash: &str,
     length: Option<usize>,
 ) -> Result<Vec<GitCommit>, GitError> {
-    let commit =
-        GitCommit::from_hash(&project, commit_hash).map_err(|_| GitError::InvalidHistory)?;
+    let commit = GitCommit::from_hash(&project, hash).map_err(|_| GitError::InvalidHistory)?;
 
     commit
         .get_commit_history(&project, length)

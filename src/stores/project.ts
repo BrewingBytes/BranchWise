@@ -2,6 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { defineStore } from "pinia";
 import { BranchType, IGitBranch } from "../types/gitBranch";
 import { IGitProject } from "../types/gitProject";
+import { useDialogStore } from "./dialogs";
 
 interface IProjectState {
     projects: IGitProject[];
@@ -35,6 +36,19 @@ export const useProjectStore = defineStore('project', {
         }
     },
     actions: {
+        async fetchCommitHistory (length: number = 10) {
+            let hash = "";
+
+            if (this.branch !== null) {
+                hash = this.branch.commit.trim();
+            }
+
+            try {
+            await invoke("get_commit_history", { project: this.selectedProject, hash, length});
+            } catch (error) {
+                useDialogStore().openSnackbar({text: error as string, color: "error"});
+            }
+        },
         setBranch(branch: IGitBranch) {
             if (this.selectedProject === null) {
                 return;
@@ -46,6 +60,9 @@ export const useProjectStore = defineStore('project', {
             }
 
             this.branch = branchObj;
+
+            // invoke("set_current_branch", { branch: branch });
+            this.fetchCommitHistory();
         },
         addProject(git: IGitProject) {
             this.projects.push(git);
@@ -94,6 +111,8 @@ export const useProjectStore = defineStore('project', {
                         break;
                 }
             }
+
+            this.fetchCommitHistory();
         },
     }
 });
