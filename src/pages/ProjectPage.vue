@@ -34,6 +34,13 @@ export default defineComponent({
       useAppStore().setTitle(this.projectName);
     }
   },
+  beforeRouteEnter(_to, _from, next) {
+    if (!useProjectStore().getSelectedProject) {
+      next("/");
+    } else {
+      next();
+    }
+  },
 });
 </script>
 
