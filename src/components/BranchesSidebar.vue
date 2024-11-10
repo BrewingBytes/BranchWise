@@ -1,35 +1,23 @@
 <template>
-  <v-col
-    align="center"
-    class="pa-0"
-    cols="4"
-    style="border-right: 1px solid #e0e0e0;"
-  >
-    <v-expansion-panels>
-      <ExpansionPanel
-        title="Branches"
-        :branches="localProjectBranchesTree"
-      />
-      <ExpansionPanel
-        title="Remotes"
-        :branches="remoteProjectBranchesTree"
-        expand-icon="mdi-cloud"
-        collapse-icon="mdi-cloud"
-      />
-      <ExpansionPanel
-        title="Tags"
-        :branches="tagsProjectBranchesTree"
-        expand-icon="mdi-tag-arrow-down"
-        collapse-icon="mdi-tag-arrow-up"
-        item-icon="mdi-tag"
-      />
-    </v-expansion-panels>
-  </v-col>
-  <v-col
-    align="center"
-    class="pa-0"
-    cols="8"
-  />
+  <v-expansion-panels>
+    <ExpansionPanel
+      title="Branches"
+      :branches="localProjectBranchesTree"
+    />
+    <ExpansionPanel
+      title="Remotes"
+      :branches="remoteProjectBranchesTree"
+      expand-icon="mdi-cloud"
+      collapse-icon="mdi-cloud"
+    />
+    <ExpansionPanel
+      title="Tags"
+      :branches="tagsProjectBranchesTree"
+      expand-icon="mdi-tag-arrow-down"
+      collapse-icon="mdi-tag-arrow-up"
+      item-icon="mdi-tag"
+    />
+  </v-expansion-panels>
 </template>
 
 <script lang="ts">
@@ -60,7 +48,7 @@ export default defineComponent({
       if (!tree) {
         return [];
       }
-      
+
       tree.forEach((root) => {
         root.customIcon = "mdi:mdi-cloud";
       });
