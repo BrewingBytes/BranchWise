@@ -29,14 +29,6 @@ pub enum GitFilesOptional {
     PackedRefs,
 }
 
-impl AsRef<str> for GitFilesOptional {
-    fn as_ref(&self) -> &str {
-        match *self {
-            GitFilesOptional::PackedRefs => "packed-refs",
-        }
-    }
-}
-
 impl fmt::Display for GitFilesOptional {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
