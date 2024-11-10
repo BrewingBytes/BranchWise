@@ -3,11 +3,13 @@ import { defineStore } from "pinia";
 import { BranchType, IGitBranch } from "../types/gitBranch";
 import { IGitProject } from "../types/gitProject";
 import { useDialogStore } from "./dialogs";
+import { IGitCommit } from "../types/gitCommit";
 
 interface IProjectState {
     projects: IGitProject[];
     selectedProject: IGitProject | null;
     branch: IGitBranch | null;
+    history: IGitCommit[];
 }
 
 export const useProjectStore = defineStore('project', {
@@ -16,6 +18,7 @@ export const useProjectStore = defineStore('project', {
             projects: [] as IGitProject[],
             selectedProject: null as IGitProject | null,
             branch: null as IGitBranch | null,
+            history: [] as IGitCommit[],
         }),
     getters: {
         getProjects(): IGitProject[] {
@@ -44,8 +47,9 @@ export const useProjectStore = defineStore('project', {
             }
 
             try {
-            await invoke("get_commit_history", { project: this.selectedProject, hash, length});
-            } catch (error) {
+            this.history = await invoke("get_commit_history", { project: this.selectedProject, hash, length});
+                console.log(this.history);
+        } catch (error) {
                 useDialogStore().openSnackbar({text: error as string, color: "error"});
             }
         },
