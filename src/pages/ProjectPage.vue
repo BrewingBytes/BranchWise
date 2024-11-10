@@ -36,6 +36,8 @@ export default defineComponent({
   },
   mounted() {
     useAppStore().setTitle(this.projectName);
+
+    console.log(this.project);
   },
 });
 </script>
