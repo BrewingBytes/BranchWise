@@ -101,6 +101,13 @@ mod tests {
 
         for file in GitFilesRequired::iter() {
             fs::File::create(format!("{}/{}", git_path, file)).unwrap();
+
+            if file.as_ref() == GitFilesRequired::HEAD.as_ref() {
+                fs::File::create(format!("{}/{}", git_path, file))
+                    .unwrap()
+                    .write_all("ref: refs/heads/main".as_bytes())
+                    .unwrap();
+            }
         }
 
         for ref_folder in GitRefs::iter() {
