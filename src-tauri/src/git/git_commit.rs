@@ -84,6 +84,32 @@ impl GitCommit {
             .map(|parent_hash| GitCommit::from_hash(project, parent_hash))
             .collect()
     }
+
+    pub fn get_commit_history(
+        &self,
+        project: &GitProject,
+        length: Option<usize>,
+    ) -> Result<Vec<GitCommit>, GitObjectError> {
+        let mut commit = self.clone();
+        let mut history = Vec::<GitCommit>::new();
+        let length = length.unwrap_or(usize::MAX);
+
+        loop {
+            history.push(commit.clone());
+            if history.len() >= length {
+                break;
+            }
+
+            let parent_commits = commit.get_parent_commits(project)?;
+            if parent_commits.is_empty() {
+                break;
+            }
+
+            commit = parent_commits[0].clone();
+        }
+
+        Ok(history)
+    }
 }
 
 impl GitObject for GitCommit {

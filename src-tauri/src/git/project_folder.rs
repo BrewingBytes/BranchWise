@@ -1,5 +1,6 @@
 use super::{
-    git_folders::GitBranchType, git_project::GitProject, git_project_state::GitProjectState,
+    git_commit::GitCommit, git_folders::GitBranchType, git_project::GitProject,
+    git_project_state::GitProjectState, object::GitObject,
 };
 use crate::{database::storage::DATABASE, errors::git_error::GitError};
 use std::fs;
@@ -64,6 +65,20 @@ pub fn remove_database_project(project: GitProject) -> Result<(), GitError> {
         .map_err(|_| GitError::DatabaseDeleteError)?;
 
     Ok(())
+}
+
+#[tauri::command]
+pub fn get_commit_history(
+    project: GitProject,
+    commit_hash: &str,
+    length: Option<usize>,
+) -> Result<Vec<GitCommit>, GitError> {
+    let commit =
+        GitCommit::from_hash(&project, commit_hash).map_err(|_| GitError::InvalidHistory)?;
+
+    commit
+        .get_commit_history(&project, length)
+        .map_err(|_| GitError::InvalidHistory)
 }
 
 #[cfg(test)]
@@ -597,6 +612,76 @@ mod tests {
         assert_eq!(parent_commit.get_tree_hash(), "tree");
         assert_eq!(parent_commit.get_parent_hashes(), &Vec::<String>::new());
         assert_eq!(parent_commit.get_message(), "parent");
+    }
+
+    #[test]
+    fn test_git_commit_get_history() {
+        let folder = TempDir::new("test_git_commit_get_history").unwrap();
+        let test_git_folder = folder.path().to_str().unwrap();
+
+        let author = GitCommitAuthor::new(
+            GitUser::new(
+                "Andrei Serban".to_string(),
+                "andrei.serban@brewingbytes.com".to_string(),
+            ),
+            100,
+            "+03:00".to_string(),
+            GitCommitAuthorType::Author,
+        );
+
+        let committer = GitCommitAuthor::new(
+            GitUser::new(
+                "Andrei Serban".to_string(),
+                "andrei.serban@brewingbytes.com".to_string(),
+            ),
+            100,
+            "+03:00".to_string(),
+            GitCommitAuthorType::Committer,
+        );
+
+        create_sample_git_folder(test_git_folder);
+        let git_project = open_git_project(test_git_folder).unwrap();
+
+        let parent_content = create_encoded_commit_content(
+            author.clone(),
+            committer.clone(),
+            Some("tree"),
+            Vec::new(),
+            "parent",
+        );
+        let commit_prefix = String::from("6e18e0fdeac4932d71ad981dc4dc497c49f3c6");
+
+        create_object(
+            git_project.get_directory(),
+            format!("{}{:02x}", commit_prefix, 0).as_str(),
+            parent_content.unwrap().as_slice(),
+        );
+
+        for i in 1..32 {
+            let content = create_encoded_commit_content(
+                author.clone(),
+                committer.clone(),
+                Some("tree"),
+                vec![format!("{}{:02x}", commit_prefix, i - 1).as_str()],
+                "test",
+            );
+
+            create_object(
+                git_project.get_directory(),
+                format!("{}{:02x}", commit_prefix, i).as_str(),
+                content.unwrap().as_slice(),
+            );
+        }
+
+        let history = get_commit_history(
+            git_project,
+            "6e18e0fdeac4932d71ad981dc4dc497c49f3c61f",
+            None,
+        )
+        .unwrap();
+
+        assert_eq!(history.len(), 32);
+        assert_eq!(history[31].get_message(), "parent");
     }
 
     #[test]

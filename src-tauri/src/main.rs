@@ -9,7 +9,8 @@ use std::fs;
 use database::storage::DATABASE;
 use errors::git_error::GitErrorProject;
 use git::project_folder::{
-    get_database_projects, open_git_project, remove_database_project, set_current_project,
+    get_commit_history, get_database_projects, open_git_project, remove_database_project,
+    set_current_project,
 };
 use tauri::{AppHandle, Emitter, Manager};
 
@@ -85,7 +86,8 @@ fn main() {
             open_git_project,
             get_database_projects,
             remove_database_project,
-            set_current_project
+            set_current_project,
+            get_commit_history,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
