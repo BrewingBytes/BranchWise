@@ -19,6 +19,13 @@ export default defineComponent({
   components: {
     BranchesSidebar,
   },
+  beforeRouteEnter(_to, _from, next) {
+    if (!useProjectStore().getSelectedProject) {
+      next("/");
+    } else {
+      next();
+    }
+  },
   computed: {
     projectName(): string {
       return this.project?.directory.split("/").pop() || "";
@@ -28,18 +35,7 @@ export default defineComponent({
     }),
   },
   mounted() {
-    if (!this.project) {
-      this.$router.push("/");
-    } else {
-      useAppStore().setTitle(this.projectName);
-    }
-  },
-  beforeRouteEnter(_to, _from, next) {
-    if (!useProjectStore().getSelectedProject) {
-      next("/");
-    } else {
-      next();
-    }
+    useAppStore().setTitle(this.projectName);
   },
 });
 </script>
