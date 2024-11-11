@@ -1,5 +1,8 @@
 <template>
-  <v-expansion-panels>
+  <v-expansion-panels
+    variant="accordion"
+    style="overflow: hidden;"
+  >
     <ExpansionPanel
       title="Branches"
       :branches="localProjectBranchesTree"

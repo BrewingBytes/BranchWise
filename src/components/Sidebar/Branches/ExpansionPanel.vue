@@ -1,7 +1,9 @@
 <template>
-  <v-expansion-panel static>
+  <v-expansion-panel
+    static
+  >
     <v-expansion-panel-title>{{ title }}</v-expansion-panel-title>
-    <v-expansion-panel-text>
+    <v-expansion-panel-text style="overflow-y: scroll;">
       <v-treeview
         :items="branches"
         :expand-icon="expandIcon"
@@ -89,5 +91,11 @@ export default defineComponent({
 .selected-branch {
   font-weight: bold;
   color: #1976d2;
+}
+</style>
+
+<style>
+.v-expansion-panel-text__wrapper {
+    max-height: calc(600px - 64px - (2 * 48px));
 }
 </style>
