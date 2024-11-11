@@ -96,6 +96,6 @@ export default defineComponent({
 
 <style>
 .v-expansion-panel-text__wrapper {
-    max-height: calc(600px - 64px - (2 * 48px));
+    max-height: calc(75vh - 64px - (3 * 48px));
 }
 </style>
