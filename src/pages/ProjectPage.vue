@@ -15,9 +15,7 @@
       align="center"
       class="pa-0"
       cols="8"
-    >
-      <CommitTopbar />
-    </v-col>
+    />
   </v-row>
 </template>
 
@@ -25,7 +23,6 @@
 import { mapState } from "pinia";
 import { defineComponent } from "vue";
 import BranchesSidebar from "../components/BranchesSidebar.vue";
-import CommitTopbar from "../components/CommitTopbar.vue";
 import { useAppStore } from "../stores/app";
 import { useProjectStore } from "../stores/project";
 
@@ -33,7 +30,6 @@ export default defineComponent({
   name: "ProjectPage",
   components: {
     BranchesSidebar,
-    CommitTopbar,
   },
   beforeRouteEnter(_to, _from, next) {
     if (!useProjectStore().getSelectedProject) {
