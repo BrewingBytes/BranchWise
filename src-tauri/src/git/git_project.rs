@@ -326,7 +326,7 @@ impl GitProject {
 
         Ok(())
     }
-
+    
     pub fn set_state(&mut self, state: GitProjectState) {
         self.state = state;
     }
