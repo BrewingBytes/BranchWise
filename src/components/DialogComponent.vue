@@ -4,7 +4,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import ConfirmationDialog from './Dialogs/ConfirmationDialog.vue';
+import ConfirmationDialog from '@/components/Dialogs/ConfirmationDialog.vue';
 
 export default defineComponent({
     name: 'DialogComponent',
