@@ -47,11 +47,11 @@ import { invoke } from "@tauri-apps/api/core";
 import { exit } from "@tauri-apps/plugin-process";
 import { mapState } from "pinia";
 import { defineComponent } from "vue";
-import { PrependVariant } from "../enums/prependVariant";
-import { useAppStore } from "../stores/app";
-import SidebarItem from "./Sidebar/SidebarItem.vue";
-import { useDialogStore } from "../stores/dialogs";
-import { useProjectStore } from "../stores/project";
+import { PrependVariant } from "@/enums/prependVariant";
+import { useAppStore } from "@/stores/app";
+import SidebarItem from "@/components/Sidebar/SidebarItem.vue";
+import { useDialogStore } from "@/stores/dialogs";
+import { useProjectStore } from "@/stores/project";
 
 export default defineComponent({
   name: "SidebarComponent",

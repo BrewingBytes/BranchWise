@@ -1,6 +1,6 @@
-import { IGitBranch } from "./gitBranch";
-import { GitHead } from "./gitHead";
-import { GitProjectState } from "./gitProjectState";
+import { IGitBranch } from "@/types/gitBranch";
+import { GitHead } from "@/types/gitHead";
+import { GitProjectState } from "@/types/gitProjectState";
 
 export interface IGitProject {
     directory: string,

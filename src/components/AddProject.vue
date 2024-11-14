@@ -24,9 +24,9 @@
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import { defineComponent } from "vue";
-import { IGitProject } from "../types/gitProject";
-import { useProjectStore } from "../stores/project";
-import { useDialogStore } from "../stores/dialogs";
+import { IGitProject } from "@/types/gitProject";
+import { useProjectStore } from "@/stores/project";
+import { useDialogStore } from "@/stores/dialogs";
 
 export default defineComponent({
     name: "AddProject",

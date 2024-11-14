@@ -30,9 +30,9 @@
 <script lang="ts">
 import { mapState } from "pinia";
 import { defineComponent } from "vue";
-import BranchesSidebar from "../components/Project/BranchesSidebar.vue";
-import { useAppStore } from "../stores/app";
-import { useProjectStore } from "../stores/project";
+import BranchesSidebar from "@/components/Project/BranchesSidebar.vue";
+import { useAppStore } from "@/stores/app";
+import { useProjectStore } from "@/stores/project";
 
 export default defineComponent({
   name: "ProjectPage",

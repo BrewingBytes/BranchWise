@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { DEFAULT_USER } from "../types/user";
+import { DEFAULT_USER } from "@/types/user";
 
 interface IAppState {
     title: string;
