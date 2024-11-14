@@ -18,7 +18,15 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+
+    /* Resolving paths */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+       "src/*"
+      ]
+     }
   },
   "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue", "vitest.config.ts"],
   "references": [{ "path": "./tsconfig.node.json" }]
