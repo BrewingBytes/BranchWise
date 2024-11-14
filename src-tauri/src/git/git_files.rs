@@ -7,6 +7,15 @@ pub enum GitFilesRequired {
     CONFIG,
 }
 
+impl AsRef<str> for GitFilesRequired {
+    fn as_ref(&self) -> &str {
+        match *self {
+            GitFilesRequired::HEAD => "HEAD",
+            GitFilesRequired::CONFIG => "config",
+        }
+    }
+}
+
 impl fmt::Display for GitFilesRequired {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {

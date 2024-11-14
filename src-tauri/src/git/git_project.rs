@@ -6,6 +6,7 @@ use super::{
     git_branch::GitBranch,
     git_files::{GitFilesOptional, GitFilesRequired},
     git_folders::{GitBranchType, GitFolders, GitRefs, GIT_FOLDER},
+    git_head::GitHead,
     git_project_state::GitProjectState,
 };
 use crate::errors::git_error::GitError;
@@ -15,6 +16,7 @@ use crate::errors::git_error::GitError;
 pub struct GitProject {
     directory: String,
     state: GitProjectState,
+    head: GitHead,
     local_branches: Vec<GitBranch>,
     remotes: Vec<String>,
     remote_branches: Vec<GitBranch>,
@@ -34,6 +36,7 @@ impl GitProject {
         GitProject {
             directory: String::from(directory),
             state: GitProjectState::Invalid,
+            head: GitHead::Hash(String::new()),
             local_branches: Vec::new(),
             remotes: Vec::new(),
             remote_branches: Vec::new(),
@@ -59,6 +62,7 @@ impl GitProject {
         self.fetch_remotes_directories()?;
         self.fetch_branches(GitBranchType::Local)?;
         self.fetch_branches(GitBranchType::Tags)?;
+        self.fetch_head()?;
         _ = self.fetch_packed_refs(); // Should be Ok if the file doesn't exist
 
         // Fetch the branches for each remote
@@ -304,6 +308,25 @@ impl GitProject {
         Ok(())
     }
 
+    /**
+     * Fetch the HEAD branch
+     * The HEAD branch is the current branch the git project is on
+     *
+     * This function expects that the HEAD file exists
+     */
+    pub fn fetch_head(&mut self) -> Result<(), GitError> {
+        // Read the HEAD file
+        let head_path = PathBuf::from(self.get_directory())
+            .join(GIT_FOLDER)
+            .join(GitFilesRequired::HEAD.to_string());
+
+        if let Ok(head) = fs::read_to_string(head_path) {
+            self.head = GitHead::from(&head).map_err(|_| GitError::InvalidHead)?;
+        }
+
+        Ok(())
+    }
+    
     pub fn set_state(&mut self, state: GitProjectState) {
         self.state = state;
     }
