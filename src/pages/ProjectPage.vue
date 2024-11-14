@@ -14,7 +14,13 @@
     <v-col
       align="center"
       class="pa-0"
-      cols="8"
+      cols="4"
+    />
+    <v-col
+      align="center"
+      class="pa-0"
+      cols="4"
+      style="border-left: 1px solid #e0e0e0;"
     />
   </v-row>
 </template>

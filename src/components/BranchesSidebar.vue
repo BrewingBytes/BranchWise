@@ -20,13 +20,6 @@
       collapse-icon="mdi-tag-arrow-up"
       item-icon="mdi-tag"
     />
-    <ExpansionPanel
-      title="Commits"
-      :branches="[]"
-      expand-icon="mdi-source-commit-start"
-      collapse-icon="mdi-source-commit-end"
-      item-icon="mdi-source-commit"
-    />
   </v-expansion-panels>
 </template>
 
