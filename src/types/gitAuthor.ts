@@ -1,4 +1,4 @@
-import { IGitUser } from "./gitUser";
+import { IGitUser } from "@/types/gitUser";
 
 export enum GitCommitAuthorType {
     AUTHOR = "author",

@@ -24,13 +24,13 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
+import ExpansionPanel from '@/components/Sidebar/Branches/ExpansionPanel.vue';
+import { useProjectStore } from '@/stores/project';
 import { IBranchTreeItem } from '@/types/branchTreeItem';
 import { IDirectory } from '@/types/directory';
 import { BranchType, IGitBranch } from '@/types/gitBranch';
-import ExpansionPanel from '@/components/Sidebar/Branches/ExpansionPanel.vue';
 import { mapState } from 'pinia';
-import { useProjectStore } from '@/stores/project';
+import { defineComponent } from 'vue';
 
 export default defineComponent({
   name: 'BranchesSidebar',

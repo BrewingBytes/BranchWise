@@ -1,4 +1,4 @@
-import { IGitAuthor } from "./gitAuthor";
+import { IGitAuthor } from "@/types/gitAuthor";
 
 export interface IGitCommit {
     tree_hash: string;

@@ -21,12 +21,12 @@
 </template>
 
 <script lang="ts">
+import { useDialogStore } from "@/stores/dialogs";
+import { useProjectStore } from "@/stores/project";
+import { IGitProject } from "@/types/gitProject";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import { defineComponent } from "vue";
-import { IGitProject } from "@/types/gitProject";
-import { useProjectStore } from "@/stores/project";
-import { useDialogStore } from "@/stores/dialogs";
 
 export default defineComponent({
     name: "AddProject",

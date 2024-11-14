@@ -3,8 +3,8 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
 import ConfirmationDialog from '@/components/Dialogs/ConfirmationDialog.vue';
+import { defineComponent } from 'vue';
 
 export default defineComponent({
     name: 'DialogComponent',

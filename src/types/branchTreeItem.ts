@@ -1,4 +1,4 @@
-import { IGitBranch } from "./gitBranch";
+import { IGitBranch } from "@/types/gitBranch";
 
 export interface IBranchTreeItem {
     id: number;

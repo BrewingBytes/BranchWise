@@ -28,9 +28,9 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
 import { useDialogStore } from '@/stores/dialogs';
 import { mapState } from 'pinia';
+import { defineComponent } from 'vue';
 
 export default defineComponent({
     name: 'ConfirmationDialog',

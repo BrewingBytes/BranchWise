@@ -1,9 +1,9 @@
 import { invoke } from "@tauri-apps/api/core";
 import { defineStore } from "pinia";
 import { BranchType, IGitBranch } from "../types/gitBranch";
+import { IGitCommit } from "../types/gitCommit";
 import { IGitProject } from "../types/gitProject";
 import { useDialogStore } from "./dialogs";
-import { IGitCommit } from "../types/gitCommit";
 
 interface IProjectState {
     projects: IGitProject[];

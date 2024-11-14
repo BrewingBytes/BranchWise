@@ -1,6 +1,6 @@
-import { test, expect, vi } from "vitest";
-import { createApp } from "vue";
 import App from "@/App.vue";
+import { expect, test, vi } from "vitest";
+import { createApp } from "vue";
 
 test('App is mounted', () => {
     document.body.innerHTML =

@@ -36,10 +36,10 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
 import { useProjectStore } from '@/stores/project';
 import { IBranchTreeItem } from '@/types/branchTreeItem';
 import { IGitBranch } from '@/types/gitBranch';
+import { defineComponent } from 'vue';
 
 export default defineComponent({
   name: 'ExpansionPanel',

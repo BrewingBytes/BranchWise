@@ -1,4 +1,4 @@
-import { IGitBranch } from "./gitBranch";
+import { IGitBranch } from "@/types/gitBranch";
 
 export interface IDirectoryBranch extends IGitBranch {
   dir_name: string;

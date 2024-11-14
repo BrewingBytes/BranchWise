@@ -5,4 +5,5 @@ export enum GitError {
     noLocalBranches = "Error: No local branches found",
     databaseSaveError = "Error: Cannot save to database",
     databaseDeleteError = "Error: Cannot delete from database",
+    invalidHistory = "Error: Invalid history",
 };

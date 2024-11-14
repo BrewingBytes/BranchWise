@@ -17,17 +17,17 @@
 </template>
 
 <script lang="ts">
-import { invoke } from "@tauri-apps/api/core";
-import { listen, UnlistenFn } from "@tauri-apps/api/event";
-import { mapState } from "pinia";
-import { defineComponent } from "vue";
 import DialogComponent from "@/components/DialogComponent.vue";
 import SidebarComponent from "@/components/SidebarComponent.vue";
 import TopbarComponent from "@/components/TopbarComponent.vue";
 import { useAppStore } from "@/stores/app";
-import { IGitProject } from "@/types/gitProject";
-import { useProjectStore } from "@/stores/project";
 import { useDialogStore } from "@/stores/dialogs";
+import { useProjectStore } from "@/stores/project";
+import { IGitProject } from "@/types/gitProject";
+import { invoke } from "@tauri-apps/api/core";
+import { listen, UnlistenFn } from "@tauri-apps/api/event";
+import { mapState } from "pinia";
+import { defineComponent } from "vue";
 
 export default defineComponent({
   name: "AppComponent",
