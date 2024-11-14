@@ -1,5 +1,5 @@
-import { IGitBranch } from "./gitBranch";
-import { GitProjectState } from "./gitProjectState";
+import { IGitBranch } from "@/types/gitBranch";
+import { GitProjectState } from "@/types/gitProjectState";
 
 export enum BranchType {
     LOCAL = "local",

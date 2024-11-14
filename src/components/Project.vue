@@ -24,8 +24,8 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import { useAppStore } from "../stores/app";
-import { IGitProject } from "../types/gitProject";
+import { useAppStore } from "@/stores/app";
+import { IGitProject } from "@/types/gitProject";
 
 export default defineComponent({
     name: "ProjectComponent",
