@@ -25,22 +25,17 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import { IBranchTreeItem } from '../types/branchTreeItem';
-import { IDirectory } from '../types/directory';
-import { BranchType, IGitBranch } from '../types/gitBranch';
-import { IGitProject } from '../types/gitProject';
-import ExpansionPanel from './Sidebar/Branches/ExpansionPanel.vue';
+import { IBranchTreeItem } from '@/types/branchTreeItem';
+import { IDirectory } from '@/types/directory';
+import { BranchType, IGitBranch } from '@/types/gitBranch';
+import ExpansionPanel from '@/components/Sidebar/Branches/ExpansionPanel.vue';
+import { mapState } from 'pinia';
+import { useProjectStore } from '@/stores/project';
 
 export default defineComponent({
   name: 'BranchesSidebar',
   components: {
     ExpansionPanel,
-  },
-  props: {
-    project: {
-      type: Object as () => IGitProject | null,
-      required: true,
-    },
   },
   computed: {
     localProjectBranchesTree() {
@@ -61,6 +56,9 @@ export default defineComponent({
     tagsProjectBranchesTree() {
       return this.branchTreeToTreeview(BranchType.TAGS);
     },
+    ...mapState(useProjectStore, {
+      project: "getSelectedProject",
+    }),
   },
   methods: {
     makeBranchesTree(branchType: BranchType) {

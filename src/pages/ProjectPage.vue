@@ -9,13 +9,15 @@
       cols="4"
       style="border-right: 1px solid #e0e0e0;"
     >
-      <BranchesSidebar :project="project" />
+      <BranchesSidebar />
     </v-col>
     <v-col
       align="center"
       class="pa-0"
       cols="4"
-    />
+    >
+      <CommitHistory />
+    </v-col>
     <v-col
       align="center"
       class="pa-0"
@@ -28,7 +30,7 @@
 <script lang="ts">
 import { mapState } from "pinia";
 import { defineComponent } from "vue";
-import BranchesSidebar from "../components/BranchesSidebar.vue";
+import BranchesSidebar from "../components/Project/BranchesSidebar.vue";
 import { useAppStore } from "../stores/app";
 import { useProjectStore } from "../stores/project";
 

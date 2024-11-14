@@ -29,7 +29,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import { useDialogStore } from '../../stores/dialogs';
+import { useDialogStore } from '@/stores/dialogs';
 import { mapState } from 'pinia';
 
 export default defineComponent({
