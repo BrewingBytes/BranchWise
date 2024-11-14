@@ -21,12 +21,12 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen, UnlistenFn } from "@tauri-apps/api/event";
 import { mapState } from "pinia";
 import { defineComponent, provide } from "vue";
-import DialogComponent from "./components/DialogComponent.vue";
-import SidebarComponent from "./components/SidebarComponent.vue";
-import TopbarComponent from "./components/TopbarComponent.vue";
-import { useAppStore } from "./stores/app";
-import { GitError } from "./types/gitErrors";
-import { IGitProject } from "./types/gitProject";
+import DialogComponent from "@/components/DialogComponent.vue";
+import SidebarComponent from "@/components/SidebarComponent.vue";
+import TopbarComponent from "@/components/TopbarComponent.vue";
+import { useAppStore } from "@/stores/app";
+import { GitError } from "@/types/gitErrors";
+import { IGitProject } from "@/types/gitProject";
 
 export default defineComponent({
   name: "AppComponent",

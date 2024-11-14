@@ -27,9 +27,9 @@
 import { defineComponent } from "vue";
 
 import { mapState } from "pinia";
-import AddProject from "../components/AddProject.vue";
-import Project from "../components/Project.vue";
-import { useAppStore } from "../stores/app";
+import AddProject from "@/components/AddProject.vue";
+import Project from "@/components/Project.vue";
+import { useAppStore } from "@/stores/app";
 
 export default defineComponent({
     name: "IndexPage",

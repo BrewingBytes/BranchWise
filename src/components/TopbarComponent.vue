@@ -37,7 +37,7 @@
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { mapState } from "pinia";
 import { CreateComponentPublicInstance, defineComponent } from "vue";
-import { useAppStore } from "../stores/app";
+import { useAppStore } from "@/stores/app";
 const appWindow = getCurrentWebviewWindow()
 
 export default defineComponent({

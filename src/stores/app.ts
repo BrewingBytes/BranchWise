@@ -1,7 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { defineStore } from "pinia";
-import { IGitProject } from "../types/gitProject";
-import { DEFAULT_USER } from "../types/user";
+import { IGitProject } from "@/types/gitProject";
+import { DEFAULT_USER } from "@/types/user";
 
 interface IAppState {
     title: string;
