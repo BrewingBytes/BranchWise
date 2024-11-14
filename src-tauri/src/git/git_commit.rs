@@ -173,9 +173,7 @@ impl GitObject for GitCommit {
                     break;
                 }
                 CommitPrefix::Invalid => {
-                    return Err(GitObjectError::InvalidCommitFile(
-                        CommitError::InvalidContent,
-                    ));
+                    message += line;
                 }
             }
 
