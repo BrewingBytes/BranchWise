@@ -481,6 +481,7 @@ mod tests {
             author.clone(),
             commiter.clone(),
             "test message",
+            None,
         );
         commit.write_object(&git_project).unwrap();
 

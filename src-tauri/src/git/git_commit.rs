@@ -13,6 +13,7 @@ pub enum CommitPrefix {
     Author,
     Committer,
     Message,
+    Signature,
     Invalid,
 }
 
@@ -24,6 +25,7 @@ impl From<&str> for CommitPrefix {
             "author" => CommitPrefix::Author,
             "committer" => CommitPrefix::Committer,
             "message" => CommitPrefix::Message,
+            "gpgsig" => CommitPrefix::Signature,
             _ => CommitPrefix::Invalid,
         }
     }
@@ -36,6 +38,7 @@ pub struct GitCommit {
     author: GitCommitAuthor,
     committer: GitCommitAuthor,
     message: String,
+    gpg_signature: Option<String>,
 }
 
 #[derive(Clone, Serialize)]
@@ -53,6 +56,7 @@ impl GitCommit {
         author: GitCommitAuthor,
         committer: GitCommitAuthor,
         message: &str,
+        gpg_signature: Option<String>,
     ) -> GitCommit {
         GitCommit {
             tree_hash: tree_hash.to_string(),
@@ -60,6 +64,7 @@ impl GitCommit {
             author,
             committer,
             message: message.to_string(),
+            gpg_signature,
         }
     }
 
@@ -83,6 +88,10 @@ impl GitCommit {
         &self.message
     }
 
+    pub fn get_gpg_signature(&self) -> &Option<String> {
+        &self.gpg_signature
+    }
+
     pub fn get_parent_commits(
         &self,
         project: &GitProject,
@@ -98,7 +107,7 @@ impl GitCommit {
      * project: The project to get the commit from
      * length: The number of commits to get, starting from the given commit
      * hash: The hash of the commit to get
-     * 
+     *
      * Returns the commit history, starting from the given commit
      * If length is None, all commits are returned
      */
@@ -108,7 +117,6 @@ impl GitCommit {
         length: Option<usize>,
         hash: &str,
     ) -> Result<Vec<GitCommitWithHash>, GitObjectError> {
-
         // UI needs to display the commit hash of the commit that was clicked on
         // So we need to add the hash of the commit to the history
         let mut commit = GitCommitWithHash {
@@ -161,7 +169,8 @@ impl GitObject for GitCommit {
         let mut parents = Vec::<String>::new();
         let mut author = Option::<GitCommitAuthor>::None;
         let mut committer = Option::<GitCommitAuthor>::None;
-        let mut message = String::new();
+        let mut in_signature = false;
+        let mut signature = String::new();
 
         // Remove the last newline character
         let mut data = &data[..data.len() - 1];
@@ -172,6 +181,19 @@ impl GitObject for GitCommit {
                     .ok_or(GitObjectError::InvalidCommitFile(
                         CommitError::InvalidContent,
                     ))?;
+
+            // If we are in the signature section, add the line to the signature
+            if in_signature {
+                signature += line;
+                data = remaining_data;
+
+                if line.contains("-----END PGP SIGNATURE-----") {
+                    in_signature = false;
+                }
+
+                signature += "\n";
+                continue;
+            }
 
             // Get the prefix of the line, which is the first word
             // If there is none, use "message" as the prefix
@@ -199,13 +221,11 @@ impl GitObject for GitCommit {
                         GitCommitAuthorType::Committer,
                     )?)
                 }
-                CommitPrefix::Message => {
-                    message = value.to_string();
-                    break;
+                CommitPrefix::Signature => {
+                    in_signature = true;
+                    signature = value.to_string() + "\n";
                 }
-                CommitPrefix::Invalid => {
-                    message += line;
-                }
+                _ => break,
             }
 
             data = remaining_data;
@@ -224,7 +244,8 @@ impl GitObject for GitCommit {
             &parents,
             author,
             committer,
-            message.as_str(),
+            data.trim(),
+            (!signature.is_empty()).then_some(signature),
         ))
     }
 
@@ -246,12 +267,24 @@ impl fmt::Display for GitCommit {
             .collect::<Vec<String>>()
             .join("");
 
-        let content = format!(
-            "tree {}\n{}{}\n{}\n\n{}",
-            self.tree_hash, parent_hashes, self.author, self.committer, self.message
-        );
-
-        write!(f, "{}", content)
+        if self.gpg_signature.is_some() {
+            write!(
+                f,
+                "tree {}\n{}{}\n{}\ngpgsig {}\n\n{}",
+                self.tree_hash,
+                parent_hashes,
+                self.author,
+                self.committer,
+                self.gpg_signature.clone().unwrap(),
+                self.message
+            )
+        } else {
+            write!(
+                f,
+                "tree {}\n{}{}\n{}\n\n{}",
+                self.tree_hash, parent_hashes, self.author, self.committer, self.message
+            )
+        }
     }
 }
 
@@ -295,6 +328,7 @@ mod tests {
             author.clone(),
             author.clone(),
             "commit message",
+            None,
         )
     }
 
@@ -428,6 +462,31 @@ mod tests {
     }
 
     #[test]
+    fn test_gpg_sig() {
+        let author = mock_git_commit_author();
+        let committer = mock_git_commit_committer();
+        let git_commit = GitCommit::new(
+            "test",
+            &[],
+            author,
+            committer,
+            "test",
+            Some(
+                "-----BEGIN PGP SIGNATURE-----\n\naaaaa\n-----END PGP SIGNATURE-----\n".to_string(),
+            ),
+        );
+
+        let encoded_file_content = git_commit.get_encoded_data().unwrap();
+        let git_commit = GitCommit::from_encoded_data(&encoded_file_content).unwrap();
+
+        assert_eq!(
+            git_commit.get_gpg_signature().clone().unwrap(),
+            "-----BEGIN PGP SIGNATURE-----\n\naaaaa\n-----END PGP SIGNATURE-----\n"
+        );
+        assert_eq!(git_commit.get_encoded_data().unwrap(), encoded_file_content);
+    }
+
+    #[test]
     fn test_from_string_with_parents() {
         let committer = mock_git_commit_author();
 
@@ -458,13 +517,13 @@ mod tests {
     fn test_serialize_git_commit() {
         let git_commit = mock_git_commit();
         let serialized = serde_json::to_string(&git_commit).unwrap();
-        let expected = r#"{"tree_hash":"tree_hash","parent_hashes":["parent_hash1","parent_hash2"],"author":{"user":{"name":"Test User","email":"test@example.com"},"date_seconds":1234567890,"timezone":"+0000","type_":"Author"},"committer":{"user":{"name":"Test User","email":"test@example.com"},"date_seconds":1234567890,"timezone":"+0000","type_":"Author"},"message":"commit message"}"#;
+        let expected = r#"{"tree_hash":"tree_hash","parent_hashes":["parent_hash1","parent_hash2"],"author":{"user":{"name":"Test User","email":"test@example.com"},"date_seconds":1234567890,"timezone":"+0000","type_":"Author"},"committer":{"user":{"name":"Test User","email":"test@example.com"},"date_seconds":1234567890,"timezone":"+0000","type_":"Author"},"message":"commit message","gpg_signature":null}"#;
         assert_eq!(serialized, expected);
     }
 
     #[test]
     fn test_deserialize_git_commit() {
-        let json_str = r#"{"tree_hash":"tree_hash","parent_hashes":["parent_hash1","parent_hash2"],"author":{"user":{"name":"Test User","email":"test@example.com"},"date_seconds":1234567890,"timezone":"+0000","type_":"Author"},"committer":{"user":{"name":"Test User","email":"test@example.com"},"date_seconds":1234567890,"timezone":"+0000","type_":"Author"},"message":"commit message"}"#;
+        let json_str = r#"{"tree_hash":"tree_hash","parent_hashes":["parent_hash1","parent_hash2"],"author":{"user":{"name":"Test User","email":"test@example.com"},"date_seconds":1234567890,"timezone":"+0000","type_":"Author"},"committer":{"user":{"name":"Test User","email":"test@example.com"},"date_seconds":1234567890,"timezone":"+0000","type_":"Author"},"message":"commit message","gpg_signature":null}"#;
         let deserialized: GitCommit = serde_json::from_str(json_str).unwrap();
         let expected = mock_git_commit();
         assert_eq!(deserialized, expected);
@@ -505,6 +564,7 @@ mod tests {
             author.clone(),
             committer.clone(),
             message,
+            None,
         );
         assert_eq!(git_commit.get_hash(), hash);
         assert_eq!(git_commit.tree_hash, tree_hash);
