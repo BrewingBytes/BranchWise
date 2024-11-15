@@ -3,7 +3,7 @@
     no-gutters
     align="center"
     style="height: 10vh;"
-    class="hoverable pa-2"
+    :class="commitClass"
     @click="setCommit"
   >
     <v-col
@@ -80,6 +80,15 @@ export default defineComponent({
 
         let maxMessageLength = screen.width / 80;
         return message.length > maxMessageLength ? message.slice(0, maxMessageLength) + '...' : message;
+    },
+    commitClass() {
+        let className = "hoverable pa-2 ml-2 mr-1 mb-2";
+
+        if (this.commit.hash === useProjectStore().getCommit?.hash) {
+            className += ' selected';
+        }
+
+        return className;
     }
   },
   methods: {
@@ -96,4 +105,15 @@ export default defineComponent({
     cursor: pointer;
     border-radius: 25px;
 }
+
+.selected {
+    background-color: #112233;
+    border-radius: 25px;
+}
+
+.selected:hover {
+    background-color: #112233;
+    cursor: default !important;
+}
+
 </style>

@@ -45,6 +45,6 @@ export default defineComponent({
         useDialogStore().showError(e);
       }
     }
-  }
+  },
 });
 </script>

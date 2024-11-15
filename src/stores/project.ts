@@ -68,7 +68,12 @@ export const useProjectStore = defineStore('project', {
                 useDialogStore().showError(error);
             }
         },
-        setBranch(branch: IGitBranch) {
+        async setBranch(branch: IGitBranch | null) {
+            if (branch === null) {
+                this.branch = null;
+                return;
+            }
+
             if (this.selectedProject === null) {
                 return;
             }
@@ -85,10 +90,10 @@ export const useProjectStore = defineStore('project', {
             }
 
             this.branch = branchObj;
-            this.setCommit(branch.commit);
 
             // invoke("set_current_branch", { branch: branch });
-            this.fetchCommitHistory();
+            await this.fetchCommitHistory();
+            this.setCommit(branch.commit);
         },
         addProject(git: IGitProject) {
             this.projects.push(git);
@@ -124,7 +129,7 @@ export const useProjectStore = defineStore('project', {
             invoke("set_current_project", { project: project });
 
             if (project === null) {
-                this.branch = null;
+                this.setBranch(null);
                 return;
             }
 
@@ -133,27 +138,27 @@ export const useProjectStore = defineStore('project', {
 
                 switch (project.head.Branch[0].toLowerCase() as BranchType) {
                     case BranchType.HEADS:
-                        this.branch = project.localBranches.find(b => b.name === name) || null;
+                        this.setBranch(project.localBranches.find(b => b.name === name) || null);
                         break;
                     case BranchType.REMOTES:
-                        this.branch = project.remoteBranches.find(b => b.name === name) || null;
+                        this.setBranch(project.remoteBranches.find(b => b.name === name) || null);
                         break;
                     case BranchType.TAGS:
-                        this.branch = project.tags.find(b => b.name === name) || null;
+                        this.setBranch(project.tags.find(b => b.name === name) || null);
                         break;
                 }
             }
-
-            this.fetchCommitHistory();
         },
         setCommit(hash: string) {
+            hash = hash.trim();
+            
             if (this.commit !== null) {
                 if (this.commit.hash === hash) {
                     return;
                 }
             }
 
-            this.commit = this.history.find(c => c.hash === hash) || null;
+            this.commit = this.history.find(c => c.hash === hash) ?? null;
         }
     }
 });
