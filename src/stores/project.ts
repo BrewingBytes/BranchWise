@@ -39,16 +39,23 @@ export const useProjectStore = defineStore('project', {
         }
     },
     actions: {
-        async fetchCommitHistory (length: number = 10) {
+        async fetchCommitHistory (length: number = 30, fromHash: string = "") {
             let hash = "";
 
-            if (this.branch !== null) {
+            if (this.branch !== null && fromHash === "") {
                 hash = this.branch.commit.trim();
+            } else {
+                hash = fromHash;
             }
 
             try {
-            this.history = await invoke("get_commit_history", { project: this.selectedProject, hash, length});
-                console.log(this.history);
+                let history: IGitCommit[] = await invoke("get_commit_history", { project: this.selectedProject, hash, length});
+            
+                if (fromHash === "") {
+                    this.history = history;
+                } else {
+                    this.history = this.history.concat(history.slice(1));
+                }
         } catch (error) {
                 useDialogStore().openSnackbar({text: error as string, color: "error"});
             }
