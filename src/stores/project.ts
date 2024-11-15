@@ -49,15 +49,15 @@ export const useProjectStore = defineStore('project', {
             }
 
             try {
-                let history: IGitCommit[] = await invoke("get_commit_history", { project: this.selectedProject, hash, length});
-            
+                const history: IGitCommit[] = await invoke("get_commit_history", { project: this.selectedProject, hash, length});
+
                 if (fromHash === "") {
                     this.history = history;
                 } else {
                     this.history = this.history.concat(history.slice(1));
                 }
         } catch (error) {
-                useDialogStore().openSnackbar({text: error as string, color: "error"});
+                useDialogStore().showError(error);
             }
         },
         setBranch(branch: IGitBranch) {
@@ -68,6 +68,12 @@ export const useProjectStore = defineStore('project', {
             const branchObj = this.getBranches.find(b => b.name === branch.name);
             if (branchObj === undefined) {
                 return;
+            }
+
+            if (this.branch !== null) {
+                if (this.branch.commit === branch.commit && this.branch.name === branch.name) {
+                    return;
+                }
             }
 
             this.branch = branchObj;
@@ -99,6 +105,12 @@ export const useProjectStore = defineStore('project', {
             this.setCurrentProject(git);
         },
         setCurrentProject(project: IGitProject | null) {
+            if (this.selectedProject !== null && project !== null) {
+                if (this.selectedProject.directory === project.directory) {
+                    return;
+                }
+            }
+
             this.selectedProject = project;
             invoke("set_current_project", { project: project });
 

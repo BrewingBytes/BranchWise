@@ -49,7 +49,7 @@ export default defineComponent({
     try {
       useProjectStore().setProjects(await invoke("get_database_projects"));
     } catch (error) {
-      useDialogStore().openSnackbar({text: error as string, color: "error"});
+      useDialogStore().showError(error);
     }
 
     const unlisten = await listen("project_update", (event) => {

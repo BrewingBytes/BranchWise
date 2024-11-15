@@ -65,7 +65,8 @@ export default defineComponent({
       return this.commit.author.user.name;
     },
     getDate() {
-        return moment.unix(this.commit.author.date_seconds).tz(this.commit.author.timezone).format('YYYY-MM-DD');
+        const timezone = this.commit.author.timezone.substring(0, 3) + ':' + this.commit.author.timezone.substring(3);
+        return moment.unix(this.commit.author.date_seconds).utcOffset(timezone).format('YYYY-MM-DD');
     },
     getHash() {
       return getHash(this.commit);

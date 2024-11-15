@@ -42,7 +42,7 @@ export default defineComponent({
                     const project: IGitProject = await invoke("open_git_project", { directory: result });
                     useProjectStore().addProject(project);
                 } catch (error) {
-                    useDialogStore().openSnackbar({ text: error as string, color: "error" });
+                    useDialogStore().showError(error);
                 }
             }
         }

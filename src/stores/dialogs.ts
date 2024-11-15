@@ -1,3 +1,4 @@
+import { GitError } from "@/types/gitErrors";
 import { defineStore } from "pinia";
 
 interface IDialogState {
@@ -32,6 +33,11 @@ export const useDialogStore = defineStore('dialog', {
             }
         }),
     actions: {
+        showError(error: unknown) {
+            const text = GitError[error as keyof typeof GitError];
+
+            this.openSnackbar({text: text, color: "error"});
+        },
         openSnackbar({text, color}: {text: string, color: string}) {
             this.snackbar.show = true;
             this.snackbar.text = text;

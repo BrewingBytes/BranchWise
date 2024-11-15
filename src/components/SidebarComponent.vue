@@ -95,7 +95,7 @@ export default defineComponent({
         useProjectStore().removeProject();
         this.$router.push("/");
       } catch (e) {
-        console.error(e);
+        useDialogStore().showError(e);
       }
     },
     confirmExit() {
