@@ -34,7 +34,8 @@ export default defineComponent({
     }),
   },
   methods: {
-    async fetchMore({ done }: { done: (status?: string) => void }) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async fetchMore({ done }: { done: any }) {
       try {
       await useProjectStore().fetchCommitHistory(30, this.commits[this.commits.length - 1].hash);
       done('ok');
