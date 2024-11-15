@@ -10,18 +10,18 @@ export interface IGitCommit {
 }
 
 export const NO_COMMIT: IGitCommit = {
-    tree_hash: "",
-    parent_hashes: [],
-    author: NO_AUTHOR,
-    committer: NO_AUTHOR,
-    hash: "",
-    message: "",
+	tree_hash: "",
+	parent_hashes: [],
+	author: NO_AUTHOR,
+	committer: NO_AUTHOR,
+	hash: "",
+	message: "",
 };
 
 export function getHash(commit: IGitCommit | null): string {
-    if (commit === null) {
-        return "";
-    }
+	if (commit === null) {
+		return "";
+	}
 
-    return commit.hash.substring(0, 7);
+	return commit.hash.substring(0, 7);
 }

@@ -1,4 +1,4 @@
 export enum PrependVariant {
-    ICON = 'icon',
-    AVATAR = 'avatar',
+    ICON = "icon",
+    AVATAR = "avatar",
 }

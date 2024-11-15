@@ -71,63 +71,63 @@
 </template>
 
 <script lang="ts">
-import { PrependVariant } from '@/enums/prependVariant';
-import { defineComponent, getCurrentInstance } from 'vue';
+import { PrependVariant } from "@/enums/prependVariant";
+import { defineComponent, getCurrentInstance } from "vue";
 
 export default defineComponent({
-  name: 'SidebarItem',
-  props: {
-    prependIcon: {
-        type: String,
-        required: true
-    },
-    prependVariant: {
-        type: String as () => PrependVariant,
-        default: PrependVariant.ICON
-    },
-    prependColor: {
-        type: String,
-        default: 'white'
-    },
-    text: {
-        type: String,
-        required: true
-    },
-    subtitle: {
-        type: String,
-        default: ''
-    },
-    textColor: {
-        type: String,
-        default: 'white'
-    },
-    appendIcon: {
-        type: String,
-        default: ''
-    },
-    appendColor: {
-        type: String,
-        default: 'white'
-    }
-  },
-  emits: ['prependClick', 'appendClick'],
-  data() {
-    return {
-      hasPrependClick: false,
-      hasAppendClick: false,
-      PrependVariant
-    }
-  },
-  mounted() {
-    const allProps = getCurrentInstance()?.vnode.props;
-    if (allProps?.onAppendClick) {
-      this.hasAppendClick = true;
-    }
+	name: "SidebarItem",
+	props: {
+		prependIcon: {
+			type: String,
+			required: true
+		},
+		prependVariant: {
+			type: String as () => PrependVariant,
+			default: PrependVariant.ICON
+		},
+		prependColor: {
+			type: String,
+			default: "white"
+		},
+		text: {
+			type: String,
+			required: true
+		},
+		subtitle: {
+			type: String,
+			default: ""
+		},
+		textColor: {
+			type: String,
+			default: "white"
+		},
+		appendIcon: {
+			type: String,
+			default: ""
+		},
+		appendColor: {
+			type: String,
+			default: "white"
+		}
+	},
+	emits: ["prependClick", "appendClick"],
+	data() {
+		return {
+			hasPrependClick: false,
+			hasAppendClick: false,
+			PrependVariant
+		};
+	},
+	mounted() {
+		const allProps = getCurrentInstance()?.vnode.props;
+		if (allProps?.onAppendClick) {
+			this.hasAppendClick = true;
+		}
 
-    if (allProps?.onPrependClick) {
-      this.hasPrependClick = true;
-    }
-  },
+		if (allProps?.onPrependClick) {
+			this.hasPrependClick = true;
+		}
+	},
 });
 </script>
 

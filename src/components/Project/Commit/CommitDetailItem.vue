@@ -27,19 +27,19 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
+import { defineComponent } from "vue";
 
 export default defineComponent({
-  name: 'CommitDetailItem',
-  props: {
-    tag: {
-      type: String,
-      required: true,
-    },
-    value: {
-      type: String,
-      required: true,
-    },
-  },
+	name: "CommitDetailItem",
+	props: {
+		tag: {
+			type: String,
+			required: true,
+		},
+		value: {
+			type: String,
+			required: true,
+		},
+	},
 });
 </script>

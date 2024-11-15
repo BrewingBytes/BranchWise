@@ -36,54 +36,54 @@
 </template>
 
 <script lang="ts">
-import { useProjectStore } from '@/stores/project';
-import { IBranchTreeItem } from '@/types/branchTreeItem';
-import { IGitBranch } from '@/types/gitBranch';
-import { defineComponent } from 'vue';
+import { useProjectStore } from "@/stores/project";
+import { IBranchTreeItem } from "@/types/branchTreeItem";
+import { IGitBranch } from "@/types/gitBranch";
+import { defineComponent } from "vue";
 
 export default defineComponent({
-  name: 'ExpansionPanel',
-  props: {
-    branches: {
-      type: Array as () => IBranchTreeItem[] | undefined,
-      required: true,
-    },
-    title: {
-      type: String,
-      required: true,
-    },
-    expandIcon: {
-      type: String,
-      default: 'mdi-folder',
-    },
+	name: "ExpansionPanel",
+	props: {
+		branches: {
+			type: Array as () => IBranchTreeItem[] | undefined,
+			required: true,
+		},
+		title: {
+			type: String,
+			required: true,
+		},
+		expandIcon: {
+			type: String,
+			default: "mdi-folder",
+		},
 
-    collapseIcon: {
-      type: String,
-      default: 'mdi-folder-open',
-    },
-    itemIcon: {
-      type: String,
-      default: 'mdi-source-branch',
-    },
-    customIcon: {
-      type: String,
-      default: '',
-    },
-  },
-  methods: {
-    setBranch(branch: IGitBranch | undefined) {
-      if (!branch) {
-        return;
-      }
+		collapseIcon: {
+			type: String,
+			default: "mdi-folder-open",
+		},
+		itemIcon: {
+			type: String,
+			default: "mdi-source-branch",
+		},
+		customIcon: {
+			type: String,
+			default: "",
+		},
+	},
+	methods: {
+		setBranch(branch: IGitBranch | undefined) {
+			if (!branch) {
+				return;
+			}
 
-      useProjectStore().setBranch(branch);
-    },
-    getSelectedClass(branch: IGitBranch | undefined) {
-      return {
-        'selected-branch': branch?.name === useProjectStore().getBranch?.name,
-      };
-    },
-  }
+			useProjectStore().setBranch(branch);
+		},
+		getSelectedClass(branch: IGitBranch | undefined) {
+			return {
+				"selected-branch": branch?.name === useProjectStore().getBranch?.name,
+			};
+		},
+	}
 });
 </script>
 

@@ -79,37 +79,37 @@ import CommitDetailItem from "./CommitDetailItem.vue";
 import { getAuthorDate } from "@/types/gitAuthor";
 
 export default defineComponent({
-  name: "CommitDetails",
-  components: {
-    CommitDetailItem,
-  },
-  computed: {
-    getCommitName() {
-      return getHash(this.commit);
-    },
-    getAuthorName() {
-      return this.commit.author.user.name + " <" + this.commit.author.user.email + ">";
-    },
-    getAuthorDate() {
-      return getAuthorDate(this.commit.author, true);
-    },
-    getCommitterName() {
-      return this.commit.committer.user.name + " <" + this.commit.committer.user.email + ">";
-    },
-    getCommitterDate() {
-      return getAuthorDate(this.commit.committer, true);
-    },
-    commit() {
-      if (this.getCommit) {
-        return this.getCommit;
-      }
+	name: "CommitDetails",
+	components: {
+		CommitDetailItem,
+	},
+	computed: {
+		getCommitName() {
+			return getHash(this.commit);
+		},
+		getAuthorName() {
+			return this.commit.author.user.name + " <" + this.commit.author.user.email + ">";
+		},
+		getAuthorDate() {
+			return getAuthorDate(this.commit.author, true);
+		},
+		getCommitterName() {
+			return this.commit.committer.user.name + " <" + this.commit.committer.user.email + ">";
+		},
+		getCommitterDate() {
+			return getAuthorDate(this.commit.committer, true);
+		},
+		commit() {
+			if (this.getCommit) {
+				return this.getCommit;
+			}
 
-      return NO_COMMIT;
-    },
-    getMaxHeight() {
-      return window.innerHeight - 64 - 24;
-    },
-    ...mapState(useProjectStore, ["getCommit"]),
-  },
+			return NO_COMMIT;
+		},
+		getMaxHeight() {
+			return window.innerHeight - 64 - 24;
+		},
+		...mapState(useProjectStore, ["getCommit"]),
+	},
 });
 </script>

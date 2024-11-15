@@ -28,24 +28,24 @@
 </template>
 
 <script lang="ts">
-import { useDialogStore } from '@/stores/dialogs';
-import { mapState } from 'pinia';
-import { defineComponent } from 'vue';
+import { useDialogStore } from "@/stores/dialogs";
+import { mapState } from "pinia";
+import { defineComponent } from "vue";
 
 export default defineComponent({
-    name: 'ConfirmationDialog',
-    computed: {
-        isShowing: {
-            get() {
-                return this.confirmationDialog.isOpen;
-            },
-            set(value: boolean) {
-                if (value === false) {
-                useDialogStore().closeConfirmationDialog();
-                }
-            }
-        },
-        ...mapState(useDialogStore, ["confirmationDialog"])
-    }
-})
+	name: "ConfirmationDialog",
+	computed: {
+		isShowing: {
+			get() {
+				return this.confirmationDialog.isOpen;
+			},
+			set(value: boolean) {
+				if (value === false) {
+					useDialogStore().closeConfirmationDialog();
+				}
+			}
+		},
+		...mapState(useDialogStore, ["confirmationDialog"])
+	}
+});
 </script>

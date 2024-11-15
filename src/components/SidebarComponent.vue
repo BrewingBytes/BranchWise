@@ -54,59 +54,59 @@ import { mapState } from "pinia";
 import { defineComponent } from "vue";
 
 export default defineComponent({
-  name: "SidebarComponent",
-  components: {
-    SidebarItem,
-  },
-  props: {
-    isOpen: {
-      type: Boolean,
-      required: true,
-    }
-  },
-  data() {
-    return {
-      showExitDialog: false,
-      PrependVariant,
-    };
-  },
-  computed: {
-    isProjectSelected() {
-      return useProjectStore().getSelectedProject !== null;
-    },
-    appVersion() {
-      return `Version ${this.getAppVersion}`;
-    },
-    ...mapState(useAppStore, ["user", "getAppVersion"])
-  },
-  methods: {
-    closeMe() {
-      useAppStore().toggleNavbar();
-    },
-    goHome() {
-      this.$router.push("/");
-    },
-    async deleteProject() {
-      try {
-        await invoke("remove_database_project", {
-          project: useProjectStore().getSelectedProject,
-        });
+	name: "SidebarComponent",
+	components: {
+		SidebarItem,
+	},
+	props: {
+		isOpen: {
+			type: Boolean,
+			required: true,
+		}
+	},
+	data() {
+		return {
+			showExitDialog: false,
+			PrependVariant,
+		};
+	},
+	computed: {
+		isProjectSelected() {
+			return useProjectStore().getSelectedProject !== null;
+		},
+		appVersion() {
+			return `Version ${this.getAppVersion}`;
+		},
+		...mapState(useAppStore, ["user", "getAppVersion"])
+	},
+	methods: {
+		closeMe() {
+			useAppStore().toggleNavbar();
+		},
+		goHome() {
+			this.$router.push("/");
+		},
+		async deleteProject() {
+			try {
+				await invoke("remove_database_project", {
+					project: useProjectStore().getSelectedProject,
+				});
 
-        useProjectStore().removeProject();
-        this.$router.push("/");
-      } catch (e) {
-        useDialogStore().showError(e);
-      }
-    },
-    confirmExit() {
-      useDialogStore().openConfirmationDialog({
-        title: "Exit",
-        message: "Are you sure you want to exit?",
-        onConfirm: () => {
-          exit();
-        },
-      });
-    }
-  }
+				useProjectStore().removeProject();
+				this.$router.push("/");
+			} catch (e) {
+				useDialogStore().showError(e);
+			}
+		},
+		confirmExit() {
+			useDialogStore().openConfirmationDialog({
+				title: "Exit",
+				message: "Are you sure you want to exit?",
+				onConfirm: () => {
+					exit();
+				},
+			});
+		}
+	}
 });
 </script>
