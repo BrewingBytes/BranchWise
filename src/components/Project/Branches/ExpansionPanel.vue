@@ -3,7 +3,7 @@
     static
   >
     <v-expansion-panel-title>{{ title }}</v-expansion-panel-title>
-    <v-expansion-panel-text style="max-height: 50vh; overflow-y: scroll;">
+    <v-expansion-panel-text style="max-height: 50vh; overflow: scroll">
       <v-treeview
         :items="branches"
         :expand-icon="expandIcon"
