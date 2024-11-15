@@ -79,7 +79,7 @@ pub fn get_commit_history(
     let commit = GitCommit::from_hash(&project, hash).map_err(|_| GitError::InvalidHistory)?;
 
     commit
-        .get_commit_history(&project, length)
+        .get_commit_history(&project, length, hash)
         .map_err(|_| GitError::InvalidHistory)
 }
 

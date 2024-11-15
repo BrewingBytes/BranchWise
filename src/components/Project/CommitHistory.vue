@@ -1,16 +1,21 @@
 <template>
-  <v-virtual-scroll
+  <v-infinite-scroll
     :height="getHeight"
     :items="commits"
+    @load="fetchMore"
   >
-    <template #default="{ item }">
-      <CommitListItem :commit="item" />
+    <template
+      v-for="commit in commits"
+      :key="commit.hash"
+    >
+      <CommitListItem :commit="commit" />
     </template>
-  </v-virtual-scroll>
+  </v-infinite-scroll>
 </template>
 
 <script lang="ts">
 import CommitListItem from '@/components/Project/Commit/CommitListItem.vue';
+import { useDialogStore } from '@/stores/dialogs';
 import { useProjectStore } from '@/stores/project';
 import { mapState } from 'pinia';
 import { defineComponent } from 'vue';
@@ -28,5 +33,17 @@ export default defineComponent({
       commits: 'history',
     }),
   },
+  methods: {
+    async fetchMore({ done }: { done: (status?: string) => void }) {
+      try {
+      await useProjectStore().fetchCommitHistory(30, this.commits[this.commits.length - 1].hash);
+      done('ok');
+      } catch (e) {
+        done('fail');
+
+        useDialogStore().showError(e);
+      }
+    }
+  }
 });
 </script>

@@ -38,7 +38,7 @@ pub struct GitCommit {
     message: String,
 }
 
-#[derive(Serialize)]
+#[derive(Clone, Serialize)]
 pub struct GitCommitWithHash {
     hash: String,
 
@@ -97,27 +97,31 @@ impl GitCommit {
         &self,
         project: &GitProject,
         length: Option<usize>,
+        hash: &str,
     ) -> Result<Vec<GitCommitWithHash>, GitObjectError> {
-        let mut commit = self.clone();
+        let mut commit = GitCommitWithHash {
+            commit: self.clone(),
+            hash: hash.to_string(),
+        };
+
         let mut history = Vec::<GitCommitWithHash>::new();
         let length = length.unwrap_or(usize::MAX);
 
         loop {
-            history.push(GitCommitWithHash {
-                commit: commit.clone(),
-                hash: commit.get_hash().clone(),
-            });
-
+            history.push(commit.clone());
             if history.len() >= length {
                 break;
             }
 
-            let parent_commits = commit.get_parent_commits(project)?;
+            let parent_commits = commit.commit.get_parent_commits(project)?;
             if parent_commits.is_empty() {
                 break;
             }
 
-            commit = parent_commits[0].clone();
+            commit = GitCommitWithHash {
+                commit: parent_commits[0].clone(),
+                hash: commit.commit.parent_hashes[0].clone(),
+            };
         }
 
         Ok(history)
