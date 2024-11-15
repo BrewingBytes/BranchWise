@@ -1,4 +1,10 @@
 <template>
+  <v-container class="pa-0" height="24px">
+    <v-col class="pa-0" no-gutters>
+      <p class="text-blue-grey">{{ getBranch }}</p>
+      <v-divider />
+    </v-col>
+  </v-container>
   <v-infinite-scroll
     :height="getHeight"
     :items="commits"
@@ -27,7 +33,10 @@ export default defineComponent({
   },
   computed: {
     getHeight() {
-      return window.innerHeight - 64;
+      return window.innerHeight - 64 - 24;
+    },
+    getBranch() {
+      return useProjectStore().getBranch?.name;
     },
     ...mapState(useProjectStore, {
       commits: 'getHistory',
