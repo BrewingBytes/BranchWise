@@ -1,6 +1,9 @@
 use super::{
-    git_commit::GitCommit, git_folders::GitBranchType, git_project::GitProject,
-    git_project_state::GitProjectState, object::GitObject,
+    git_commit::{GitCommit, GitCommitWithHash},
+    git_folders::GitBranchType,
+    git_project::GitProject,
+    git_project_state::GitProjectState,
+    object::GitObject,
 };
 use crate::{database::storage::DATABASE, errors::git_error::GitError};
 use std::fs;
@@ -72,7 +75,7 @@ pub fn get_commit_history(
     project: GitProject,
     hash: &str,
     length: Option<usize>,
-) -> Result<Vec<GitCommit>, GitError> {
+) -> Result<Vec<GitCommitWithHash>, GitError> {
     let commit = GitCommit::from_hash(&project, hash).map_err(|_| GitError::InvalidHistory)?;
 
     commit
@@ -680,7 +683,7 @@ mod tests {
         .unwrap();
 
         assert_eq!(history.len(), 32);
-        assert_eq!(history[31].get_message(), "parent");
+        assert_eq!(history[31].commit.get_message(), "parent");
     }
 
     #[test]

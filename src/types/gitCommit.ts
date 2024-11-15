@@ -5,5 +5,6 @@ export interface IGitCommit {
     parent_hashes: string[];
     author: IGitAuthor;
     committer: IGitAuthor;
+    hash: string;
     message: string;
 }

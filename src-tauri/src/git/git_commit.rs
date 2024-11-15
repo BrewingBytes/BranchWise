@@ -38,6 +38,14 @@ pub struct GitCommit {
     message: String,
 }
 
+#[derive(Serialize)]
+pub struct GitCommitWithHash {
+    hash: String,
+
+    #[serde(flatten)]
+    pub commit: GitCommit,
+}
+
 impl GitCommit {
     pub fn new(
         tree_hash: &str,
@@ -89,13 +97,17 @@ impl GitCommit {
         &self,
         project: &GitProject,
         length: Option<usize>,
-    ) -> Result<Vec<GitCommit>, GitObjectError> {
+    ) -> Result<Vec<GitCommitWithHash>, GitObjectError> {
         let mut commit = self.clone();
-        let mut history = Vec::<GitCommit>::new();
+        let mut history = Vec::<GitCommitWithHash>::new();
         let length = length.unwrap_or(usize::MAX);
 
         loop {
-            history.push(commit.clone());
+            history.push(GitCommitWithHash {
+                commit: commit.clone(),
+                hash: commit.get_hash().clone(),
+            });
+
             if history.len() >= length {
                 break;
             }
