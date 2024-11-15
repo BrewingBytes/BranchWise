@@ -24,7 +24,7 @@
 </template>
 
 <script lang="ts">
-import ExpansionPanel from "@/components/Sidebar/Branches/ExpansionPanel.vue";
+import ExpansionPanel from "@/components/Project/Branches/ExpansionPanel.vue";
 import { useProjectStore } from "@/stores/project";
 import { IBranchTreeItem } from "@/types/branchTreeItem";
 import { IDirectory } from "@/types/directory";

@@ -65,10 +65,12 @@ export default defineComponent({
 html {
     overflow: scroll;
     overflow-x: hidden;
+	overflow-y: hidden;
 }
 
 ::-webkit-scrollbar {
     width: 0;
     background: transparent;
+	display: none;
 }
 </style>
