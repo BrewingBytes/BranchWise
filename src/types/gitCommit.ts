@@ -1,4 +1,4 @@
-import { IGitAuthor } from "@/types/gitAuthor";
+import { IGitAuthor, NO_AUTHOR } from "@/types/gitAuthor";
 
 export interface IGitCommit {
     tree_hash: string;
@@ -9,6 +9,19 @@ export interface IGitCommit {
     message: string;
 }
 
-export function getHash(commit: IGitCommit): string {
+export const NO_COMMIT: IGitCommit = {
+    tree_hash: "",
+    parent_hashes: [],
+    author: NO_AUTHOR,
+    committer: NO_AUTHOR,
+    hash: "",
+    message: "",
+};
+
+export function getHash(commit: IGitCommit | null): string {
+    if (commit === null) {
+        return "";
+    }
+
     return commit.hash.substring(0, 7);
 }

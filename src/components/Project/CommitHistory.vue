@@ -1,7 +1,15 @@
 <template>
-  <v-container class="pa-0" height="24px">
-    <v-col class="pa-0" no-gutters>
-      <p class="text-blue-grey">{{ getBranch }}</p>
+  <v-container
+    class="pa-0"
+    height="24px"
+  >
+    <v-col
+      class="pa-0"
+      no-gutters
+    >
+      <p class="text-blue-grey">
+        {{ getBranch }}
+      </p>
       <v-divider />
     </v-col>
   </v-container>

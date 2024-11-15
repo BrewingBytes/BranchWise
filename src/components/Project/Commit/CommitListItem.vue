@@ -51,8 +51,8 @@
 
 <script lang="ts">
 import { useProjectStore } from '@/stores/project';
+import { getAuthorDate } from '@/types/gitAuthor';
 import { getHash, IGitCommit } from '@/types/gitCommit';
-import moment from 'moment-timezone';
 import { defineComponent } from 'vue';
 
 export default defineComponent({
@@ -68,8 +68,7 @@ export default defineComponent({
       return this.commit.author.user.name;
     },
     getDate() {
-        const timezone = this.commit.author.timezone.substring(0, 3) + ':' + this.commit.author.timezone.substring(3);
-        return moment.unix(this.commit.author.date_seconds).utcOffset(timezone).format('YYYY-MM-DD');
+        return getAuthorDate(this.commit.author);
     },
     getHash() {
       return getHash(this.commit);

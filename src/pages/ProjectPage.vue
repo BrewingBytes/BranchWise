@@ -23,12 +23,15 @@
       class="pa-0"
       cols="4"
       style="border-left: 1px solid #e0e0e0;"
-    />
+    >
+      <CommitDetails />
+    </v-col>
   </v-row>
 </template>
 
 <script lang="ts">
 import BranchesSidebar from "@/components/Project/BranchesSidebar.vue";
+import CommitDetails from "@/components/Project/Commit/CommitDetails.vue";
 import CommitHistory from "@/components/Project/CommitHistory.vue";
 import { useAppStore } from "@/stores/app";
 import { useProjectStore } from "@/stores/project";
@@ -40,6 +43,7 @@ export default defineComponent({
   components: {
     BranchesSidebar,
     CommitHistory,
+    CommitDetails,
   },
   beforeRouteEnter(_to, _from, next) {
     if (!useProjectStore().getSelectedProject) {
