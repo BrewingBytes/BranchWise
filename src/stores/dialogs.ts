@@ -35,11 +35,11 @@ export const useDialogStore = defineStore("dialog", {
 	actions: {
 		showError(error: unknown) {
 			const text = GitError[error as keyof typeof GitError];
-            console.error(error);
+			console.error(error);
 
-            if (text) {
+			if (text) {
 			    this.openSnackbar({text: text, color: "error"});
-            }
+			}
 		},
 		openSnackbar({text, color}: {text: string, color: string}) {
 			this.snackbar.show = true;
