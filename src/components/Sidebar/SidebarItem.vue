@@ -71,8 +71,8 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, getCurrentInstance } from 'vue';
 import { PrependVariant } from '@/enums/prependVariant';
+import { defineComponent, getCurrentInstance } from 'vue';
 
 export default defineComponent({
   name: 'SidebarItem',

@@ -13,6 +13,7 @@ pub enum GitError {
     NoLocalBranches,
     PackedRefsError,
     InvalidHead,
+    InvalidHistory,
 }
 
 #[derive(Clone, Serialize)]

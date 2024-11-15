@@ -38,6 +38,14 @@ pub struct GitCommit {
     message: String,
 }
 
+#[derive(Clone, Serialize)]
+pub struct GitCommitWithHash {
+    hash: String,
+
+    #[serde(flatten)]
+    pub commit: GitCommit,
+}
+
 impl GitCommit {
     pub fn new(
         tree_hash: &str,
@@ -83,6 +91,55 @@ impl GitCommit {
             .iter()
             .map(|parent_hash| GitCommit::from_hash(project, parent_hash))
             .collect()
+    }
+
+    /**
+     * Get the commit with the given hash from the project
+     * project: The project to get the commit from
+     * length: The number of commits to get, starting from the given commit
+     * hash: The hash of the commit to get
+     * 
+     * Returns the commit history, starting from the given commit
+     * If length is None, all commits are returned
+     */
+    pub fn get_commit_history(
+        &self,
+        project: &GitProject,
+        length: Option<usize>,
+        hash: &str,
+    ) -> Result<Vec<GitCommitWithHash>, GitObjectError> {
+
+        // UI needs to display the commit hash of the commit that was clicked on
+        // So we need to add the hash of the commit to the history
+        let mut commit = GitCommitWithHash {
+            commit: self.clone(),
+            hash: hash.to_string(),
+        };
+
+        let mut history = Vec::<GitCommitWithHash>::new();
+        let length = length.unwrap_or(usize::MAX);
+
+        loop {
+            // Add the commit to the history
+            history.push(commit.clone());
+            if history.len() >= length {
+                break;
+            }
+
+            // Get the parent commits
+            let parent_commits = commit.commit.get_parent_commits(project)?;
+            if parent_commits.is_empty() {
+                break;
+            }
+
+            // Set the next commit to the first parent commit
+            commit = GitCommitWithHash {
+                commit: parent_commits[0].clone(),
+                hash: commit.commit.parent_hashes[0].clone(),
+            };
+        }
+
+        Ok(history)
     }
 }
 
@@ -147,9 +204,7 @@ impl GitObject for GitCommit {
                     break;
                 }
                 CommitPrefix::Invalid => {
-                    return Err(GitObjectError::InvalidCommitFile(
-                        CommitError::InvalidContent,
-                    ));
+                    message += line;
                 }
             }
 
@@ -296,13 +351,13 @@ mod tests {
         let author = mock_git_commit_author();
         let committer = mock_git_commit_committer();
 
-        let commit_hash = "25723a3e66cd8dcbaf085ed83b86a8007df7ff32".to_string();
+        let commit_hash = "90f28789cc3092bb8802acb1ca9e818dd98df342".to_string();
         let encoded_file_content = create_encoded_commit_file(
             author.clone(),
             committer.clone(),
             Some("50c8353444afbef3172c999ef6cff8d31309ac3e"),
             Vec::new(),
-            "test commit",
+            "test commit\n\ntest test",
         )
         .unwrap();
 
@@ -313,7 +368,7 @@ mod tests {
             git_commit.get_tree_hash(),
             "50c8353444afbef3172c999ef6cff8d31309ac3e"
         );
-        assert_eq!(git_commit.get_message(), "test commit");
+        assert_eq!(git_commit.get_message(), "test commit\n\ntest test");
         assert_eq!(*git_commit.get_author(), author);
         assert_eq!(*git_commit.get_committer(), committer);
     }

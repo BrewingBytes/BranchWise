@@ -17,16 +17,17 @@
 </template>
 
 <script lang="ts">
-import { invoke } from "@tauri-apps/api/core";
-import { listen, UnlistenFn } from "@tauri-apps/api/event";
-import { mapState } from "pinia";
-import { defineComponent, provide } from "vue";
 import DialogComponent from "@/components/DialogComponent.vue";
 import SidebarComponent from "@/components/SidebarComponent.vue";
 import TopbarComponent from "@/components/TopbarComponent.vue";
 import { useAppStore } from "@/stores/app";
-import { GitError } from "@/types/gitErrors";
+import { useDialogStore } from "@/stores/dialogs";
+import { useProjectStore } from "@/stores/project";
 import { IGitProject } from "@/types/gitProject";
+import { invoke } from "@tauri-apps/api/core";
+import { listen, UnlistenFn } from "@tauri-apps/api/event";
+import { mapState } from "pinia";
+import { defineComponent } from "vue";
 
 export default defineComponent({
   name: "AppComponent",
@@ -37,29 +38,22 @@ export default defineComponent({
   },
   data() {
     return {
-      snackbar: {
-        show: false,
-        text: "",
-        color: "",
-        timeout: 5000,
-      },
       listeners: [] as UnlistenFn[],
     };
   },
   computed: {
     ...mapState(useAppStore, ["isNavbarOpen"]),
+    ...mapState(useDialogStore, ["snackbar"]),
   },
   async mounted() {
-    provide("showError", this.showError);
-
     try {
-      useAppStore().setProjects(await invoke("get_database_projects"));
+      useProjectStore().setProjects(await invoke("get_database_projects"));
     } catch (error) {
-      this.showError(error as string);
+      useDialogStore().showError(error);
     }
 
     const unlisten = await listen("project_update", (event) => {
-      useAppStore().updateProject(event.payload as IGitProject);
+      useProjectStore().updateProject(event.payload as IGitProject);
     });
 
     this.listeners.push(unlisten);
@@ -67,12 +61,17 @@ export default defineComponent({
   unmounted() {
     this.listeners.forEach((unlisten) => unlisten());
   },
-  methods: {
-    showError(error: string) {
-      this.snackbar.show = true;
-      this.snackbar.text = GitError[error as keyof typeof GitError];
-      this.snackbar.color = "red";
-    },
-  },
 });
 </script>
+
+<style>
+html {
+    overflow: scroll;
+    overflow-x: hidden;
+}
+
+::-webkit-scrollbar {
+    width: 0;
+    background: transparent;
+}
+</style>

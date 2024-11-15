@@ -18,6 +18,7 @@
     "@tauri-apps/plugin-process": "~2",
     "@tauri-apps/plugin-shell": "~2",
     "@tauri-apps/plugin-updater": "~2",
+    "moment-timezone": "^0.5.46",
     "pinia": "^2.2.6",
     "pinia-plugin-persistedstate": "^4.1.1",
     "vue": "^3.5.12",
@@ -27,6 +28,7 @@
   "devDependencies": {
     "@mdi/font": "^7.4.47",
     "@tauri-apps/cli": "^2.1.0",
+    "@types/lodash": "^4.17.13",
     "@types/node": "^22.9.0",
     "@vitejs/plugin-vue": "^5.1.5",
     "@vitest/coverage-v8": "^2.0.5",

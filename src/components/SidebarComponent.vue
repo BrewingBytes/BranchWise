@@ -43,14 +43,15 @@
 </template>
 
 <script lang="ts">
+import SidebarItem from "@/components/Sidebar/SidebarItem.vue";
+import { PrependVariant } from "@/enums/prependVariant";
+import { useAppStore } from "@/stores/app";
+import { useDialogStore } from "@/stores/dialogs";
+import { useProjectStore } from "@/stores/project";
 import { invoke } from "@tauri-apps/api/core";
 import { exit } from "@tauri-apps/plugin-process";
 import { mapState } from "pinia";
 import { defineComponent } from "vue";
-import { PrependVariant } from "@/enums/prependVariant";
-import { useAppStore } from "@/stores/app";
-import SidebarItem from "@/components/Sidebar/SidebarItem.vue";
-import { useDialogStore } from "@/stores/dialogs";
 
 export default defineComponent({
   name: "SidebarComponent",
@@ -71,7 +72,7 @@ export default defineComponent({
   },
   computed: {
     isProjectSelected() {
-      return useAppStore().getSelectedProject !== null;
+      return useProjectStore().getSelectedProject !== null;
     },
     appVersion() {
       return `Version ${this.getAppVersion}`;
@@ -88,13 +89,13 @@ export default defineComponent({
     async deleteProject() {
       try {
         await invoke("remove_database_project", {
-          project: useAppStore().getSelectedProject,
+          project: useProjectStore().getSelectedProject,
         });
 
-        useAppStore().removeProject();
+        useProjectStore().removeProject();
         this.$router.push("/");
       } catch (e) {
-        console.error(e);
+        useDialogStore().showError(e);
       }
     },
     confirmExit() {
