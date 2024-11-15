@@ -20,12 +20,13 @@
 import DialogComponent from "@/components/DialogComponent.vue";
 import SidebarComponent from "@/components/SidebarComponent.vue";
 import TopbarComponent from "@/components/TopbarComponent.vue";
+import { registerListeners, unregisterListeners } from "@/listeners";
 import { useAppStore } from "@/stores/app";
 import { useDialogStore } from "@/stores/dialogs";
 import { useProjectStore } from "@/stores/project";
-import { IGitProject } from "@/types/gitProject";
+import { TauriCommands } from "@/types/tauri";
 import { invoke } from "@tauri-apps/api/core";
-import { listen, UnlistenFn } from "@tauri-apps/api/event";
+import { UnlistenFn } from "@tauri-apps/api/event";
 import { mapState } from "pinia";
 import { defineComponent } from "vue";
 
@@ -47,19 +48,15 @@ export default defineComponent({
 	},
 	async mounted() {
 		try {
-			useProjectStore().setProjects(await invoke("get_database_projects"));
+			useProjectStore().setProjects(await invoke(TauriCommands.GetDatabaseProjects));
 		} catch (error) {
 			useDialogStore().showError(error);
 		}
 
-		const unlisten = await listen("project_update", (event) => {
-			useProjectStore().updateProject(event.payload as IGitProject);
-		});
-
-		this.listeners.push(unlisten);
+		registerListeners();
 	},
 	unmounted() {
-		this.listeners.forEach((unlisten) => unlisten());
+		unregisterListeners();
 	},
 });
 </script>
