@@ -184,13 +184,14 @@ impl GitObject for GitCommit {
 
             // If we are in the signature section, add the line to the signature
             if in_signature {
-                signature += &(line.to_owned() + "\n");
+                signature += line;
                 data = remaining_data;
 
                 if line.contains("-----END PGP SIGNATURE-----") {
                     in_signature = false;
                 }
 
+                signature += "\n";
                 continue;
             }
 
