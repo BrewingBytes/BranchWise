@@ -80,7 +80,7 @@ export default defineComponent({
     },
     getSelectedClass(branch: IGitBranch | undefined) {
       return {
-        'selected-branch': branch?.name === useProjectStore().branch?.name,
+        'selected-branch': branch?.name === useProjectStore().getBranch?.name,
       };
     },
   }

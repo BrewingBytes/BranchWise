@@ -9,6 +9,7 @@ interface IProjectState {
     projects: IGitProject[];
     selectedProject: IGitProject | null;
     branch: IGitBranch | null;
+    commit: IGitCommit | null;
     history: IGitCommit[];
 }
 
@@ -18,6 +19,7 @@ export const useProjectStore = defineStore('project', {
             projects: [] as IGitProject[],
             selectedProject: null as IGitProject | null,
             branch: null as IGitBranch | null,
+            commit: null as IGitCommit | null,
             history: [] as IGitCommit[],
         }),
     getters: {
@@ -36,6 +38,12 @@ export const useProjectStore = defineStore('project', {
             }
 
             return this.selectedProject.localBranches.concat(this.selectedProject.remoteBranches).concat(this.selectedProject.tags);
+        },
+        getCommit(): IGitCommit | null {
+            return this.commit;
+        },
+        getHistory(): IGitCommit[] {
+            return this.history;
         }
     },
     actions: {
@@ -137,5 +145,14 @@ export const useProjectStore = defineStore('project', {
 
             this.fetchCommitHistory();
         },
+        setCommit(hash: string) {
+            if (this.commit !== null) {
+                if (this.commit.hash === hash) {
+                    return;
+                }
+            }
+
+            this.commit = this.history.find(c => c.hash === hash) || null;
+        }
     }
 });

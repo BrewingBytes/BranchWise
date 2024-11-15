@@ -30,7 +30,7 @@ export default defineComponent({
       return window.innerHeight - 64;
     },
     ...mapState(useProjectStore, {
-      commits: 'history',
+      commits: 'getHistory',
     }),
   },
   methods: {
