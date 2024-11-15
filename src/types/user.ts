@@ -4,6 +4,6 @@ export interface IUser {
 }
 
 export const DEFAULT_USER: IUser = {
-    name: "Guest",
-    avatar: "https://cdn.vuetifyjs.com/images/logos/logo.svg",
+	name: "Guest",
+	avatar: "https://cdn.vuetifyjs.com/images/logos/logo.svg",
 };

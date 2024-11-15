@@ -30,37 +30,37 @@ import { mapState } from "pinia";
 import { defineComponent } from "vue";
 
 export default defineComponent({
-  name: "AppComponent",
-  components: {
-    SidebarComponent,
-    TopbarComponent,
-    DialogComponent
-  },
-  data() {
-    return {
-      listeners: [] as UnlistenFn[],
-    };
-  },
-  computed: {
-    ...mapState(useAppStore, ["isNavbarOpen"]),
-    ...mapState(useDialogStore, ["snackbar"]),
-  },
-  async mounted() {
-    try {
-      useProjectStore().setProjects(await invoke("get_database_projects"));
-    } catch (error) {
-      useDialogStore().showError(error);
-    }
+	name: "AppComponent",
+	components: {
+		SidebarComponent,
+		TopbarComponent,
+		DialogComponent
+	},
+	data() {
+		return {
+			listeners: [] as UnlistenFn[],
+		};
+	},
+	computed: {
+		...mapState(useAppStore, ["isNavbarOpen"]),
+		...mapState(useDialogStore, ["snackbar"]),
+	},
+	async mounted() {
+		try {
+			useProjectStore().setProjects(await invoke("get_database_projects"));
+		} catch (error) {
+			useDialogStore().showError(error);
+		}
 
-    const unlisten = await listen("project_update", (event) => {
-      useProjectStore().updateProject(event.payload as IGitProject);
-    });
+		const unlisten = await listen("project_update", (event) => {
+			useProjectStore().updateProject(event.payload as IGitProject);
+		});
 
-    this.listeners.push(unlisten);
-  },
-  unmounted() {
-    this.listeners.forEach((unlisten) => unlisten());
-  },
+		this.listeners.push(unlisten);
+	},
+	unmounted() {
+		this.listeners.forEach((unlisten) => unlisten());
+	},
 });
 </script>
 

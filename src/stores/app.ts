@@ -8,25 +8,25 @@ interface IAppState {
     appVersion: string;
 }
 
-export const useAppStore = defineStore('app', {
-    state: (): IAppState => (
-        {
-            title: "BranchWise",
-            user: DEFAULT_USER,
-            isNavbarOpen: false,
-            appVersion: "0.0.8",
-        }),
-    getters: {
-        getAppVersion(): string {
-            return `v${this.appVersion}`;
-        }
-    },
-    actions: {
-        setTitle(title: string) {
-            this.title = title;
-        },
-        toggleNavbar() {
-            this.isNavbarOpen = !this.isNavbarOpen;
-        },
-    }
+export const useAppStore = defineStore("app", {
+	state: (): IAppState => (
+		{
+			title: "BranchWise",
+			user: DEFAULT_USER,
+			isNavbarOpen: false,
+			appVersion: "0.0.8",
+		}),
+	getters: {
+		getAppVersion(): string {
+			return `v${this.appVersion}`;
+		}
+	},
+	actions: {
+		setTitle(title: string) {
+			this.title = title;
+		},
+		toggleNavbar() {
+			this.isNavbarOpen = !this.isNavbarOpen;
+		},
+	}
 });

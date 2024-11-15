@@ -28,24 +28,24 @@ import { IGitProject } from "@/types/gitProject";
 import { defineComponent } from "vue";
 
 export default defineComponent({
-    name: "ProjectComponent",
-    props: {
-        project: {
-            type: Object as () => IGitProject,
-            required: true
-        }
-    },
-    computed: {
-        name() {
-            return this.project.directory.split("/").pop();
-        }
-    },
-    methods: {
-        openProjectPage() {
-            useProjectStore().setCurrentProject(this.project);
-            this.$router.push("/project");
-        }
-    }
+	name: "ProjectComponent",
+	props: {
+		project: {
+			type: Object as () => IGitProject,
+			required: true
+		}
+	},
+	computed: {
+		name() {
+			return this.project.directory.split("/").pop();
+		}
+	},
+	methods: {
+		openProjectPage() {
+			useProjectStore().setCurrentProject(this.project);
+			this.$router.push("/project");
+		}
+	}
 });
 </script>
 

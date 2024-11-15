@@ -33,17 +33,17 @@ import { useProjectStore } from "@/stores/project";
 import { mapState } from "pinia";
 
 export default defineComponent({
-    name: "IndexPage",
-    components: {
-        AddProject,
-        Project
-    },
-    computed: {
-        ...mapState(useProjectStore, ["getProjects"])
-    },
-    mounted() {
-        useAppStore().setTitle("BranchWise");
-        useProjectStore().setCurrentProject(null);
-    }
+	name: "IndexPage",
+	components: {
+		AddProject,
+		Project
+	},
+	computed: {
+		...mapState(useProjectStore, ["getProjects"])
+	},
+	mounted() {
+		useAppStore().setTitle("BranchWise");
+		useProjectStore().setCurrentProject(null);
+	}
 });
 </script>

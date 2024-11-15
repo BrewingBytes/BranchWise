@@ -15,23 +15,23 @@ export interface IGitAuthor {
 }
 
 export const NO_AUTHOR: IGitAuthor = {
-    user: NO_USER,
-    date_seconds: 0,
-    timezone: "",
-    type_: GitCommitAuthorType.AUTHOR,
+	user: NO_USER,
+	date_seconds: 0,
+	timezone: "",
+	type_: GitCommitAuthorType.AUTHOR,
 };
 
-export function getAuthorDate(author: IGitAuthor | null, hour_format: boolean = false): string {
-    if (author === null) {
-        return "";
-    }
+export function getAuthorDate(author: IGitAuthor | null, hour_format = false): string {
+	if (author === null) {
+		return "";
+	}
 
-    const timezone = author.timezone.substring(0, 3) + ':' + author.timezone.substring(3);
-    const momentString = moment.unix(author.date_seconds).utcOffset(timezone);
+	const timezone = author.timezone.substring(0, 3) + ":" + author.timezone.substring(3);
+	const momentString = moment.unix(author.date_seconds).utcOffset(timezone);
 
-    if (hour_format) {
-        return momentString.format("YYYY-MM-DD HH:mm:ss");
-    }
+	if (hour_format) {
+		return momentString.format("YYYY-MM-DD HH:mm:ss");
+	}
 
-    return momentString.format("YYYY-MM-DD");
+	return momentString.format("YYYY-MM-DD");
 }

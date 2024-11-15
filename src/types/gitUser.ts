@@ -4,6 +4,6 @@ export interface IGitUser {
 }
 
 export const NO_USER: IGitUser = {
-    name: "",
-    email: "",
+	name: "",
+	email: "",
 };

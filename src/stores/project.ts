@@ -13,152 +13,152 @@ interface IProjectState {
     history: IGitCommit[];
 }
 
-export const useProjectStore = defineStore('project', {
-    state: (): IProjectState => (
-        {
-            projects: [] as IGitProject[],
-            selectedProject: null as IGitProject | null,
-            branch: null as IGitBranch | null,
-            commit: null as IGitCommit | null,
-            history: [] as IGitCommit[],
-        }),
-    getters: {
-        getProjects(): IGitProject[] {
-            return this.projects;
-        },
-        getSelectedProject(): IGitProject | null {
-            return this.selectedProject;
-        },
-        getBranch(): IGitBranch | null {
-            return this.branch;
-        },
-        getBranches(): IGitBranch[] {
-            if (this.selectedProject === null) {
-                return [];
-            }
+export const useProjectStore = defineStore("project", {
+	state: (): IProjectState => (
+		{
+			projects: [] as IGitProject[],
+			selectedProject: null as IGitProject | null,
+			branch: null as IGitBranch | null,
+			commit: null as IGitCommit | null,
+			history: [] as IGitCommit[],
+		}),
+	getters: {
+		getProjects(): IGitProject[] {
+			return this.projects;
+		},
+		getSelectedProject(): IGitProject | null {
+			return this.selectedProject;
+		},
+		getBranch(): IGitBranch | null {
+			return this.branch;
+		},
+		getBranches(): IGitBranch[] {
+			if (this.selectedProject === null) {
+				return [];
+			}
 
-            return this.selectedProject.localBranches.concat(this.selectedProject.remoteBranches).concat(this.selectedProject.tags);
-        },
-        getCommit(): IGitCommit | null {
-            return this.commit;
-        },
-        getHistory(): IGitCommit[] {
-            return this.history;
-        }
-    },
-    actions: {
-        async fetchCommitHistory (length: number = 30, fromHash: string = "") {
-            let hash = "";
+			return this.selectedProject.localBranches.concat(this.selectedProject.remoteBranches).concat(this.selectedProject.tags);
+		},
+		getCommit(): IGitCommit | null {
+			return this.commit;
+		},
+		getHistory(): IGitCommit[] {
+			return this.history;
+		}
+	},
+	actions: {
+		async fetchCommitHistory (length = 30, fromHash = "") {
+			let hash = "";
 
-            if (this.branch !== null && fromHash === "") {
-                hash = this.branch.commit.trim();
-            } else {
-                hash = fromHash;
-            }
+			if (this.branch !== null && fromHash === "") {
+				hash = this.branch.commit.trim();
+			} else {
+				hash = fromHash;
+			}
 
-            try {
-                const history: IGitCommit[] = await invoke("get_commit_history", { project: this.selectedProject, hash, length});
+			try {
+				const history: IGitCommit[] = await invoke("get_commit_history", { project: this.selectedProject, hash, length});
 
-                if (fromHash === "") {
-                    this.history = history;
-                } else {
-                    this.history = this.history.concat(history.slice(1));
-                }
-        } catch (error) {
-                useDialogStore().showError(error);
-            }
-        },
-        async setBranch(branch: IGitBranch | null) {
-            if (branch === null) {
-                this.branch = null;
-                return;
-            }
+				if (fromHash === "") {
+					this.history = history;
+				} else {
+					this.history = this.history.concat(history.slice(1));
+				}
+			} catch (error) {
+				useDialogStore().showError(error);
+			}
+		},
+		async setBranch(branch: IGitBranch | null) {
+			if (branch === null) {
+				this.branch = null;
+				return;
+			}
 
-            if (this.selectedProject === null) {
-                return;
-            }
+			if (this.selectedProject === null) {
+				return;
+			}
 
-            const branchObj = this.getBranches.find(b => b.name === branch.name);
-            if (branchObj === undefined) {
-                return;
-            }
+			const branchObj = this.getBranches.find(b => b.name === branch.name);
+			if (branchObj === undefined) {
+				return;
+			}
 
-            if (this.branch !== null) {
-                if (this.branch.commit === branch.commit && this.branch.name === branch.name) {
-                    return;
-                }
-            }
+			if (this.branch !== null) {
+				if (this.branch.commit === branch.commit && this.branch.name === branch.name) {
+					return;
+				}
+			}
 
-            this.branch = branchObj;
+			this.branch = branchObj;
 
-            // invoke("set_current_branch", { branch: branch });
-            await this.fetchCommitHistory();
-            this.setCommit(branch.commit);
-        },
-        addProject(git: IGitProject) {
-            this.projects.push(git);
-        },
-        setProjects(projects: IGitProject[]) {
-            this.projects = projects;
-        },
-        removeProject(git: IGitProject | null = null) {
-            if (git === null && this.selectedProject !== null) {
-                git = this.selectedProject;
-            } else if (this.selectedProject === null) {
-                return;
-            }
+			// invoke("set_current_branch", { branch: branch });
+			await this.fetchCommitHistory();
+			this.setCommit(branch.commit);
+		},
+		addProject(git: IGitProject) {
+			this.projects.push(git);
+		},
+		setProjects(projects: IGitProject[]) {
+			this.projects = projects;
+		},
+		removeProject(git: IGitProject | null = null) {
+			if (git === null && this.selectedProject !== null) {
+				git = this.selectedProject;
+			} else if (this.selectedProject === null) {
+				return;
+			}
 
-            const index = this.projects.indexOf(git as IGitProject);
-            if (index > -1) {
-                this.projects.splice(index, 1);
-            }
-        },
-        updateProject(git: IGitProject) {
-            this.removeProject(this.selectedProject);
-            this.addProject(git);
-            this.setCurrentProject(git);
-        },
-        setCurrentProject(project: IGitProject | null) {
-            if (this.selectedProject !== null && project !== null) {
-                if (this.selectedProject.directory === project.directory) {
-                    return;
-                }
-            }
+			const index = this.projects.indexOf(git as IGitProject);
+			if (index > -1) {
+				this.projects.splice(index, 1);
+			}
+		},
+		updateProject(git: IGitProject) {
+			this.removeProject(this.selectedProject);
+			this.addProject(git);
+			this.setCurrentProject(git);
+		},
+		setCurrentProject(project: IGitProject | null) {
+			if (this.selectedProject !== null && project !== null) {
+				if (this.selectedProject.directory === project.directory) {
+					return;
+				}
+			}
 
-            this.selectedProject = project;
-            invoke("set_current_project", { project: project });
+			this.selectedProject = project;
+			invoke("set_current_project", { project: project });
 
-            if (project === null) {
-                this.setBranch(null);
-                return;
-            }
+			if (project === null) {
+				this.setBranch(null);
+				return;
+			}
 
-            if (project.head.Branch !== undefined) {
-                const name = project.head.Branch[1];
+			if (project.head.Branch !== undefined) {
+				const name = project.head.Branch[1];
 
-                switch (project.head.Branch[0].toLowerCase() as BranchType) {
-                    case BranchType.HEADS:
-                        this.setBranch(project.localBranches.find(b => b.name === name) || null);
-                        break;
-                    case BranchType.REMOTES:
-                        this.setBranch(project.remoteBranches.find(b => b.name === name) || null);
-                        break;
-                    case BranchType.TAGS:
-                        this.setBranch(project.tags.find(b => b.name === name) || null);
-                        break;
-                }
-            }
-        },
-        setCommit(hash: string) {
-            hash = hash.trim();
+				switch (project.head.Branch[0].toLowerCase() as BranchType) {
+					case BranchType.HEADS:
+						this.setBranch(project.localBranches.find(b => b.name === name) || null);
+						break;
+					case BranchType.REMOTES:
+						this.setBranch(project.remoteBranches.find(b => b.name === name) || null);
+						break;
+					case BranchType.TAGS:
+						this.setBranch(project.tags.find(b => b.name === name) || null);
+						break;
+				}
+			}
+		},
+		setCommit(hash: string) {
+			hash = hash.trim();
             
-            if (this.commit !== null) {
-                if (this.commit.hash === hash) {
-                    return;
-                }
-            }
+			if (this.commit !== null) {
+				if (this.commit.hash === hash) {
+					return;
+				}
+			}
 
-            this.commit = this.history.find(c => c.hash === hash) ?? null;
-        }
-    }
+			this.commit = this.history.find(c => c.hash === hash) ?? null;
+		}
+	}
 });

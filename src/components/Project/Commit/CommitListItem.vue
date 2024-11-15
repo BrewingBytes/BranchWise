@@ -50,51 +50,51 @@
 </template>
 
 <script lang="ts">
-import { useProjectStore } from '@/stores/project';
-import { getAuthorDate } from '@/types/gitAuthor';
-import { getHash, IGitCommit } from '@/types/gitCommit';
-import { defineComponent } from 'vue';
+import { useProjectStore } from "@/stores/project";
+import { getAuthorDate } from "@/types/gitAuthor";
+import { getHash, IGitCommit } from "@/types/gitCommit";
+import { defineComponent } from "vue";
 
 export default defineComponent({
-  name: 'CommitListItem',
-  props: {
-    commit: {
-      type: Object as () => IGitCommit,
-      required: true,
-    },
-  },
-  computed: {
-    getAuthorName() {
-      return this.commit.author.user.name;
-    },
-    getDate() {
-        return getAuthorDate(this.commit.author);
-    },
-    getHash() {
-      return getHash(this.commit);
-    },
-    getMessage() {
-        // Get the first line of the commit message based on the screen size
-        const message = this.commit.message.split('\n')[0];
+	name: "CommitListItem",
+	props: {
+		commit: {
+			type: Object as () => IGitCommit,
+			required: true,
+		},
+	},
+	computed: {
+		getAuthorName() {
+			return this.commit.author.user.name;
+		},
+		getDate() {
+			return getAuthorDate(this.commit.author);
+		},
+		getHash() {
+			return getHash(this.commit);
+		},
+		getMessage() {
+			// Get the first line of the commit message based on the screen size
+			const message = this.commit.message.split("\n")[0];
 
-        let maxMessageLength = screen.width / 80;
-        return message.length > maxMessageLength ? message.slice(0, maxMessageLength) + '...' : message;
-    },
-    commitClass() {
-        let className = "hoverable pa-2 ml-2 mr-1 mb-2";
+			const maxMessageLength = screen.width / 80;
+			return message.length > maxMessageLength ? message.slice(0, maxMessageLength) + "..." : message;
+		},
+		commitClass() {
+			let className = "hoverable pa-2 ml-2 mr-1 mb-2";
 
-        if (this.commit.hash === useProjectStore().getCommit?.hash) {
-            className += ' selected';
-        }
+			if (this.commit.hash === useProjectStore().getCommit?.hash) {
+				className += " selected";
+			}
 
-        return className;
-    }
-  },
-  methods: {
-    setCommit() {
-        useProjectStore().setCommit(this.commit.hash);
-    }
-  }
+			return className;
+		}
+	},
+	methods: {
+		setCommit() {
+			useProjectStore().setCommit(this.commit.hash);
+		}
+	}
 });
 </script>
 

@@ -29,26 +29,26 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { defineComponent } from "vue";
 
 export default defineComponent({
-  name: "AddProject",
-  methods: {
-    async openNewProject() {
-      const result = await open({
-        directory: true,
-        multiple: false
-      });
+	name: "AddProject",
+	methods: {
+		async openNewProject() {
+			const result = await open({
+				directory: true,
+				multiple: false
+			});
 
-      if (!result) {
-        return;
-      }
+			if (!result) {
+				return;
+			}
 
-      try {
-        const project: IGitProject = await invoke("open_git_project", { directory: result });
-        useProjectStore().addProject(project);
-      } catch (error) {
-        useDialogStore().showError(error);
-      }
-    }
-  }
+			try {
+				const project: IGitProject = await invoke("open_git_project", { directory: result });
+				useProjectStore().addProject(project);
+			} catch (error) {
+				useDialogStore().showError(error);
+			}
+		}
+	}
 });
 </script>
 

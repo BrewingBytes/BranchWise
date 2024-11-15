@@ -39,30 +39,30 @@ import { mapState } from "pinia";
 import { defineComponent } from "vue";
 
 export default defineComponent({
-  name: "ProjectPage",
-  components: {
-    BranchesSidebar,
-    CommitHistory,
-    CommitDetails,
-  },
-  beforeRouteEnter(_to, _from, next) {
-    if (!useProjectStore().getSelectedProject) {
-      next("/");
-    } else {
-      next();
-    }
-  },
-  computed: {
-    projectName(): string {
-      return this.project?.directory.split("/").pop() || "";
-    },
-    ...mapState(useProjectStore, {
-      project: "getSelectedProject",
-    }),
-  },
-  mounted() {
-    useAppStore().setTitle(this.projectName);
-  },
+	name: "ProjectPage",
+	components: {
+		BranchesSidebar,
+		CommitHistory,
+		CommitDetails,
+	},
+	beforeRouteEnter(_to, _from, next) {
+		if (!useProjectStore().getSelectedProject) {
+			next("/");
+		} else {
+			next();
+		}
+	},
+	computed: {
+		projectName(): string {
+			return this.project?.directory.split("/").pop() || "";
+		},
+		...mapState(useProjectStore, {
+			project: "getSelectedProject",
+		}),
+	},
+	mounted() {
+		useAppStore().setTitle(this.projectName);
+	},
 });
 </script>
 

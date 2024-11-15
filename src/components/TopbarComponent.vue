@@ -38,32 +38,32 @@ import { useAppStore } from "@/stores/app";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { mapState } from "pinia";
 import { CreateComponentPublicInstance, defineComponent } from "vue";
-const appWindow = getCurrentWebviewWindow()
+const appWindow = getCurrentWebviewWindow();
 
 export default defineComponent({
-    name: "TopbarComponent",
-    data() {
-        return {
-            x: 0,
-            y: 0,
-        };
-    },
-    computed: {
-        ...mapState(useAppStore, ["title"]),
-    },
-    mounted() {
-        (this.$refs.title as CreateComponentPublicInstance).$el.addEventListener("mousedown", this.startDragging);
-    },
-    methods: {
-        async startDragging(event: Event) {
-            if (event.target === (this.$refs.title as CreateComponentPublicInstance).$el) {
-                event.preventDefault();
-                await appWindow.startDragging();
-            }
-        },
-        toggleNavbar() {
-            useAppStore().toggleNavbar();
-        },
-    },
+	name: "TopbarComponent",
+	data() {
+		return {
+			x: 0,
+			y: 0,
+		};
+	},
+	computed: {
+		...mapState(useAppStore, ["title"]),
+	},
+	mounted() {
+		(this.$refs.title as CreateComponentPublicInstance).$el.addEventListener("mousedown", this.startDragging);
+	},
+	methods: {
+		async startDragging(event: Event) {
+			if (event.target === (this.$refs.title as CreateComponentPublicInstance).$el) {
+				event.preventDefault();
+				await appWindow.startDragging();
+			}
+		},
+		toggleNavbar() {
+			useAppStore().toggleNavbar();
+		},
+	},
 });
 </script>

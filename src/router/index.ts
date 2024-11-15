@@ -3,17 +3,17 @@ import ProjectPage from "@/pages/ProjectPage.vue";
 import { createMemoryHistory, createRouter } from "vue-router";
 
 const routes = [
-    {
-        path: "/",
-        component: IndexPage
-    },
-    {
-        path: "/project",
-        component: ProjectPage
-    }
+	{
+		path: "/",
+		component: IndexPage
+	},
+	{
+		path: "/project",
+		component: ProjectPage
+	}
 ];
 
 export default createRouter({
-    history: createMemoryHistory(),
-    routes
+	history: createMemoryHistory(),
+	routes
 });
