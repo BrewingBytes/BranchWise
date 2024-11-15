@@ -85,6 +85,7 @@ export const useProjectStore = defineStore('project', {
             }
 
             this.branch = branchObj;
+            this.setCommit(branch.commit);
 
             // invoke("set_current_branch", { branch: branch });
             this.fetchCommitHistory();
