@@ -48,6 +48,7 @@ import { PrependVariant } from "@/enums/prependVariant";
 import { useAppStore } from "@/stores/app";
 import { useDialogStore } from "@/stores/dialogs";
 import { useProjectStore } from "@/stores/project";
+import { TauriCommands } from "@/types/tauri";
 import { invoke } from "@tauri-apps/api/core";
 import { exit } from "@tauri-apps/plugin-process";
 import { mapState } from "pinia";
@@ -88,7 +89,7 @@ export default defineComponent({
 		},
 		async deleteProject() {
 			try {
-				await invoke("remove_database_project", {
+				await invoke(TauriCommands.RemoveDatabaseProject, {
 					project: useProjectStore().getSelectedProject,
 				});
 

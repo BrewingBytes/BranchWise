@@ -24,6 +24,7 @@
 import { useDialogStore } from "@/stores/dialogs";
 import { useProjectStore } from "@/stores/project";
 import { IGitProject } from "@/types/gitProject";
+import { TauriCommands } from "@/types/tauri";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import { defineComponent } from "vue";
@@ -42,7 +43,7 @@ export default defineComponent({
 			}
 
 			try {
-				const project: IGitProject = await invoke("open_git_project", { directory: result });
+				const project: IGitProject = await invoke(TauriCommands.OpenGitProject, { directory: result });
 				useProjectStore().addProject(project);
 			} catch (error) {
 				useDialogStore().showError(error);

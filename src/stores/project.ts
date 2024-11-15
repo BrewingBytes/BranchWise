@@ -1,9 +1,10 @@
 import { invoke } from "@tauri-apps/api/core";
 import { defineStore } from "pinia";
-import { BranchType, IGitBranch } from "../types/gitBranch";
-import { IGitCommit } from "../types/gitCommit";
-import { IGitProject } from "../types/gitProject";
-import { useDialogStore } from "./dialogs";
+import { BranchType, IGitBranch } from "@/types/gitBranch";
+import { IGitCommit } from "@/types/gitCommit";
+import { IGitProject } from "@/types/gitProject";
+import { useDialogStore } from "@/stores/dialogs";
+import { TauriCommands } from "@/types/tauri";
 
 interface IProjectState {
     projects: IGitProject[];
@@ -57,7 +58,7 @@ export const useProjectStore = defineStore("project", {
 			}
 
 			try {
-				const history: IGitCommit[] = await invoke("get_commit_history", { project: this.selectedProject, hash, length});
+				const history: IGitCommit[] = await invoke(TauriCommands.GetCommitHistory, { project: this.selectedProject, hash, length});
 
 				if (fromHash === "") {
 					this.history = history;
@@ -91,7 +92,7 @@ export const useProjectStore = defineStore("project", {
 
 			this.branch = branchObj;
 
-			// invoke("set_current_branch", { branch: branch });
+			// invoke(TauriCommands.SetCurrentBranch, { branch: branch });
 			await this.fetchCommitHistory();
 			this.setCommit(branch.commit);
 		},
@@ -126,7 +127,7 @@ export const useProjectStore = defineStore("project", {
 			}
 
 			this.selectedProject = project;
-			invoke("set_current_project", { project: project });
+			invoke(TauriCommands.SetCurrentProject, { project: project });
 
 			if (project === null) {
 				this.setBranch(null);

@@ -75,7 +75,7 @@ import { useProjectStore } from "@/stores/project";
 import { getHash, NO_COMMIT } from "@/types/gitCommit";
 import { mapState } from "pinia";
 import { defineComponent } from "vue";
-import CommitDetailItem from "./CommitDetailItem.vue";
+import CommitDetailItem from "@/components/Project/Commit/CommitDetailItem.vue";
 import { getAuthorDate } from "@/types/gitAuthor";
 
 export default defineComponent({
