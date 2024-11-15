@@ -3,6 +3,8 @@
     no-gutters
     align="center"
     style="height: 10vh;"
+    class="hoverable pa-2"
+    @click="setCommit"
   >
     <v-col
       style="height: 85%;"
@@ -48,6 +50,7 @@
 </template>
 
 <script lang="ts">
+import { useProjectStore } from '@/stores/project';
 import { getHash, IGitCommit } from '@/types/gitCommit';
 import moment from 'moment-timezone';
 import { defineComponent } from 'vue';
@@ -78,6 +81,19 @@ export default defineComponent({
         let maxMessageLength = screen.width / 80;
         return message.length > maxMessageLength ? message.slice(0, maxMessageLength) + '...' : message;
     }
+  },
+  methods: {
+    setCommit() {
+        useProjectStore().setCommit(this.commit.hash);
+    }
   }
 });
 </script>
+
+<style scoped>
+.hoverable:hover {
+    background-color: black;
+    cursor: pointer;
+    border-radius: 25px;
+}
+</style>
