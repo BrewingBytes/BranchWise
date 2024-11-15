@@ -93,12 +93,24 @@ impl GitCommit {
             .collect()
     }
 
+    /**
+     * Get the commit with the given hash from the project
+     * project: The project to get the commit from
+     * length: The number of commits to get, starting from the given commit
+     * hash: The hash of the commit to get
+     * 
+     * Returns the commit history, starting from the given commit
+     * If length is None, all commits are returned
+     */
     pub fn get_commit_history(
         &self,
         project: &GitProject,
         length: Option<usize>,
         hash: &str,
     ) -> Result<Vec<GitCommitWithHash>, GitObjectError> {
+
+        // UI needs to display the commit hash of the commit that was clicked on
+        // So we need to add the hash of the commit to the history
         let mut commit = GitCommitWithHash {
             commit: self.clone(),
             hash: hash.to_string(),
@@ -108,16 +120,19 @@ impl GitCommit {
         let length = length.unwrap_or(usize::MAX);
 
         loop {
+            // Add the commit to the history
             history.push(commit.clone());
             if history.len() >= length {
                 break;
             }
 
+            // Get the parent commits
             let parent_commits = commit.commit.get_parent_commits(project)?;
             if parent_commits.is_empty() {
                 break;
             }
 
+            // Set the next commit to the first parent commit
             commit = GitCommitWithHash {
                 commit: parent_commits[0].clone(),
                 hash: commit.commit.parent_hashes[0].clone(),
