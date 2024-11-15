@@ -8,3 +8,7 @@ export interface IGitCommit {
     hash: string;
     message: string;
 }
+
+export function getHash(commit: IGitCommit): string {
+    return commit.hash.substring(0, 7);
+}

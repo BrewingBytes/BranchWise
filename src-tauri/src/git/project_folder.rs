@@ -676,7 +676,7 @@ mod tests {
         }
 
         let history = get_commit_history(
-            git_project,
+            git_project.clone(),
             "6e18e0fdeac4932d71ad981dc4dc497c49f3c61f",
             None,
         )
@@ -684,6 +684,15 @@ mod tests {
 
         assert_eq!(history.len(), 32);
         assert_eq!(history[31].commit.get_message(), "parent");
+
+        let history = get_commit_history(
+            git_project,
+            "6e18e0fdeac4932d71ad981dc4dc497c49f3c61f",
+            Some(1),
+        )
+        .unwrap();
+
+        assert_eq!(history.len(), 1);
     }
 
     #[test]

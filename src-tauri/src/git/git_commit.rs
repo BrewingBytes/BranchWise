@@ -332,13 +332,13 @@ mod tests {
         let author = mock_git_commit_author();
         let committer = mock_git_commit_committer();
 
-        let commit_hash = "25723a3e66cd8dcbaf085ed83b86a8007df7ff32".to_string();
+        let commit_hash = "90f28789cc3092bb8802acb1ca9e818dd98df342".to_string();
         let encoded_file_content = create_encoded_commit_file(
             author.clone(),
             committer.clone(),
             Some("50c8353444afbef3172c999ef6cff8d31309ac3e"),
             Vec::new(),
-            "test commit",
+            "test commit\n\ntest test",
         )
         .unwrap();
 
@@ -349,7 +349,7 @@ mod tests {
             git_commit.get_tree_hash(),
             "50c8353444afbef3172c999ef6cff8d31309ac3e"
         );
-        assert_eq!(git_commit.get_message(), "test commit");
+        assert_eq!(git_commit.get_message(), "test commit\n\ntest test");
         assert_eq!(*git_commit.get_author(), author);
         assert_eq!(*git_commit.get_committer(), committer);
     }
