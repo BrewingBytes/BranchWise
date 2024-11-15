@@ -28,7 +28,7 @@ jobs:
             - uses: actions/setup-node@v4
               if: steps.changes.outputs.src == 'true'
               with:
-                node-version: 20
+                node-version: 22
 
             - name: "Install Dependencies"
               if: steps.changes.outputs.src == 'true'
@@ -88,7 +88,7 @@ jobs:
             - uses: actions/setup-node@v4
               if: steps.changes.outputs.src == 'true'
               with:
-                node-version: 20
+                node-version: 22
 
             - name: "Install Dependencies"
               if: steps.changes.outputs.src == 'true'
