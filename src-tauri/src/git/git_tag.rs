@@ -93,7 +93,7 @@ impl GitObject for GitTag {
         } else {
             String::from_utf8_lossy(encoded_data).to_string()
         };
-        
+
         let data = if needs_decoding {
             Self::check_header_valid_and_get_data(&decoded_data)?.0
         } else {

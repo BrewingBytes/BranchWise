@@ -42,13 +42,13 @@ impl GitObject for GitBlob {
         } else {
             String::from_utf8_lossy(encoded_data).to_string()
         };
-        
+
         let (data, size) = if needs_decoding {
             Self::check_header_valid_and_get_data(&decoded_data)?
         } else {
             (decoded_data.as_str(), decoded_data.len())
         };
-        
+
         let (data, _) = data.split_once("\n").ok_or(GitObjectError::ParsingError)?;
 
         Ok(Self::new(size, data.as_bytes().to_vec()))
