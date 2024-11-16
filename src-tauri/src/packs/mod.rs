@@ -12,21 +12,21 @@ use crate::{
 pub mod index;
 
 enum GitPackTypes {
-    INDEX,
-    PACK,
-    MTIMES,
-    REV,
-    UNKNOWN,
+    Index,
+    Pack,
+    MTimes,
+    Rev,
+    Unknown,
 }
 
 impl From<&str> for GitPackTypes {
     fn from(s: &str) -> Self {
         match s {
-            "idx" => GitPackTypes::INDEX,
-            "pack" => GitPackTypes::PACK,
-            "mtimes" => GitPackTypes::MTIMES,
-            "rev" => GitPackTypes::REV,
-            _ => GitPackTypes::UNKNOWN,
+            "idx" => GitPackTypes::Index,
+            "pack" => GitPackTypes::Pack,
+            "mtimes" => GitPackTypes::MTimes,
+            "rev" => GitPackTypes::Rev,
+            _ => GitPackTypes::Unknown,
         }
     }
 }
@@ -44,9 +44,9 @@ pub fn get_object_encoded_data(
     let indexes = get_all_indexes(path)?;
 
     for index in indexes {
-        println!("Checking index: {:?}", index);
-        if is_hash_in_index(&index, hash) {
-            println!("Found hash in index: {:?}", index);
+        let (found, offset) = is_hash_in_index(&index, hash);
+        if found {
+            println!("Found hash in index: {:?}, offset {}", index, offset);
             todo!()
         }
     }
@@ -67,11 +67,8 @@ fn get_all_indexes(path: PathBuf) -> Result<Vec<PathBuf>, GitObjectError> {
             let entry = entry.unwrap();
             if entry.file_type().map(|t| t.is_file()).unwrap_or(false) {
                 if let Some(extension) = entry.path().extension() {
-                    match extension.to_str().unwrap_or_default().into() {
-                        GitPackTypes::INDEX => {
-                            index.push(entry.path());
-                        }
-                        _ => {}
+                    if let GitPackTypes::Index = extension.to_str().unwrap_or_default().into() {
+                        index.push(entry.path());
                     }
                 }
             }
