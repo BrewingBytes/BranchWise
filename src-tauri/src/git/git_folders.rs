@@ -31,6 +31,20 @@ impl fmt::Display for GitFolders {
     }
 }
 
+pub enum GitObjects {
+    INFO,
+    PACK,
+}
+
+impl AsRef<str> for GitObjects {
+    fn as_ref(&self) -> &str {
+        match *self {
+            GitObjects::INFO => "info",
+            GitObjects::PACK => "pack",
+        }
+    }
+}
+
 #[derive(EnumIter, Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum GitRefs {
     HEADS,

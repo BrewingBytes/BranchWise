@@ -7,7 +7,10 @@ use std::{
 use flate2::{read::ZlibDecoder, write::ZlibEncoder};
 use sha1::{Digest, Sha1};
 
-use crate::errors::git_object_error::{GitObjectError, ObjectError};
+use crate::{
+    errors::git_object_error::{GitObjectError, ObjectError},
+    packs::get_object_encoded_data,
+};
 
 use super::{
     git_folders::{GitFolders, GIT_FOLDER},
@@ -23,6 +26,7 @@ pub enum Header {
     Commit,
     Blob,
     Tag,
+    PackIndex,
     Invalid,
 }
 
@@ -33,6 +37,7 @@ impl From<&str> for Header {
             "commit" => Header::Commit,
             "blob" => Header::Blob,
             "tag" => Header::Tag,
+            "idx" => Header::PackIndex,
             _ => Header::Invalid,
         }
     }
@@ -45,6 +50,7 @@ impl std::fmt::Display for Header {
             Header::Commit => "commit",
             Header::Blob => "blob",
             Header::Tag => "tag",
+            Header::PackIndex => "idx",
             Header::Invalid => "invalid",
         };
 
@@ -103,8 +109,12 @@ pub trait GitObject {
             .join(&hash[2..]);
 
         // Read the file and get the encoded data
-        let data = std::fs::read(file_path).map_err(|_| GitObjectError::FileReadError)?;
-        Self::from_encoded_data(data.as_slice())
+        let data = std::fs::read(file_path);
+
+        Self::from_encoded_data(
+            data.unwrap_or_else(|_| get_object_encoded_data(project, hash).unwrap_or([0].to_vec()))
+                .as_slice(),
+        )
     }
 
     /**
@@ -198,6 +208,7 @@ pub trait GitObject {
             Header::Commit => {}
             Header::Blob => {}
             Header::Tag => {}
+            Header::PackIndex => {}
             Header::Invalid => {
                 return Err(GitObjectError::InvalidObjectFile(
                     ObjectError::InvalidHeader,
