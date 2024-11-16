@@ -408,7 +408,7 @@ mod tests {
         )
         .unwrap();
 
-        let git_commit = GitCommit::from_encoded_data(&encoded_file_content, false).unwrap();
+        let git_commit = GitCommit::from_encoded_data(&encoded_file_content, true).unwrap();
         assert_eq!(*git_commit.get_hash(), commit_hash);
         assert_eq!(*git_commit.get_parent_hashes(), Vec::<String>::new());
         assert_eq!(
@@ -424,7 +424,7 @@ mod tests {
     fn test_from_string_invalid() {
         let encoded_file_content = "invalid content".as_bytes();
 
-        let git_commit = GitCommit::from_encoded_data(encoded_file_content, false);
+        let git_commit = GitCommit::from_encoded_data(encoded_file_content, true);
         assert!(git_commit.is_err());
     }
 
@@ -441,7 +441,7 @@ mod tests {
         );
 
         let git_commit =
-            GitCommit::from_encoded_data(encoded_file_content.as_ref().unwrap(), false).unwrap();
+            GitCommit::from_encoded_data(encoded_file_content.as_ref().unwrap(), true).unwrap();
 
         assert_eq!(
             git_commit.get_encoded_data().unwrap(),
@@ -466,7 +466,7 @@ mod tests {
         );
 
         let git_commit =
-            GitCommit::from_encoded_data(encoded_file_content.as_ref().unwrap(), false).unwrap();
+            GitCommit::from_encoded_data(encoded_file_content.as_ref().unwrap(), true).unwrap();
 
         assert_eq!(
             git_commit.get_encoded_data().unwrap(),
@@ -490,7 +490,7 @@ mod tests {
         );
 
         let encoded_file_content = git_commit.get_encoded_data().unwrap();
-        let git_commit = GitCommit::from_encoded_data(&encoded_file_content, false).unwrap();
+        let git_commit = GitCommit::from_encoded_data(&encoded_file_content, true).unwrap();
 
         assert_eq!(
             git_commit.get_gpg_signature().clone().unwrap(),
@@ -518,7 +518,7 @@ mod tests {
         );
 
         let git_commit =
-            GitCommit::from_encoded_data(encoded_file_content.as_ref().unwrap(), false).unwrap();
+            GitCommit::from_encoded_data(encoded_file_content.as_ref().unwrap(), true).unwrap();
         assert_eq!(git_commit.get_hash(), commit_hash);
         assert_eq!(git_commit.parent_hashes, parent_commit_hash);
         assert_eq!(git_commit.tree_hash, tree_hash);

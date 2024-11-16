@@ -260,7 +260,7 @@ mod tests {
         ];
         let encoded_data = create_encoded_tree_file(entries).unwrap();
 
-        let tree = GitTree::from_encoded_data(encoded_data.as_slice(), false).unwrap();
+        let tree = GitTree::from_encoded_data(encoded_data.as_slice(), true).unwrap();
 
         assert_eq!(tree.entries().len(), 2);
         assert_eq!(tree.get_blobs().len(), 1);

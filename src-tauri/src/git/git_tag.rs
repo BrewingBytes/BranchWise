@@ -251,7 +251,7 @@ mod tests {
         )
         .unwrap();
 
-        let git_tag = GitTag::from_encoded_data(&encoded, false).unwrap();
+        let git_tag = GitTag::from_encoded_data(&encoded, true).unwrap();
         assert!(git_tag.get_object_hash() == "25723a3e66cd8dcbaf085ed83b86a8007df7ff32");
         assert!(git_tag.get_type_() == "commit");
         assert!(git_tag.get_tag_name() == "test");
@@ -264,7 +264,7 @@ mod tests {
     fn test_from_string_invalid() {
         let encoded_file_content = "invalid content".as_bytes();
 
-        let git_tag = GitTag::from_encoded_data(encoded_file_content, false);
+        let git_tag = GitTag::from_encoded_data(encoded_file_content, true);
         assert!(git_tag.is_err());
     }
 
