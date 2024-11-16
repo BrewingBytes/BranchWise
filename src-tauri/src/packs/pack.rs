@@ -52,7 +52,7 @@ pub fn get_encoded_data_from_pack(path: &PathBuf, offset: usize) -> Vec<u8> {
     }
 
     match object_type {
-        GitPackType::ObjectOffsetDelta => todo!(),
+        GitPackType::ObjectOffsetDelta => parse_offset_delta(path, &data[1..], size),
         GitPackType::ObjectReferenceDelta => parse_reference_delta(&data[1..], size),
         GitPackType::Invalid => panic!(),
         _ => {
@@ -64,6 +64,25 @@ pub fn get_encoded_data_from_pack(path: &PathBuf, offset: usize) -> Vec<u8> {
             decoded_data
         }
     }
+}
+
+fn parse_offset_delta(path: &PathBuf, data: &[u8], size: usize) -> Vec<u8> {
+    let (offset, offset_shift) = variable_length_int(data);
+    let (source_size, source_shift) = variable_length_int(&data[offset_shift..]);
+    let (target_size, target_shift) = variable_length_int(&data[offset_shift + source_shift..]);
+
+    let mut delta_instructions: Vec<u8> =
+        vec![0; size - offset_shift - source_shift - target_shift];
+    ZlibDecoder::new(&data[offset_shift + source_shift + target_shift..])
+        .read_exact(&mut delta_instructions)
+        .unwrap();
+
+    let source = get_encoded_data_from_pack(path, offset);
+    if source.len() != source_size {
+        panic!();
+    }
+
+    parse_delta_instructions(&source, &delta_instructions, target_size)
 }
 
 fn parse_reference_delta(data: &[u8], size: usize) -> Vec<u8> {
@@ -83,9 +102,17 @@ fn parse_reference_delta(data: &[u8], size: usize) -> Vec<u8> {
         panic!();
     }
 
+    parse_delta_instructions(source, &delta_instructions, target_size)
+}
+
+fn parse_delta_instructions(
+    source: &[u8],
+    delta_instructions: &[u8],
+    target_size: usize,
+) -> Vec<u8> {
     let mut target = Vec::<u8>::new();
 
-    let mut delta_instructions = delta_instructions.as_slice();
+    let mut delta_instructions = delta_instructions;
     while delta_instructions.is_empty() {
         let instruction = delta_instructions[0];
 
