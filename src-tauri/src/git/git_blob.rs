@@ -170,6 +170,16 @@ mod tests {
     }
 
     #[test]
+    fn test_already_decoded_data() {
+        let data = vec![1, 2, 3, 4, 5];
+        let blob = GitBlob::new(data.len(), data.clone());
+        let decoded_data = blob.get_data_string() + "\n";
+
+        let git_blob = GitBlob::from_encoded_data(decoded_data.as_bytes(), false).unwrap();
+        assert_eq!(git_blob.get_hash(), blob.get_hash());
+    }
+
+    #[test]
     fn test_git_blob_serialization() {
         let data = vec![1, 2, 3, 4, 5];
         let blob = GitBlob::new(data.len(), data.clone());

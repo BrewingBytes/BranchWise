@@ -277,6 +277,15 @@ mod tests {
     }
 
     #[test]
+    fn test_already_decoded_data() {
+        let tag = mock_git_tag();
+        let decoded_data = tag.get_data_string() + "\n";
+
+        let git_tag = GitTag::from_encoded_data(decoded_data.as_bytes(), false).unwrap();
+        assert_eq!(git_tag.get_hash(), tag.get_hash());
+    }
+
+    #[test]
     fn test_serialize() {
         let git_tag = mock_git_tag();
         let serialized = serde_json::to_string(&git_tag).unwrap();

@@ -335,11 +335,13 @@ mod tests {
 
     fn mock_git_commit() -> GitCommit {
         let author = mock_git_commit_author();
+        let committer = mock_git_commit_committer();
+
         GitCommit::new(
             "tree_hash",
             &["parent_hash1".to_string(), "parent_hash2".to_string()],
-            author.clone(),
-            author.clone(),
+            author,
+            committer,
             "commit message",
             None,
         )
@@ -527,16 +529,25 @@ mod tests {
     }
 
     #[test]
+    fn test_already_decoded_data() {
+        let commit = mock_git_commit();
+        let decoded_data = commit.get_data_string() + "\n";
+
+        let git_commit = GitCommit::from_encoded_data(decoded_data.as_bytes(), false).unwrap();
+        assert_eq!(git_commit.get_hash(), commit.get_hash());
+    }
+
+    #[test]
     fn test_serialize_git_commit() {
         let git_commit = mock_git_commit();
         let serialized = serde_json::to_string(&git_commit).unwrap();
-        let expected = r#"{"tree_hash":"tree_hash","parent_hashes":["parent_hash1","parent_hash2"],"author":{"user":{"name":"Test User","email":"test@example.com"},"date_seconds":1234567890,"timezone":"+0000","type_":"Author"},"committer":{"user":{"name":"Test User","email":"test@example.com"},"date_seconds":1234567890,"timezone":"+0000","type_":"Author"},"message":"commit message","gpg_signature":null}"#;
+        let expected = r#"{"tree_hash":"tree_hash","parent_hashes":["parent_hash1","parent_hash2"],"author":{"user":{"name":"Test User","email":"test@example.com"},"date_seconds":1234567890,"timezone":"+0000","type_":"Author"},"committer":{"user":{"name":"Test User","email":"test@example.com"},"date_seconds":1234567890,"timezone":"+0000","type_":"Committer"},"message":"commit message","gpg_signature":null}"#;
         assert_eq!(serialized, expected);
     }
 
     #[test]
     fn test_deserialize_git_commit() {
-        let json_str = r#"{"tree_hash":"tree_hash","parent_hashes":["parent_hash1","parent_hash2"],"author":{"user":{"name":"Test User","email":"test@example.com"},"date_seconds":1234567890,"timezone":"+0000","type_":"Author"},"committer":{"user":{"name":"Test User","email":"test@example.com"},"date_seconds":1234567890,"timezone":"+0000","type_":"Author"},"message":"commit message","gpg_signature":null}"#;
+        let json_str = r#"{"tree_hash":"tree_hash","parent_hashes":["parent_hash1","parent_hash2"],"author":{"user":{"name":"Test User","email":"test@example.com"},"date_seconds":1234567890,"timezone":"+0000","type_":"Author"},"committer":{"user":{"name":"Test User","email":"test@example.com"},"date_seconds":1234567890,"timezone":"+0000","type_":"Committer"},"message":"commit message","gpg_signature":null}"#;
         let deserialized: GitCommit = serde_json::from_str(json_str).unwrap();
         let expected = mock_git_commit();
         assert_eq!(deserialized, expected);

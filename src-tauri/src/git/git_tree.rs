@@ -282,6 +282,29 @@ mod tests {
     }
 
     #[test]
+    fn test_already_decoded_data() {
+        let entries = vec![
+            GitTreeEntry {
+                mode: GitTreeMode::File,
+                hash: "df6773ea47ed3fce3b3bb14e3d1101963e77ef08".to_string(),
+                name: "file1".to_string(),
+            },
+            GitTreeEntry {
+                mode: GitTreeMode::Tree,
+                hash: "df6773ea47ed3fce3b3bb14e3d1101963e77ef09".to_string(),
+                name: "tree1".to_string(),
+            },
+        ];
+        let encoded_data = create_encoded_tree_file(entries).unwrap();
+        let tree = GitTree::from_encoded_data(encoded_data.as_slice(), true).unwrap();
+
+        let decoded_data = tree.get_data_string() + "\n";
+
+        let git_tree = GitTree::from_encoded_data(decoded_data.as_bytes(), false).unwrap();
+        assert_eq!(git_tree.get_hash(), tree.get_hash());
+    }
+
+    #[test]
     fn test_git_tree_mode_from_mode_str() {
         assert_eq!(GitTreeMode::from_mode_str("100644"), GitTreeMode::File);
         assert_eq!(

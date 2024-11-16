@@ -91,3 +91,21 @@ pub enum GitBranchType {
     Remote(String),
     Tags,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_git_folders_as_ref() {
+        assert_eq!(GitFolders::REFS.as_ref(), "refs");
+        assert_eq!(GitFolders::OBJECTS.as_ref(), "objects");
+        assert_eq!(GitFolders::HOOKS.as_ref(), "hooks");
+    }
+
+    #[test]
+    fn test_git_objects_as_ref() {
+        assert_eq!(GitObjects::INFO.as_ref(), "info");
+        assert_eq!(GitObjects::PACK.as_ref(), "pack");
+    }
+}
