@@ -159,9 +159,22 @@ impl GitObject for GitCommit {
      *
      * Returns the GitCommit
      */
-    fn from_encoded_data(encoded_data: &[u8]) -> Result<Self, GitObjectError> {
-        let decoded_data = Self::decode_data(encoded_data)?;
-        let (data, _) = Self::check_header_valid_and_get_data(&decoded_data)?;
+    fn from_encoded_data(
+        encoded_data: &[u8],
+        needs_decoding: bool,
+    ) -> Result<Self, GitObjectError> {
+        // Decode the data and check if the header is valid
+        let decoded_data = if needs_decoding {
+            Self::decode_data(encoded_data)?
+        } else {
+            String::from_utf8_lossy(encoded_data).to_string()
+        };
+        
+        let data = if needs_decoding {
+            Self::check_header_valid_and_get_data(&decoded_data)?.0
+        } else {
+            &decoded_data
+        };
 
         // The data must contain a tree hash, either an author or committer,
         // none or more parent commits, and a message
@@ -395,7 +408,7 @@ mod tests {
         )
         .unwrap();
 
-        let git_commit = GitCommit::from_encoded_data(&encoded_file_content).unwrap();
+        let git_commit = GitCommit::from_encoded_data(&encoded_file_content, false).unwrap();
         assert_eq!(*git_commit.get_hash(), commit_hash);
         assert_eq!(*git_commit.get_parent_hashes(), Vec::<String>::new());
         assert_eq!(
@@ -411,7 +424,7 @@ mod tests {
     fn test_from_string_invalid() {
         let encoded_file_content = "invalid content".as_bytes();
 
-        let git_commit = GitCommit::from_encoded_data(encoded_file_content);
+        let git_commit = GitCommit::from_encoded_data(encoded_file_content, false);
         assert!(git_commit.is_err());
     }
 
@@ -428,7 +441,7 @@ mod tests {
         );
 
         let git_commit =
-            GitCommit::from_encoded_data(encoded_file_content.as_ref().unwrap()).unwrap();
+            GitCommit::from_encoded_data(encoded_file_content.as_ref().unwrap(), false).unwrap();
 
         assert_eq!(
             git_commit.get_encoded_data().unwrap(),
@@ -453,7 +466,7 @@ mod tests {
         );
 
         let git_commit =
-            GitCommit::from_encoded_data(encoded_file_content.as_ref().unwrap()).unwrap();
+            GitCommit::from_encoded_data(encoded_file_content.as_ref().unwrap(), false).unwrap();
 
         assert_eq!(
             git_commit.get_encoded_data().unwrap(),
@@ -477,7 +490,7 @@ mod tests {
         );
 
         let encoded_file_content = git_commit.get_encoded_data().unwrap();
-        let git_commit = GitCommit::from_encoded_data(&encoded_file_content).unwrap();
+        let git_commit = GitCommit::from_encoded_data(&encoded_file_content, false).unwrap();
 
         assert_eq!(
             git_commit.get_gpg_signature().clone().unwrap(),
@@ -505,7 +518,7 @@ mod tests {
         );
 
         let git_commit =
-            GitCommit::from_encoded_data(encoded_file_content.as_ref().unwrap()).unwrap();
+            GitCommit::from_encoded_data(encoded_file_content.as_ref().unwrap(), false).unwrap();
         assert_eq!(git_commit.get_hash(), commit_hash);
         assert_eq!(git_commit.parent_hashes, parent_commit_hash);
         assert_eq!(git_commit.tree_hash, tree_hash);

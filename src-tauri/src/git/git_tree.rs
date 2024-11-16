@@ -171,13 +171,22 @@ impl GitObject for GitTree {
      *
      * Returns the GitTree
      */
-    fn from_encoded_data(encoded_data: &[u8]) -> Result<Self, GitObjectError>
+    fn from_encoded_data(encoded_data: &[u8], needs_decoding: bool) -> Result<Self, GitObjectError>
     where
         Self: Sized,
     {
         // Decode the data and check if the header is valid
-        let decoded_data = Self::decode_data(encoded_data)?;
-        let (data, _) = Self::check_header_valid_and_get_data(&decoded_data)?;
+        let decoded_data = if needs_decoding {
+            Self::decode_data(encoded_data)?
+        } else {
+            String::from_utf8_lossy(encoded_data).to_string()
+        };
+        
+        let data = if needs_decoding {
+            Self::check_header_valid_and_get_data(&decoded_data)?.0
+        } else {
+            &decoded_data
+        };
 
         // Parse the tree entries
         let mut tree = Self::new();
@@ -251,7 +260,7 @@ mod tests {
         ];
         let encoded_data = create_encoded_tree_file(entries).unwrap();
 
-        let tree = GitTree::from_encoded_data(encoded_data.as_slice()).unwrap();
+        let tree = GitTree::from_encoded_data(encoded_data.as_slice(), false).unwrap();
 
         assert_eq!(tree.entries().len(), 2);
         assert_eq!(tree.get_blobs().len(), 1);

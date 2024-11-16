@@ -1,5 +1,7 @@
 use std::{fs, path::PathBuf};
 
+use pack::get_encoded_data_from_pack;
+
 use crate::{
     errors::git_object_error::GitObjectError,
     git::{
@@ -9,7 +11,8 @@ use crate::{
     packs::index::is_hash_in_index,
 };
 
-pub mod index;
+mod index;
+mod pack;
 
 enum GitPackTypes {
     Index,
@@ -31,6 +34,18 @@ impl From<&str> for GitPackTypes {
     }
 }
 
+impl AsRef<str> for GitPackTypes {
+    fn as_ref(&self) -> &str {
+        match self {
+            GitPackTypes::Index => "idx",
+            GitPackTypes::Pack => "pack",
+            GitPackTypes::MTimes => "mtimes",
+            GitPackTypes::Rev => "rev",
+            GitPackTypes::Unknown => "unknown",
+        }
+    }
+}
+
 pub fn get_object_encoded_data(
     project: &GitProject,
     hash: &str,
@@ -40,18 +55,19 @@ pub fn get_object_encoded_data(
         .join(GitFolders::OBJECTS.as_ref())
         .join(GitObjects::PACK.as_ref());
 
-    println!("Searching for hash: {}", hash);
     let indexes = get_all_indexes(path)?;
-
     for index in indexes {
         let (found, offset) = is_hash_in_index(&index, hash);
+
         if found {
-            println!("Found hash in index: {:?}, offset {}", index, offset);
-            todo!()
+            return Ok(get_encoded_data_from_pack(
+                &index.with_extension(GitPackTypes::Pack.as_ref()),
+                offset,
+            ));
         }
     }
 
-    todo!()
+    Err(GitObjectError::PackError)
 }
 
 fn get_all_indexes(path: PathBuf) -> Result<Vec<PathBuf>, GitObjectError> {

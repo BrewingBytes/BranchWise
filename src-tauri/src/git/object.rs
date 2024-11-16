@@ -111,10 +111,12 @@ pub trait GitObject {
         // Read the file and get the encoded data
         let data = std::fs::read(file_path);
 
-        Self::from_encoded_data(
-            data.unwrap_or_else(|_| get_object_encoded_data(project, hash).unwrap_or([0].to_vec()))
-                .as_slice(),
-        )
+        if let Ok(data) = data {
+            Self::from_encoded_data(data.as_slice(), true)
+        } else {
+            let encoded_data = get_object_encoded_data(project, hash)?;
+            Self::from_encoded_data(&encoded_data, false)
+        }
     }
 
     /**
@@ -225,7 +227,7 @@ pub trait GitObject {
         Ok((other_data, size))
     }
 
-    fn from_encoded_data(encoded_data: &[u8]) -> Result<Self, GitObjectError>
+    fn from_encoded_data(encoded_data: &[u8], needs_decoding: bool) -> Result<Self, GitObjectError>
     where
         Self: Sized;
 }

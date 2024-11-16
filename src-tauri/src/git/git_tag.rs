@@ -83,9 +83,22 @@ impl GitObject for GitTag {
      *
      * Returns the GitTag if the encoded data is valid, otherwise an error
      */
-    fn from_encoded_data(encoded_data: &[u8]) -> Result<Self, GitObjectError> {
-        let decoded_data = Self::decode_data(encoded_data)?;
-        let (data, _) = Self::check_header_valid_and_get_data(&decoded_data)?;
+    fn from_encoded_data(
+        encoded_data: &[u8],
+        needs_decoding: bool,
+    ) -> Result<Self, GitObjectError> {
+        // Decode the data and check if the header is valid
+        let decoded_data = if needs_decoding {
+            Self::decode_data(encoded_data)?
+        } else {
+            String::from_utf8_lossy(encoded_data).to_string()
+        };
+        
+        let data = if needs_decoding {
+            Self::check_header_valid_and_get_data(&decoded_data)?.0
+        } else {
+            &decoded_data
+        };
 
         // The data must contain an object hash, a type, a tag name, a tagger and a message
         let mut object = "";
@@ -238,7 +251,7 @@ mod tests {
         )
         .unwrap();
 
-        let git_tag = GitTag::from_encoded_data(&encoded).unwrap();
+        let git_tag = GitTag::from_encoded_data(&encoded, false).unwrap();
         assert!(git_tag.get_object_hash() == "25723a3e66cd8dcbaf085ed83b86a8007df7ff32");
         assert!(git_tag.get_type_() == "commit");
         assert!(git_tag.get_tag_name() == "test");
@@ -251,7 +264,7 @@ mod tests {
     fn test_from_string_invalid() {
         let encoded_file_content = "invalid content".as_bytes();
 
-        let git_tag = GitTag::from_encoded_data(encoded_file_content);
+        let git_tag = GitTag::from_encoded_data(encoded_file_content, false);
         assert!(git_tag.is_err());
     }
 

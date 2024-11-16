@@ -7,10 +7,10 @@ const HEADER_BYTES: [u8; 8] = [0xff, 0x74, 0x4f, 0x63, 0, 0, 0, 2];
 
 /**
  * Check if the hash is in the index file
- * 
+ *
  * index: The path to the index file
  * hash: The hash to check
- * 
+ *
  * Returns a tuple with a boolean if the hash is in the index and the offset of the object in the pack
  */
 pub fn is_hash_in_index(index: &PathBuf, hash: &str) -> (bool, usize) {
