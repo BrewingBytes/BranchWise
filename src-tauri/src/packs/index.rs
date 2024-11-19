@@ -104,3 +104,137 @@ fn find_object_offset(data: &[u8], total_objects: usize, index: usize) -> usize 
 fn is_header_valid(header: &[u8]) -> bool {
     header == HEADER_BYTES
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use tempdir::TempDir;
+
+    fn mocked_header() -> [u8; 8] {
+        HEADER_BYTES
+    }
+
+    fn mocked_fanout_table(el: usize) -> Vec<u8> {
+        let mut fanout_table = Vec::new();
+        for _ in 0..256 {
+            fanout_table.push(0);
+            fanout_table.push(0);
+            fanout_table.push(0);
+            fanout_table.push(0);
+        }
+
+        fanout_table[el * 4 + 3] = 1;
+        fanout_table[255 * 4 + 3] = 1;
+
+        fanout_table
+    }
+
+    fn mocked_object_table(hash: &str) -> Vec<u8> {
+        let mut object_table = Vec::new();
+        object_table.extend_from_slice(&<[u8; 20]>::from_hex(hash).unwrap());
+
+        object_table
+    }
+
+    fn mocked_crc_table() -> Vec<u8> {
+        let mut crc_table = Vec::new();
+        crc_table.push(0);
+        crc_table.push(0);
+        crc_table.push(0);
+        crc_table.push(0);
+
+        crc_table
+    }
+
+    fn mocked_small_offset_table(offset: usize) -> Vec<u8> {
+        let mut offset_table = Vec::new();
+        offset_table.extend_from_slice(&u32::to_be_bytes(offset as u32));
+
+        offset_table
+    }
+
+    fn mocked_big_offset_table(offset: usize) -> Vec<u8> {
+        let mut offset_table = Vec::new();
+        offset_table.push((offset >> 56) as u8);
+        offset_table.push((offset >> 48) as u8);
+        offset_table.push((offset >> 40) as u8);
+        offset_table.push((offset >> 32) as u8);
+        offset_table.push((offset >> 24) as u8);
+        offset_table.push((offset >> 16) as u8);
+        offset_table.push((offset >> 8) as u8);
+        offset_table.push(offset as u8);
+
+        offset_table
+    }
+
+    fn create_mocked_index_file(temp_dir: &TempDir, small_offset: bool) -> PathBuf {
+        let index = temp_dir.path().join("index");
+
+        let mut data = Vec::new();
+        data.extend_from_slice(&mocked_header());
+        data.extend_from_slice(&mocked_fanout_table(18));
+        data.extend_from_slice(&mocked_object_table(
+            "1234567890123456789012345678901234567890",
+        ));
+        data.extend_from_slice(&mocked_crc_table());
+        if small_offset {
+            data.extend_from_slice(&mocked_small_offset_table(1));
+        } else {
+            data.extend_from_slice(&mocked_small_offset_table(0x80000000));
+            data.extend_from_slice(&mocked_big_offset_table(12));
+        }
+
+        fs::write(&index, data).unwrap();
+        index
+    }
+
+    #[test]
+    fn test_hash_in_index_offset_big() {
+        let temp_dir = TempDir::new("test_hash_in_index_offset_big").unwrap();
+
+        let index = create_mocked_index_file(&temp_dir, false);
+        let hash = "1234567890123456789012345678901234567890";
+
+        let (is_hash_in_index, offset) = is_hash_in_index(&index, hash);
+        assert_eq!(is_hash_in_index, true);
+        assert_eq!(offset, 12);
+    }
+
+    #[test]
+    fn test_hash_in_index_offset_small() {
+        let temp_dir = TempDir::new("test_hash_in_index_offset_small").unwrap();
+
+        let index = create_mocked_index_file(&temp_dir, true);
+        let hash = "1234567890123456789012345678901234567890";
+
+        let (is_hash_in_index, offset) = is_hash_in_index(&index, hash);
+        assert_eq!(is_hash_in_index, true);
+        assert_eq!(offset, 1);
+    }
+
+    #[test]
+    fn test_hash_not_in_index() {
+        let temp_dir = TempDir::new("test_hash_not_in_index").unwrap();
+
+        let index = create_mocked_index_file(&temp_dir, true);
+        let hash = "1234567890123456789012345678901234567891";
+
+        let (is_hash_in_index, offset) = is_hash_in_index(&index, hash);
+        assert_eq!(is_hash_in_index, false);
+        assert_eq!(offset, 0);
+    }
+
+    #[test]
+    fn test_invalid_header() {
+        let temp_dir = TempDir::new("test_invalid_header").unwrap();
+
+        let index = temp_dir.path().join("index");
+        fs::write(&index, vec![0, 1, 2, 3, 4, 5, 6, 7]).unwrap();
+
+        let hash = "1234567890123456789012345678901234567890";
+
+        let (is_hash_in_index, _) = is_hash_in_index(&index, hash);
+        assert_eq!(is_hash_in_index, false);
+    }
+}
