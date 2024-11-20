@@ -32,11 +32,7 @@ jobs:
               uses: actions-rs/toolchain@v1
               with:
                 toolchain: stable
-            
-            - name: Install Platform Dependecies (MacOS)
-              if: matrix.platform == 'macos-latest' # This must match the platform value defined above.
-              run: |
-                rustup target add x86_64-apple-darwin
+                target: x86_64-apple-darwin
 
             - name: Install Platform Dependecies (Linux)
               if: matrix.platform == 'ubuntu-22.04' # This must match the platform value defined above.
