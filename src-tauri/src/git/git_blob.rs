@@ -32,9 +32,23 @@ impl GitObject for GitBlob {
      *
      * Returns the GitBlob
      */
-    fn from_encoded_data(encoded_data: &[u8]) -> Result<Self, GitObjectError> {
-        let decoded_data = Self::decode_data(encoded_data)?;
-        let (data, size) = Self::check_header_valid_and_get_data(&decoded_data)?;
+    fn from_encoded_data(
+        encoded_data: &[u8],
+        needs_decoding: bool,
+    ) -> Result<Self, GitObjectError> {
+        // Decode the data and check if the header is valid
+        let decoded_data = if needs_decoding {
+            Self::decode_data(encoded_data)?
+        } else {
+            String::from_utf8_lossy(encoded_data).to_string()
+        };
+
+        let (data, size) = if needs_decoding {
+            Self::check_header_valid_and_get_data(&decoded_data)?
+        } else {
+            (decoded_data.as_str(), decoded_data.len())
+        };
+
         let (data, _) = data.split_once("\n").ok_or(GitObjectError::ParsingError)?;
 
         Ok(Self::new(size, data.as_bytes().to_vec()))
@@ -104,7 +118,7 @@ mod tests {
         let data = String::from("test");
         let encoded_data = create_encoded_blob_file(Some(data.clone())).unwrap();
 
-        let blob = GitBlob::from_encoded_data(encoded_data.as_slice()).unwrap();
+        let blob = GitBlob::from_encoded_data(encoded_data.as_slice(), true).unwrap();
 
         assert_eq!(blob.get_hash(), "9daeafb9864cf43055ae93beb0afd6c7d144bfa4");
     }
@@ -114,7 +128,7 @@ mod tests {
         let data = String::from("test");
         let encoded_data = create_encoded_blob_file(Some(data.clone())).unwrap();
 
-        let blob = GitBlob::from_encoded_data(encoded_data.as_slice()).unwrap();
+        let blob = GitBlob::from_encoded_data(encoded_data.as_slice(), true).unwrap();
 
         assert_eq!(blob.size(), data.len());
         assert_eq!(blob.data(), data.as_bytes());
@@ -122,7 +136,7 @@ mod tests {
 
     #[test]
     fn test_git_blob_from_encoded_data_invalid_blob_file() {
-        let result = GitBlob::from_encoded_data(vec![0, 1, 2, 3, 4, 5].as_slice());
+        let result = GitBlob::from_encoded_data(vec![0, 1, 2, 3, 4, 5].as_slice(), true);
         assert_eq!(result, Err(GitObjectError::DecompressionError));
     }
 
@@ -138,7 +152,7 @@ mod tests {
         let mut encoded_file_content = Vec::new();
         zlib.read_to_end(&mut encoded_file_content).unwrap();
 
-        let result = GitBlob::from_encoded_data(encoded_file_content.as_slice());
+        let result = GitBlob::from_encoded_data(encoded_file_content.as_slice(), true);
         assert_eq!(
             result,
             Err(GitObjectError::InvalidObjectFile(
@@ -153,6 +167,16 @@ mod tests {
         let blob = GitBlob::new(data.len(), data.clone());
         assert_eq!(blob.size(), data.len());
         assert_eq!(blob.data(), data.as_slice());
+    }
+
+    #[test]
+    fn test_already_decoded_data() {
+        let data = vec![1, 2, 3, 4, 5];
+        let blob = GitBlob::new(data.len(), data.clone());
+        let decoded_data = blob.get_data_string() + "\n";
+
+        let git_blob = GitBlob::from_encoded_data(decoded_data.as_bytes(), false).unwrap();
+        assert_eq!(git_blob.get_hash(), blob.get_hash());
     }
 
     #[test]

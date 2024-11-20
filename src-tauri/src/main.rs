@@ -3,6 +3,7 @@
 pub mod database;
 pub mod errors;
 pub mod git;
+pub mod packs;
 
 use std::fs;
 

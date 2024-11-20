@@ -10,6 +10,7 @@ pub enum GitObjectError {
     ParsingError,
     ShaError,
     InvalidHash,
+    PackError,
 }
 
 #[derive(Debug, PartialEq)]

@@ -31,6 +31,20 @@ impl fmt::Display for GitFolders {
     }
 }
 
+pub enum GitObjects {
+    INFO,
+    PACK,
+}
+
+impl AsRef<str> for GitObjects {
+    fn as_ref(&self) -> &str {
+        match *self {
+            GitObjects::INFO => "info",
+            GitObjects::PACK => "pack",
+        }
+    }
+}
+
 #[derive(EnumIter, Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum GitRefs {
     HEADS,
@@ -76,4 +90,22 @@ pub enum GitBranchType {
     Local,
     Remote(String),
     Tags,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_git_folders_as_ref() {
+        assert_eq!(GitFolders::REFS.as_ref(), "refs");
+        assert_eq!(GitFolders::OBJECTS.as_ref(), "objects");
+        assert_eq!(GitFolders::HOOKS.as_ref(), "hooks");
+    }
+
+    #[test]
+    fn test_git_objects_as_ref() {
+        assert_eq!(GitObjects::INFO.as_ref(), "info");
+        assert_eq!(GitObjects::PACK.as_ref(), "pack");
+    }
 }

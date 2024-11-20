@@ -336,6 +336,7 @@ name = "branchwise"
 version = "0.0.8"
 dependencies = [
  "flate2",
+ "hex",
  "lazy_static",
  "serde",
  "serde_json",

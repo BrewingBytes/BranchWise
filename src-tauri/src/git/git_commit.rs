@@ -159,9 +159,22 @@ impl GitObject for GitCommit {
      *
      * Returns the GitCommit
      */
-    fn from_encoded_data(encoded_data: &[u8]) -> Result<Self, GitObjectError> {
-        let decoded_data = Self::decode_data(encoded_data)?;
-        let (data, _) = Self::check_header_valid_and_get_data(&decoded_data)?;
+    fn from_encoded_data(
+        encoded_data: &[u8],
+        needs_decoding: bool,
+    ) -> Result<Self, GitObjectError> {
+        // Decode the data and check if the header is valid
+        let decoded_data = if needs_decoding {
+            Self::decode_data(encoded_data)?
+        } else {
+            String::from_utf8_lossy(encoded_data).to_string()
+        };
+
+        let data = if needs_decoding {
+            Self::check_header_valid_and_get_data(&decoded_data)?.0
+        } else {
+            &decoded_data
+        };
 
         // The data must contain a tree hash, either an author or committer,
         // none or more parent commits, and a message
@@ -171,7 +184,7 @@ impl GitObject for GitCommit {
         let mut committer = Option::<GitCommitAuthor>::None;
         let mut in_signature = false;
         let mut signature = String::new();
-
+        
         // Remove the last newline character
         let mut data = &data[..data.len() - 1];
         while !data.is_empty() {
@@ -322,11 +335,13 @@ mod tests {
 
     fn mock_git_commit() -> GitCommit {
         let author = mock_git_commit_author();
+        let committer = mock_git_commit_committer();
+
         GitCommit::new(
             "tree_hash",
             &["parent_hash1".to_string(), "parent_hash2".to_string()],
-            author.clone(),
-            author.clone(),
+            author,
+            committer,
             "commit message",
             None,
         )
@@ -395,7 +410,7 @@ mod tests {
         )
         .unwrap();
 
-        let git_commit = GitCommit::from_encoded_data(&encoded_file_content).unwrap();
+        let git_commit = GitCommit::from_encoded_data(&encoded_file_content, true).unwrap();
         assert_eq!(*git_commit.get_hash(), commit_hash);
         assert_eq!(*git_commit.get_parent_hashes(), Vec::<String>::new());
         assert_eq!(
@@ -411,7 +426,7 @@ mod tests {
     fn test_from_string_invalid() {
         let encoded_file_content = "invalid content".as_bytes();
 
-        let git_commit = GitCommit::from_encoded_data(encoded_file_content);
+        let git_commit = GitCommit::from_encoded_data(encoded_file_content, true);
         assert!(git_commit.is_err());
     }
 
@@ -428,7 +443,7 @@ mod tests {
         );
 
         let git_commit =
-            GitCommit::from_encoded_data(encoded_file_content.as_ref().unwrap()).unwrap();
+            GitCommit::from_encoded_data(encoded_file_content.as_ref().unwrap(), true).unwrap();
 
         assert_eq!(
             git_commit.get_encoded_data().unwrap(),
@@ -453,7 +468,7 @@ mod tests {
         );
 
         let git_commit =
-            GitCommit::from_encoded_data(encoded_file_content.as_ref().unwrap()).unwrap();
+            GitCommit::from_encoded_data(encoded_file_content.as_ref().unwrap(), true).unwrap();
 
         assert_eq!(
             git_commit.get_encoded_data().unwrap(),
@@ -477,7 +492,7 @@ mod tests {
         );
 
         let encoded_file_content = git_commit.get_encoded_data().unwrap();
-        let git_commit = GitCommit::from_encoded_data(&encoded_file_content).unwrap();
+        let git_commit = GitCommit::from_encoded_data(&encoded_file_content, true).unwrap();
 
         assert_eq!(
             git_commit.get_gpg_signature().clone().unwrap(),
@@ -505,7 +520,7 @@ mod tests {
         );
 
         let git_commit =
-            GitCommit::from_encoded_data(encoded_file_content.as_ref().unwrap()).unwrap();
+            GitCommit::from_encoded_data(encoded_file_content.as_ref().unwrap(), true).unwrap();
         assert_eq!(git_commit.get_hash(), commit_hash);
         assert_eq!(git_commit.parent_hashes, parent_commit_hash);
         assert_eq!(git_commit.tree_hash, tree_hash);
@@ -514,16 +529,25 @@ mod tests {
     }
 
     #[test]
+    fn test_already_decoded_data() {
+        let commit = mock_git_commit();
+        let decoded_data = commit.get_data_string() + "\n";
+
+        let git_commit = GitCommit::from_encoded_data(decoded_data.as_bytes(), false).unwrap();
+        assert_eq!(git_commit.get_hash(), commit.get_hash());
+    }
+
+    #[test]
     fn test_serialize_git_commit() {
         let git_commit = mock_git_commit();
         let serialized = serde_json::to_string(&git_commit).unwrap();
-        let expected = r#"{"tree_hash":"tree_hash","parent_hashes":["parent_hash1","parent_hash2"],"author":{"user":{"name":"Test User","email":"test@example.com"},"date_seconds":1234567890,"timezone":"+0000","type_":"Author"},"committer":{"user":{"name":"Test User","email":"test@example.com"},"date_seconds":1234567890,"timezone":"+0000","type_":"Author"},"message":"commit message","gpg_signature":null}"#;
+        let expected = r#"{"tree_hash":"tree_hash","parent_hashes":["parent_hash1","parent_hash2"],"author":{"user":{"name":"Test User","email":"test@example.com"},"date_seconds":1234567890,"timezone":"+0000","type_":"Author"},"committer":{"user":{"name":"Test User","email":"test@example.com"},"date_seconds":1234567890,"timezone":"+0000","type_":"Committer"},"message":"commit message","gpg_signature":null}"#;
         assert_eq!(serialized, expected);
     }
 
     #[test]
     fn test_deserialize_git_commit() {
-        let json_str = r#"{"tree_hash":"tree_hash","parent_hashes":["parent_hash1","parent_hash2"],"author":{"user":{"name":"Test User","email":"test@example.com"},"date_seconds":1234567890,"timezone":"+0000","type_":"Author"},"committer":{"user":{"name":"Test User","email":"test@example.com"},"date_seconds":1234567890,"timezone":"+0000","type_":"Author"},"message":"commit message","gpg_signature":null}"#;
+        let json_str = r#"{"tree_hash":"tree_hash","parent_hashes":["parent_hash1","parent_hash2"],"author":{"user":{"name":"Test User","email":"test@example.com"},"date_seconds":1234567890,"timezone":"+0000","type_":"Author"},"committer":{"user":{"name":"Test User","email":"test@example.com"},"date_seconds":1234567890,"timezone":"+0000","type_":"Committer"},"message":"commit message","gpg_signature":null}"#;
         let deserialized: GitCommit = serde_json::from_str(json_str).unwrap();
         let expected = mock_git_commit();
         assert_eq!(deserialized, expected);
