@@ -106,7 +106,9 @@ fn is_header_valid(header: &[u8]) -> bool {
 }
 
 #[cfg(test)]
-mod tests {
+pub mod tests {
+    use std::path::Path;
+
     use super::*;
 
     use tempdir::TempDir;
@@ -168,21 +170,26 @@ mod tests {
         offset_table
     }
 
-    fn create_mocked_index_file(temp_dir: &TempDir, small_offset: bool) -> PathBuf {
-        let index = temp_dir.path().join("index");
+    pub fn create_mocked_index_file(
+        temp_dir: &Path,
+        small_offset: bool,
+        set_offset: usize,
+        index_name: &str,
+        hash: &str,
+    ) -> PathBuf {
+        let index = temp_dir.join(index_name);
+        let el = usize::from_str_radix(&hash[..2], 16).unwrap_or_default();
 
         let mut data = Vec::new();
         data.extend_from_slice(&mocked_header());
-        data.extend_from_slice(&mocked_fanout_table(18));
-        data.extend_from_slice(&mocked_object_table(
-            "1234567890123456789012345678901234567890",
-        ));
+        data.extend_from_slice(&mocked_fanout_table(el));
+        data.extend_from_slice(&mocked_object_table(hash));
         data.extend_from_slice(&mocked_crc_table());
         if small_offset {
-            data.extend_from_slice(&mocked_small_offset_table(1));
+            data.extend_from_slice(&mocked_small_offset_table(set_offset));
         } else {
             data.extend_from_slice(&mocked_small_offset_table(0x80000000));
-            data.extend_from_slice(&mocked_big_offset_table(12));
+            data.extend_from_slice(&mocked_big_offset_table(set_offset));
         }
 
         fs::write(&index, data).unwrap();
@@ -193,8 +200,8 @@ mod tests {
     fn test_hash_in_index_offset_big() {
         let temp_dir = TempDir::new("test_hash_in_index_offset_big").unwrap();
 
-        let index = create_mocked_index_file(&temp_dir, false);
         let hash = "1234567890123456789012345678901234567890";
+        let index = create_mocked_index_file(&temp_dir.path(), false, 12, "index.idx", hash);
 
         let (is_hash_in_index, offset) = is_hash_in_index(&index, hash);
         assert_eq!(is_hash_in_index, true);
@@ -205,8 +212,8 @@ mod tests {
     fn test_hash_in_index_offset_small() {
         let temp_dir = TempDir::new("test_hash_in_index_offset_small").unwrap();
 
-        let index = create_mocked_index_file(&temp_dir, true);
         let hash = "1234567890123456789012345678901234567890";
+        let index = create_mocked_index_file(&temp_dir.path(), true, 1, "index.idx", hash);
 
         let (is_hash_in_index, offset) = is_hash_in_index(&index, hash);
         assert_eq!(is_hash_in_index, true);
@@ -217,7 +224,8 @@ mod tests {
     fn test_hash_not_in_index() {
         let temp_dir = TempDir::new("test_hash_not_in_index").unwrap();
 
-        let index = create_mocked_index_file(&temp_dir, true);
+        let hash = "1234567890123456789012345678901234567890";
+        let index = create_mocked_index_file(&temp_dir.path(), true, 1, "index.idx", hash);
         let hash = "1234567890123456789012345678901234567891";
 
         let (is_hash_in_index, offset) = is_hash_in_index(&index, hash);

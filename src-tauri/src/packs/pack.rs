@@ -209,3 +209,59 @@ fn variable_length_int(data: &[u8]) -> (usize, usize) {
 fn is_header_valid(header: &[u8]) -> bool {
     header == HEADER_BYTES_V2 || header == HEADER_BYTES_V3
 }
+
+#[cfg(test)]
+pub mod tests {
+    use std::io::Write;
+
+    use flate2::write::ZlibEncoder;
+    use fs::File;
+
+    use crate::git::git_commit::GitCommit;
+
+    use super::*;
+
+    fn mocked_header_v2() -> [u8; 8] {
+        HEADER_BYTES_V2
+    }
+
+    fn mocked_commit(commit: &GitCommit) -> Vec<u8> {
+        let mut data = Vec::new();
+
+        let commit_string = format!("{}\n", commit);
+        let mut cmt = commit_string.as_bytes();
+        let mut zlib = ZlibEncoder::new(Vec::new(), flate2::Compression::default());
+        while !cmt.is_empty() {
+            let len = cmt.len().min(0x10000);
+            zlib.write_all(&cmt[..len]).unwrap();
+            cmt = &cmt[len..];
+        }
+        let encoded_data = zlib.finish().unwrap();
+
+        let size = encoded_data.len();
+        data.push(0b1001_0000 | (size & 0b1111) as u8);
+
+        let mut size = size >> 4;
+        loop {
+            data.push((size & 0b0111_1111) as u8 | 0b1000_0000);
+            size >>= 7;
+
+            if size == 0 {
+                let datalen = data.len();
+                data[datalen - 1] &= 0b0111_1111;
+                break;
+            }
+        }
+
+        data.extend_from_slice(&encoded_data);
+        data
+    }
+
+    pub fn mocked_pack_file_with_commit(file: &mut File, commit: &GitCommit) {
+        let mut data = Vec::new();
+        data.extend_from_slice(&mocked_header_v2());
+        data.extend_from_slice(&mocked_commit(commit));
+
+        file.write(&data).unwrap();
+    }
+}

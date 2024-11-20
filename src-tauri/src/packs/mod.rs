@@ -11,8 +11,8 @@ use crate::{
     packs::index::is_hash_in_index,
 };
 
-mod index;
-mod pack;
+pub mod index;
+pub mod pack;
 
 enum GitPackTypes {
     Index,

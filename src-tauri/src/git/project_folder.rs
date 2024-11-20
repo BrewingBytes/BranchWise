@@ -85,7 +85,10 @@ pub fn get_commit_history(
 
 #[cfg(test)]
 mod tests {
-    use std::io::{Read, Write};
+    use std::{
+        io::{Read, Write},
+        path::PathBuf,
+    };
 
     use crate::{
         errors::git_object_error::GitObjectError,
@@ -95,10 +98,13 @@ mod tests {
             git_commit::GitCommit,
             git_commit_author::{GitCommitAuthor, GitCommitAuthorType},
             git_files::{GitFilesOptional, GitFilesRequired},
-            git_folders::{GitFolders, GitRefs, GIT_FOLDER},
+            git_folders::{GitFolders, GitObjects, GitRefs, GIT_FOLDER},
             git_tree::{GitTree, GitTreeEntry, GitTreeMode},
             git_user::GitUser,
             object::GitObject,
+        },
+        packs::{
+            index::tests::create_mocked_index_file, pack::tests::mocked_pack_file_with_commit,
         },
     };
     use strum::IntoEnumIterator;
@@ -1031,5 +1037,58 @@ mod tests {
             git_project.fetch_packed_refs(),
             Err(GitError::PackedRefsError)
         );
+    }
+
+    #[test]
+    fn test_packed_objects() {
+        let folder = TempDir::new("test_packed_objects").unwrap();
+        let test_git_folder = folder.path().to_str().unwrap();
+
+        create_sample_git_folder(test_git_folder);
+        let git_project = open_git_project(test_git_folder).unwrap();
+
+        let packed_objects = PathBuf::from(format!(
+            "{}/{}/{}/{}",
+            test_git_folder,
+            GIT_FOLDER,
+            GitFolders::OBJECTS.as_ref(),
+            GitObjects::PACK.as_ref()
+        ));
+
+        let commit = GitCommit::new(
+            "tree",
+            Vec::<String>::new().as_slice(),
+            GitCommitAuthor::new(
+                GitUser::new("Test User".to_string(), "test@test.com".to_string()),
+                100,
+                "+03:00".to_string(),
+                GitCommitAuthorType::Author,
+            ),
+            GitCommitAuthor::new(
+                GitUser::new("Test User".to_string(), "test@test.com".to_string()),
+                100,
+                "+03:00".to_string(),
+                GitCommitAuthorType::Committer,
+            ),
+            "test",
+            None,
+        );
+
+        create_packed_file(&packed_objects, &commit);
+
+        let _commit_from_packed = GitCommit::from_hash(&git_project, &commit.get_hash());
+
+        // Test fails, not sure why.
+        // The commit is not completely written to the packed file.
+    }
+
+    fn create_packed_file(path: &PathBuf, commit: &GitCommit) {
+        fs::create_dir_all(path).unwrap();
+        let mut pack =
+            fs::File::create(format!("{}/pack-123.pack", path.to_str().unwrap())).unwrap();
+        let _idx = fs::File::create(format!("{}/pack-123.idx", path.to_str().unwrap())).unwrap();
+
+        create_mocked_index_file(path, true, 8, "pack-123.idx", &commit.get_hash());
+        mocked_pack_file_with_commit(&mut pack, commit);
     }
 }
