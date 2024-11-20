@@ -184,7 +184,7 @@ impl GitObject for GitCommit {
         let mut committer = Option::<GitCommitAuthor>::None;
         let mut in_signature = false;
         let mut signature = String::new();
-        
+
         // Remove the last newline character
         let mut data = &data[..data.len() - 1];
         while !data.is_empty() {
