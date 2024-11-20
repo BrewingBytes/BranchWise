@@ -159,6 +159,10 @@ impl GitProject {
                     } else {
                         // If the entry is a file, add the branch to the project
                         let branch_name = path.file_name().unwrap().to_str().unwrap().to_string();
+                        if branch_name == GitFilesRequired::HEAD.as_ref() {
+                            continue;
+                        }
+
                         let commit_hash = fs::read_to_string(path).unwrap();
 
                         // Get the full branch name, including the remote name if it is a remote branch
