@@ -29,7 +29,7 @@
     "@mdi/font": "^7.4.47",
     "@tauri-apps/cli": "^2.1.0",
     "@types/lodash": "^4.17.13",
-    "@types/node": "^22.9.3",
+    "@types/node": "^22.10.1",
     "@vitejs/plugin-vue": "^5.1.5",
     "@vitest/coverage-v8": "^2.0.5",
     "@vue/eslint-config-typescript": "^14.1.4",
