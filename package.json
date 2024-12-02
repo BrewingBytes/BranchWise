@@ -19,7 +19,7 @@
     "@tauri-apps/plugin-shell": "~2",
     "@tauri-apps/plugin-updater": "~2",
     "moment-timezone": "^0.5.46",
-    "pinia": "^2.2.6",
+    "pinia": "^2.2.8",
     "pinia-plugin-persistedstate": "^4.1.1",
     "vue": "^3.5.13",
     "vue-router": "4",
