@@ -63,7 +63,6 @@ impl GitProject {
         self.fetch_branches(GitBranchType::Local)?;
         self.fetch_branches(GitBranchType::Tags)?;
         self.fetch_head()?;
-        _ = self.fetch_packed_refs(); // Should be Ok if the file doesn't exist
 
         // Fetch the branches for each remote
         let remotes = self.remotes.clone();
@@ -71,6 +70,7 @@ impl GitProject {
             self.fetch_branches(GitBranchType::Remote(remote))?;
         }
 
+        _ = self.fetch_packed_refs(); // Should be Ok if the file doesn't exist
         self.state = GitProjectState::Valid;
 
         Ok(())
@@ -240,20 +240,26 @@ impl GitProject {
 
                     // Add the branch to the project based on the branch type
                     if branch_name.starts_with("refs/heads/") {
-                        self.local_branches.push(GitBranch::new(
-                            branch_name.replace("refs/heads/", ""),
-                            commit_hash.to_string(),
-                        ));
+                        let branch_name = branch_name.replace("refs/heads/", "");
+
+                        if !self.local_branches.iter().any(|br| br.name == branch_name) {
+                            self.local_branches
+                                .push(GitBranch::new(branch_name, commit_hash.to_string()));
+                        }
                     } else if branch_name.starts_with("refs/remotes/") {
-                        self.remote_branches.push(GitBranch::new(
-                            branch_name.replace("refs/remotes/", ""),
-                            commit_hash.to_string(),
-                        ));
+                        let branch_name = branch_name.replace("refs/remotes/", "");
+
+                        if !self.remote_branches.iter().any(|br| br.name == branch_name) {
+                            self.remote_branches
+                                .push(GitBranch::new(branch_name, commit_hash.to_string()));
+                        }
                     } else if branch_name.starts_with("refs/tags/") {
-                        self.tags.push(GitBranch::new(
-                            branch_name.replace("refs/tags/", ""),
-                            commit_hash.to_string(),
-                        ));
+                        let branch_name = branch_name.replace("refs/tags/", "");
+
+                        if !self.tags.iter().any(|br| br.name == branch_name) {
+                            self.tags
+                                .push(GitBranch::new(branch_name, commit_hash.to_string()));
+                        }
                     }
                 }
             }
