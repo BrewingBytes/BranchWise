@@ -59,7 +59,7 @@ jobs:
           
             - name: Run sccache-cache
               if: steps.changes.outputs.src == 'true'
-              uses: mozilla-actions/sccache-action@v0.0.6
+              uses: mozilla-actions/sccache-action@v0.0.7
 
             - name: "Lint"
               if: steps.changes.outputs.src == 'true'
@@ -119,7 +119,7 @@ jobs:
           
             - name: Run sccache-cache
               if: steps.changes.outputs.src == 'true'
-              uses: mozilla-actions/sccache-action@v0.0.6
+              uses: mozilla-actions/sccache-action@v0.0.7
 
             - name: Install cargo-llvm-cov
               if: steps.changes.outputs.src == 'true'
