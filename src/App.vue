@@ -13,11 +13,13 @@
       {{ snackbar.text }}
     </v-snackbar>
     <DialogComponent />
+    <ContextMenu />
   </v-app>
 </template>
 
 <script lang="ts">
 import DialogComponent from "@/components/DialogComponent.vue";
+import ContextMenu from "@/components/Dialogs/ContextMenu.vue";
 import SidebarComponent from "@/components/SidebarComponent.vue";
 import TopbarComponent from "@/components/TopbarComponent.vue";
 import { registerListeners, unregisterListeners } from "@/listeners";
@@ -35,7 +37,8 @@ export default defineComponent({
 	components: {
 		SidebarComponent,
 		TopbarComponent,
-		DialogComponent
+		DialogComponent,
+		ContextMenu
 	},
 	data() {
 		return {
@@ -63,14 +66,14 @@ export default defineComponent({
 
 <style>
 html {
-    overflow: scroll;
-    overflow-x: hidden;
+	overflow: scroll;
+	overflow-x: hidden;
 	overflow-y: hidden;
 }
 
 ::-webkit-scrollbar {
-    width: 0;
-    background: transparent;
+	width: 0;
+	background: transparent;
 	display: none;
 }
 </style>
