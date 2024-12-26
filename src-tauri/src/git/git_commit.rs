@@ -1,7 +1,7 @@
 use super::{
     git_commit_author::{GitCommitAuthor, GitCommitAuthorType},
     git_files::GitFilesRequired,
-    git_folders::{GitFolders, GIT_FOLDER},
+    git_folders::GIT_FOLDER,
     git_project::GitProject,
     git_tree::GitTree,
     object::{GitObject, Header},
@@ -9,11 +9,7 @@ use super::{
 use crate::errors::git_object_error::{CommitError, GitObjectError};
 use core::fmt;
 use serde::{Deserialize, Serialize};
-use std::{
-    fs::{self, OpenOptions},
-    io::Write,
-    path::{Path, PathBuf},
-};
+use std::{fs::OpenOptions, io::Write, path::PathBuf};
 
 pub enum CommitPrefix {
     Tree,
@@ -163,11 +159,15 @@ impl GitCommit {
      */
     pub fn checkout(&self, project: &GitProject) -> Result<(), GitObjectError> {
         let files =
-            GitTree::from_hash(project, &self.get_tree_hash())?.get_object_blobs(project, None);
+            GitTree::from_hash(project, self.get_tree_hash())?.get_object_blobs(project, None);
 
-        let _ = files.iter().for_each(|file| {
+        files.iter().for_each(|file| {
             let path = PathBuf::from(project.get_directory()).join(&file.0);
-            let file_in_fs = OpenOptions::new().write(true).create(true).open(path);
+            let file_in_fs = OpenOptions::new()
+                .write(true)
+                .truncate(true)
+                .create(true)
+                .open(path);
 
             if let Ok(mut file_in_fs) = file_in_fs {
                 let _ = file_in_fs.write_all(file.1.data());
