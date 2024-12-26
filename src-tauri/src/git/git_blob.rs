@@ -4,7 +4,7 @@ use crate::errors::git_object_error::GitObjectError;
 
 use super::object::{GitObject, Header};
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct GitBlob {
     size: usize,
     data: Vec<u8>,

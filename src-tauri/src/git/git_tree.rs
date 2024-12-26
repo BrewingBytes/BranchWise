@@ -147,21 +147,40 @@ impl GitTree {
      * Retrieve all blobs entries in the GitTree
      * and from the trees in the GitTree
      *
-     * Returns the blob entries
+     * Returns the file name and blob entries
      */
-    pub fn get_children_blobs(&self, project: &GitProject) -> Vec<GitBlob> {
-        let mut objects: Vec<GitBlob> = Vec::new();
+    pub fn get_object_blobs(
+        &self,
+        project: &GitProject,
+        folder: Option<&str>,
+    ) -> Vec<(String, GitBlob)> {
+        let mut objects: Vec<(String, GitBlob)> = Vec::new();
+
+        // Add my blobs
+        let _ = self.get_blobs().iter().map(|blob| {
+            if let Ok(blob_obj) = GitBlob::from_hash(project, &blob.hash) {
+                if let Some(folder_name) = folder {
+                    objects.push((folder_name.to_string() + "/" + &blob.name, blob_obj));
+                } else {
+                    objects.push((blob.name.clone(), blob_obj));
+                }
+            }
+        });
 
         let _ = self.get_trees().iter().map(|tree| {
-            let tree_obj = GitTree::from_hash(project, &tree.hash).unwrap_or_default();
-
-            let _ = tree_obj.get_blobs().iter().map(|blob| {
-                let obj = GitBlob::from_hash(project, &blob.hash);
-
-                if let Ok(obj) = obj {
-                    objects.push(obj);
+            if let Ok(tree_obj) = GitTree::from_hash(project, &tree.hash) {
+                let mut new_folder = tree.name.clone();
+                if let Some(folder) = folder {
+                    new_folder = folder.to_string() + "/" + &tree.name;
                 }
-            });
+
+                tree_obj
+                    .get_object_blobs(project, Some(&new_folder))
+                    .iter()
+                    .for_each(|el| {
+                        objects.push(el.clone());
+                    });
+            }
         });
 
         objects
