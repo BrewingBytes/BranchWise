@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useDialogStore } from "@/stores/dialogs";
 import { useProjectStore } from "@/stores/project";
 import { getAuthorDate } from "@/types/gitAuthor";
 import { getHash, IGitCommit } from "@/types/gitCommit";
@@ -32,64 +33,68 @@ const commitClass = computed(() => {
 	return className;
 });
 
-function setCommit() {
-	useProjectStore().setCommit(props.commit.hash);
-}
+const showContextMenu = (event: MouseEvent) =>
+  useDialogStore().showContextMenu(getHash(props.commit), event.clientX, event.clientY);
+const setCommit = () => useProjectStore().setCommit(props.commit.hash);
 </script>
 
 <template>
-	<v-row
-		no-gutters
-		align="center"
-		style="height: 10vh;"
-		:class="commitClass"
-		@click="setCommit"
-	>
-		<v-col
-			style="height: 85%;"
-			cols="2"
-		>
-			<v-avatar
-				size="40"
-				color="blue"
-				class="text-white"
-			>
-				{{ authorName[0] }}
-			</v-avatar>
-		</v-col>
-		<v-col
-			style="height: 95%;"
-			cols="10"
-		>
-			<v-row
-				no-gutters
-				style="height: 50%;"
-			>
-				<p class="text-blue-grey">
-					{{ authorName }}
-				</p>
-				<v-spacer />
-				<p class="text-blue-lighten-3">
-					{{ date }}
-				</p>
-			</v-row>
-			<v-row
-				no-gutters
-				style="height: 50%; overflow-y: hidden;"
-			>
-				<p class="text-blue-grey">
-					{{ hash }}
-				</p>
-				<v-spacer />
-				
-				{{ message }}
-			</v-row>
-		</v-col>
-	</v-row>
+  <v-row
+    no-gutters
+    align="center"
+    style="height: 10vh;"
+    :class="commitClass"
+    @click="setCommit"
+    @click.right="showContextMenu"
+  >
+    <v-col
+      style="height: 85%;"
+      cols="2"
+    >
+      <v-avatar
+        size="40"
+        color="blue"
+        class="text-white"
+      >
+        {{ authorName[0] }}
+      </v-avatar>
+    </v-col>
+    <v-col
+      style="height: 95%;"
+      cols="10"
+    >
+      <v-row
+        no-gutters
+        style="height: 50%;"
+      >
+        <p class="text-blue-grey">
+          {{ authorName }}
+        </p>
+        <v-spacer />
+        <p class="text-blue-lighten-3">
+          {{ date }}
+        </p>
+      </v-row>
+      <v-row
+        no-gutters
+        style="height: 50%; overflow-y: hidden;"
+      >
+        <p class="text-blue-grey">
+          {{ hash }}
+        </p>
+        <v-spacer />
+
+        {{ message }}
+      </v-row>
+    </v-col>
+  </v-row>
 </template>
 
 <style scoped>
 .hoverable:hover {
+		background-color: black;
+		cursor: pointer;
+		border-radius: 25px;
 		background-color: black;
 		cursor: pointer;
 		border-radius: 25px;
@@ -101,6 +106,8 @@ function setCommit() {
 }
 
 .selected:hover {
+		background-color: #112233;
+		cursor: default !important;
 		background-color: #112233;
 		cursor: default !important;
 }
