@@ -1,6 +1,10 @@
 use crate::errors::git_object_error::GitObjectError;
 
-use super::object::{GitObject, Header};
+use super::{
+    git_blob::GitBlob,
+    git_project::GitProject,
+    object::{GitObject, Header},
+};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum GitTreeMode {
@@ -137,6 +141,30 @@ impl GitTree {
             .iter()
             .filter(|entry| entry.mode != GitTreeMode::Tree)
             .collect()
+    }
+
+    /**
+     * Retrieve all blobs entries in the GitTree
+     * and from the trees in the GitTree
+     *
+     * Returns the blob entries
+     */
+    pub fn get_children_blobs(&self, project: &GitProject) -> Vec<GitBlob> {
+        let mut objects: Vec<GitBlob> = Vec::new();
+
+        let _ = self.get_trees().iter().map(|tree| {
+            let tree_obj = GitTree::from_hash(project, &tree.hash).unwrap_or_default();
+
+            let _ = tree_obj.get_blobs().iter().map(|blob| {
+                let obj = GitBlob::from_hash(project, &blob.hash);
+
+                if let Ok(obj) = obj {
+                    objects.push(obj);
+                }
+            });
+        });
+
+        objects
     }
 }
 
