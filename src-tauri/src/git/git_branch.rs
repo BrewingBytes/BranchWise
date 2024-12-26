@@ -1,4 +1,13 @@
+use std::{fs::OpenOptions, io::Write, path::PathBuf};
+
 use serde::{Deserialize, Serialize};
+
+use crate::errors::git_object_error::{CommitError, GitObjectError};
+
+use super::{
+    git_commit::GitCommit, git_files::GitFilesRequired, git_folders::GIT_FOLDER,
+    git_project::GitProject, object::GitObject,
+};
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -10,6 +19,22 @@ pub struct GitBranch {
 impl GitBranch {
     pub fn new(name: String, commit: String) -> GitBranch {
         GitBranch { name, commit }
+    }
+
+    pub fn checkout(&self, project: &GitProject) -> Result<(), GitObjectError> {
+        GitCommit::from_hash(project, &self.commit)?.checkout(project)?;
+
+        let head_path = PathBuf::from(project.get_directory())
+            .join(GIT_FOLDER)
+            .join(GitFilesRequired::HEAD.as_ref());
+        OpenOptions::new()
+            .write(true)
+            .open(head_path)
+            .map_err(|_| GitObjectError::InvalidCommitFile(CommitError::InvalidContent))?
+            .write_all(self.name.as_bytes())
+            .map_err(|_| GitObjectError::InvalidHash)?;
+
+        Ok(())
     }
 }
 

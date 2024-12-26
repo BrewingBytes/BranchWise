@@ -1,4 +1,5 @@
 use super::{
+    git_branch::GitBranch,
     git_commit::{GitCommit, GitCommitWithHash},
     git_folders::GitBranchType,
     git_project::GitProject,
@@ -80,6 +81,22 @@ pub fn get_commit_history(
 
     commit
         .get_commit_history(&project, length, hash)
+        .map_err(|_| GitError::InvalidHistory)
+}
+
+#[tauri::command]
+pub fn checkout_branch(project: GitProject, branch: GitBranch) -> Result<(), GitError> {
+    branch
+        .checkout(&project)
+        .map_err(|_| GitError::NoLocalBranches)
+}
+
+#[tauri::command]
+pub fn checkout_commit(project: GitProject, hash: &str) -> Result<(), GitError> {
+    let commit = GitCommit::from_hash(&project, hash).map_err(|_| GitError::InvalidHistory)?;
+
+    commit
+        .checkout(&project)
         .map_err(|_| GitError::InvalidHistory)
 }
 
