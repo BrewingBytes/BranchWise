@@ -40,7 +40,7 @@ pub fn get_encoded_data_from_pack(path: &PathBuf, offset: usize) -> Vec<u8> {
 
     // Skip to the offset
     let mut data = &data.unwrap()[offset..];
-    let object_type: GitPackType = (data[0] >> 4 & 0b0111).into();
+    let object_type: GitPackType = ((data[0] >> 4) & 0b0111).into();
     let mut size: usize = (data[0] & 0b0000_1111) as usize;
 
     let mut shift: usize = 4;
