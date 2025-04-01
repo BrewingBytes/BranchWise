@@ -21,13 +21,13 @@
     "pinia-plugin-persistedstate": "^4.2.0",
     "vue": "^3.5.13",
     "vue-router": "4",
-    "vuetify": "^3.7.18"
+    "vuetify": "^3.7.19"
   },
   "devDependencies": {
     "@mdi/font": "^7.4.47",
     "@tauri-apps/cli": "^2.4.0",
     "@types/lodash": "^4.17.16",
-    "@types/node": "^22.13.13",
+    "@types/node": "^22.13.14",
     "@vitejs/plugin-vue": "^5.2.3",
     "@vue/eslint-config-typescript": "^14.5.0",
     "@vue/test-utils": "^2.4.6",
@@ -35,8 +35,8 @@
     "eslint-plugin-vue": "^10.0.0",
     "happy-dom": "^17.4.4",
     "typescript": "^5.8.2",
-    "typescript-eslint": "^8.28.0",
-    "vite": "^6.2.3",
+    "typescript-eslint": "^8.29.0",
+    "vite": "^6.2.4",
     "vue-tsc": "^2.2.8"
   },
   "resolutions": {
