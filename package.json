@@ -27,7 +27,7 @@
     "@mdi/font": "^7.4.47",
     "@tauri-apps/cli": "^2.5.0",
     "@types/lodash": "^4.17.16",
-    "@types/node": "^22.14.1",
+    "@types/node": "^22.15.3",
     "@vitejs/plugin-vue": "^5.2.3",
     "@vue/eslint-config-typescript": "^14.5.0",
     "@vue/test-utils": "^2.4.6",
@@ -35,9 +35,9 @@
     "eslint-plugin-vue": "^10.0.0",
     "happy-dom": "^17.4.4",
     "typescript": "^5.8.3",
-    "typescript-eslint": "^8.31.0",
-    "vite": "^6.3.2",
-    "vue-tsc": "^2.2.8"
+    "typescript-eslint": "^8.31.1",
+    "vite": "^6.3.3",
+    "vue-tsc": "^2.2.10"
   },
   "resolutions": {
     "strip-ansi": "6.0.1",
