@@ -51,16 +51,6 @@ jobs:
                 yarn
                 yarn build
 
-            - name: Configure sccache env var
-              if: steps.changes.outputs.src == 'true'
-              run: | 
-                    echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
-                    echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
-          
-            - name: Run sccache-cache
-              if: steps.changes.outputs.src == 'true'
-              uses: mozilla-actions/sccache-action@v0.0.7
-
             - name: "Lint"
               if: steps.changes.outputs.src == 'true'
               run: |
@@ -110,16 +100,6 @@ jobs:
                 npm install --global yarn
                 yarn
                 yarn build
-
-            - name: Configure sccache env var
-              if: steps.changes.outputs.src == 'true'
-              run: | 
-                    echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
-                    echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
-          
-            - name: Run sccache-cache
-              if: steps.changes.outputs.src == 'true'
-              uses: mozilla-actions/sccache-action@v0.0.7
 
             - name: Install cargo-llvm-cov
               if: steps.changes.outputs.src == 'true'
