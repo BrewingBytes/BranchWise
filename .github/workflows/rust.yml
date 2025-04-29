@@ -30,6 +30,15 @@ jobs:
               with:
                 node-version: 22
 
+            - name: Cache
+              uses: actions/cache@v4
+              if: steps.changes.outputs.src == 'true'
+              with:
+                path: |
+                  ~/.cargo
+                  ./target
+                key: ${{ runner.os }}-cargo-${{ hashFiles('**/src-tauri/Cargo.lock') }}
+
             - name: "Install Dependencies"
               if: steps.changes.outputs.src == 'true'
               run: |
@@ -79,6 +88,15 @@ jobs:
               if: steps.changes.outputs.src == 'true'
               with:
                 node-version: 22
+
+            - name: Cache
+              uses: actions/cache@v4
+              if: steps.changes.outputs.src == 'true'
+              with:
+                path: |
+                  ~/.cargo
+                  ./target
+                key: ${{ runner.os }}-cargo-${{ hashFiles('**/src-tauri/Cargo.lock') }}
 
             - name: "Install Dependencies"
               if: steps.changes.outputs.src == 'true'
