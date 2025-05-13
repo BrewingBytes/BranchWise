@@ -5,6 +5,7 @@
     style="height: 10vh;"
     :class="commitClass"
     @click="setCommit"
+    @click.right="showContextMenu"
   >
     <v-col
       style="height: 85%;"
@@ -42,7 +43,7 @@
           {{ getHash }}
         </p>
         <v-spacer />
-        
+
         {{ getMessage }}
       </v-row>
     </v-col>
@@ -50,6 +51,7 @@
 </template>
 
 <script lang="ts">
+import { useDialogStore } from "@/stores/dialogs";
 import { useProjectStore } from "@/stores/project";
 import { getAuthorDate } from "@/types/gitAuthor";
 import { getHash, IGitCommit } from "@/types/gitCommit";
@@ -93,6 +95,9 @@ export default defineComponent({
 	methods: {
 		setCommit() {
 			useProjectStore().setCommit(this.commit.hash);
+		},
+		showContextMenu(event: MouseEvent) {
+			useDialogStore().showContextMenu(getHash(this.commit), event.clientX, event.clientY);
 		}
 	}
 });
@@ -100,19 +105,19 @@ export default defineComponent({
 
 <style scoped>
 .hoverable:hover {
-    background-color: black;
-    cursor: pointer;
-    border-radius: 25px;
+		background-color: black;
+		cursor: pointer;
+		border-radius: 25px;
 }
 
 .selected {
-    background-color: #112233;
-    border-radius: 25px;
+		background-color: #112233;
+		border-radius: 25px;
 }
 
 .selected:hover {
-    background-color: #112233;
-    cursor: default !important;
+		background-color: #112233;
+		cursor: default !important;
 }
 
 </style>
