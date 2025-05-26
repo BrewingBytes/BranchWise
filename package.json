@@ -16,18 +16,18 @@
     "@tauri-apps/plugin-process": "~2",
     "@tauri-apps/plugin-shell": "~2",
     "@tauri-apps/plugin-updater": "~2",
-    "moment-timezone": "^0.5.48",
+    "moment-timezone": "^0.6.0",
     "pinia": "^3.0.2",
     "pinia-plugin-persistedstate": "^4.3.0",
-    "vue": "^3.5.14",
+    "vue": "^3.5.15",
     "vue-router": "4",
-    "vuetify": "^3.8.5"
+    "vuetify": "^3.8.6"
   },
   "devDependencies": {
     "@mdi/font": "^7.4.47",
     "@tauri-apps/cli": "^2.5.0",
-    "@types/lodash": "^4.17.16",
-    "@types/node": "^22.15.19",
+    "@types/lodash": "^4.17.17",
+    "@types/node": "^22.15.21",
     "@vitejs/plugin-vue": "^5.2.4",
     "@vue/eslint-config-typescript": "^14.5.0",
     "@vue/test-utils": "^2.4.6",
