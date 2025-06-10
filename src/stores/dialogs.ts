@@ -13,7 +13,15 @@ interface IDialogState {
         title: string;
         message: string;
         onConfirm: () => void;
-    }
+    },
+	contextMenu: {
+		isOpen: boolean;
+		commitHash: string;
+		position: {
+			x: number;
+			y: number;
+		};
+	}
 }
 
 export const useDialogStore = defineStore("dialog", {
@@ -30,6 +38,14 @@ export const useDialogStore = defineStore("dialog", {
 				title: "",
 				message: "",
 				onConfirm: () => { return; }
+			},
+			contextMenu: {
+				isOpen: false,
+				commitHash: "",
+				position: {
+					x: 0,
+					y: 0
+				}
 			}
 		}),
 	actions: {
@@ -57,6 +73,19 @@ export const useDialogStore = defineStore("dialog", {
 		},
 		closeConfirmationDialog() {
 			this.confirmationDialog.isOpen = false;
+		},
+		showContextMenu(hash: string, x: number, y: number) {
+			this.contextMenu = {
+				position: {
+					x,
+					y
+				},
+				commitHash: hash,
+				isOpen: true
+			};
+		},
+		closeContextMenu() {
+			this.contextMenu.isOpen = false;
 		}
 	}
 });
