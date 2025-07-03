@@ -5,13 +5,11 @@ import CommitHistory from "@/components/Project/CommitHistory.vue";
 import { useAppStore } from "@/stores/app";
 import { useProjectStore } from "@/stores/project";
 import { computed, defineComponent, onMounted } from "vue";
-import { onBeforeRouteUpdate } from "vue-router";
 
 const project = computed(() => useProjectStore().getSelectedProject);
 const projectName = computed(() => project.value?.directory.split("/").pop() || "");
 
 onMounted(() => useAppStore().setTitle(projectName.value));
-onBeforeRouteUpdate
 </script>
 
 <template>
