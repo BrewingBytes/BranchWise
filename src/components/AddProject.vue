@@ -1,3 +1,30 @@
+<script setup lang="ts">
+import { useDialogStore } from "@/stores/dialogs";
+import { useProjectStore } from "@/stores/project";
+import { IGitProject } from "@/types/gitProject";
+import { TauriCommands } from "@/types/tauri";
+import { invoke } from "@tauri-apps/api/core";
+import { open } from "@tauri-apps/plugin-dialog";
+
+async function openNewProject(): Promise<void> {
+  const result = await open({
+      directory: true,
+      multiple: false
+    });
+
+    if (!result) {
+      return;
+    }
+
+    try {
+      const project: IGitProject = await invoke(TauriCommands.OpenGitProject, { directory: result });
+      useProjectStore().addProject(project);
+    } catch (error) {
+      useDialogStore().showError(error);
+    }
+}
+</script>
+
 <template>
   <v-container @click="openNewProject">
     <v-col
@@ -19,39 +46,6 @@
     </v-col>
   </v-container>
 </template>
-
-<script lang="ts">
-import { useDialogStore } from "@/stores/dialogs";
-import { useProjectStore } from "@/stores/project";
-import { IGitProject } from "@/types/gitProject";
-import { TauriCommands } from "@/types/tauri";
-import { invoke } from "@tauri-apps/api/core";
-import { open } from "@tauri-apps/plugin-dialog";
-import { defineComponent } from "vue";
-
-export default defineComponent({
-	name: "AddProject",
-	methods: {
-		async openNewProject() {
-			const result = await open({
-				directory: true,
-				multiple: false
-			});
-
-			if (!result) {
-				return;
-			}
-
-			try {
-				const project: IGitProject = await invoke(TauriCommands.OpenGitProject, { directory: result });
-				useProjectStore().addProject(project);
-			} catch (error) {
-				useDialogStore().showError(error);
-			}
-		}
-	}
-});
-</script>
 
 <style scoped>
 .v-container {

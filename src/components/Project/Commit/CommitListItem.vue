@@ -1,3 +1,42 @@
+<script setup lang="ts">
+import { useProjectStore } from "@/stores/project";
+import { getAuthorDate } from "@/types/gitAuthor";
+import { getHash, IGitCommit } from "@/types/gitCommit";
+import { computed } from "vue";
+
+const props = defineProps({
+  commit: {
+    type: Object as () => IGitCommit,
+    required: true,
+  }
+});
+
+const authorName = computed(() => props.commit.author.user.name);
+const date = computed(() => getAuthorDate(props.commit.author));
+const hash = computed(() => getHash(props.commit));
+const message = computed(() => {
+  // Get the first line of the commit message based on the screen size
+  const message = props.commit.message.split("\n")[0];
+
+  const maxMessageLength = screen.width / 80;
+  return message.length > maxMessageLength ? message.slice(0, maxMessageLength) + "..." : message;
+});
+
+const commitClass = computed(() => {
+  let className = "hoverable pa-2 ml-2 mr-1 mb-2";
+
+    if (props.commit.hash === useProjectStore().getCommit?.hash) {
+      className += " selected";
+    }
+
+    return className;
+});
+
+function setCommit() {
+  useProjectStore().setCommit(props.commit.hash);
+}
+</script>
+
 <template>
   <v-row
     no-gutters
@@ -15,7 +54,7 @@
         color="blue"
         class="text-white"
       >
-        {{ getAuthorName[0] }}
+        {{ authorName[0] }}
       </v-avatar>
     </v-col>
     <v-col
@@ -27,11 +66,11 @@
         style="height: 50%;"
       >
         <p class="text-blue-grey">
-          {{ getAuthorName }}
+          {{ authorName }}
         </p>
         <v-spacer />
         <p class="text-blue-lighten-3">
-          {{ getDate }}
+          {{ date }}
         </p>
       </v-row>
       <v-row
@@ -39,64 +78,15 @@
         style="height: 50%; overflow-y: hidden;"
       >
         <p class="text-blue-grey">
-          {{ getHash }}
+          {{ hash }}
         </p>
         <v-spacer />
         
-        {{ getMessage }}
+        {{ message }}
       </v-row>
     </v-col>
   </v-row>
 </template>
-
-<script lang="ts">
-import { useProjectStore } from "@/stores/project";
-import { getAuthorDate } from "@/types/gitAuthor";
-import { getHash, IGitCommit } from "@/types/gitCommit";
-import { defineComponent } from "vue";
-
-export default defineComponent({
-	name: "CommitListItem",
-	props: {
-		commit: {
-			type: Object as () => IGitCommit,
-			required: true,
-		},
-	},
-	computed: {
-		getAuthorName() {
-			return this.commit.author.user.name;
-		},
-		getDate() {
-			return getAuthorDate(this.commit.author);
-		},
-		getHash() {
-			return getHash(this.commit);
-		},
-		getMessage() {
-			// Get the first line of the commit message based on the screen size
-			const message = this.commit.message.split("\n")[0];
-
-			const maxMessageLength = screen.width / 80;
-			return message.length > maxMessageLength ? message.slice(0, maxMessageLength) + "..." : message;
-		},
-		commitClass() {
-			let className = "hoverable pa-2 ml-2 mr-1 mb-2";
-
-			if (this.commit.hash === useProjectStore().getCommit?.hash) {
-				className += " selected";
-			}
-
-			return className;
-		}
-	},
-	methods: {
-		setCommit() {
-			useProjectStore().setCommit(this.commit.hash);
-		}
-	}
-});
-</script>
 
 <style scoped>
 .hoverable:hover {

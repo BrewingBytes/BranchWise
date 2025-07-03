@@ -1,3 +1,16 @@
+<script setup lang="ts">
+defineProps({
+  tag: {
+    type: String,
+    required: true,
+  },
+  value: {
+    type: String,
+    required: true,
+  }
+});
+</script>
+
 <template>
   <v-container class="pa-0">
     <v-row
@@ -25,21 +38,3 @@
     <v-divider />
   </v-container>
 </template>
-
-<script lang="ts">
-import { defineComponent } from "vue";
-
-export default defineComponent({
-	name: "CommitDetailItem",
-	props: {
-		tag: {
-			type: String,
-			required: true,
-		},
-		value: {
-			type: String,
-			required: true,
-		},
-	},
-});
-</script>

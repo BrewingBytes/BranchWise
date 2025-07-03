@@ -1,3 +1,56 @@
+<script setup lang="ts">
+import { PrependVariant } from "@/enums/prependVariant";
+import { getCurrentInstance, ref } from "vue";
+
+defineEmits(["prependClick", "appendClick"]);
+defineProps({
+  prependIcon: {
+    type: String,
+    required: true
+  },
+  prependVariant: {
+    type: String as () => PrependVariant,
+    default: PrependVariant.ICON
+  },
+  prependColor: {
+    type: String,
+    default: "white"
+  },
+  text: {
+    type: String,
+    required: true
+  },
+  subtitle: {
+    type: String,
+    default: ""
+  },
+  textColor: {
+    type: String,
+    default: "white"
+  },
+  appendIcon: {
+    type: String,
+    default: ""
+  },
+  appendColor: {
+    type: String,
+    default: "white"
+  }
+});
+
+const hasPrependClick = ref(false);
+const hasAppendClick = ref(false);
+
+const allProps = getCurrentInstance()?.vnode.props;
+if (allProps?.onAppendClick) {
+  hasAppendClick.value = true;
+}
+
+if (allProps?.onPrependClick) {
+  hasPrependClick.value = true;
+}
+</script>
+
 <template>
   <v-list-item class="pa-0 pt-4 pb-4">
     <v-row
@@ -69,67 +122,6 @@
     </v-row>
   </v-list-item>
 </template>
-
-<script lang="ts">
-import { PrependVariant } from "@/enums/prependVariant";
-import { defineComponent, getCurrentInstance } from "vue";
-
-export default defineComponent({
-	name: "SidebarItem",
-	props: {
-		prependIcon: {
-			type: String,
-			required: true
-		},
-		prependVariant: {
-			type: String as () => PrependVariant,
-			default: PrependVariant.ICON
-		},
-		prependColor: {
-			type: String,
-			default: "white"
-		},
-		text: {
-			type: String,
-			required: true
-		},
-		subtitle: {
-			type: String,
-			default: ""
-		},
-		textColor: {
-			type: String,
-			default: "white"
-		},
-		appendIcon: {
-			type: String,
-			default: ""
-		},
-		appendColor: {
-			type: String,
-			default: "white"
-		}
-	},
-	emits: ["prependClick", "appendClick"],
-	data() {
-		return {
-			hasPrependClick: false,
-			hasAppendClick: false,
-			PrependVariant
-		};
-	},
-	mounted() {
-		const allProps = getCurrentInstance()?.vnode.props;
-		if (allProps?.onAppendClick) {
-			this.hasAppendClick = true;
-		}
-
-		if (allProps?.onPrependClick) {
-			this.hasPrependClick = true;
-		}
-	},
-});
-</script>
 
 <style scoped>
 .disabled {

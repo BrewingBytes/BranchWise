@@ -1,3 +1,25 @@
+<script setup lang="ts">
+import CommitListItem from "@/components/Project/Commit/CommitListItem.vue";
+import { useDialogStore } from "@/stores/dialogs";
+import { useProjectStore } from "@/stores/project";
+import { computed } from "vue";
+
+const commits = computed(() => useProjectStore().getHistory)
+const branch = computed(() => useProjectStore().getBranch?.name);
+const height = computed(() => window.innerHeight - 64 - 24);
+
+async function fetchMore({ done }: { done: any }) {
+	try {
+		await useProjectStore().fetchCommitHistory(30, commits.value[commits.value.length - 1].hash);
+		done("ok");
+	} catch (e) {
+		done("fail");
+
+		useDialogStore().showError(e);
+	}
+};
+</script>
+
 <template>
   <v-container
     class="pa-0"
@@ -8,13 +30,13 @@
       no-gutters
     >
       <p class="text-blue-grey">
-        {{ getBranch }}
+        {{ branch }}
       </p>
       <v-divider />
     </v-col>
   </v-container>
   <v-infinite-scroll
-    :height="getHeight"
+    :height="height"
     :items="commits"
     @load="fetchMore"
   >
@@ -26,42 +48,3 @@
     </template>
   </v-infinite-scroll>
 </template>
-
-<script lang="ts">
-import CommitListItem from "@/components/Project/Commit/CommitListItem.vue";
-import { useDialogStore } from "@/stores/dialogs";
-import { useProjectStore } from "@/stores/project";
-import { mapState } from "pinia";
-import { defineComponent } from "vue";
-
-export default defineComponent({
-	name: "CommitHistory",
-	components: {
-		CommitListItem,
-	},
-	computed: {
-		getHeight() {
-			return window.innerHeight - 64 - 24;
-		},
-		getBranch() {
-			return useProjectStore().getBranch?.name;
-		},
-		...mapState(useProjectStore, {
-			commits: "getHistory",
-		}),
-	},
-	methods: {
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		async fetchMore({ done }: { done: any }) {
-			try {
-				await useProjectStore().fetchCommitHistory(30, this.commits[this.commits.length - 1].hash);
-				done("ok");
-			} catch (e) {
-				done("fail");
-
-				useDialogStore().showError(e);
-			}
-		}
-	},
-});
-</script>

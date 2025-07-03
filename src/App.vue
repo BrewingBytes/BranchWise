@@ -1,3 +1,32 @@
+<script setup lang="ts">
+import DialogComponent from "@/components/DialogComponent.vue";
+import SidebarComponent from "@/components/SidebarComponent.vue";
+import TopbarComponent from "@/components/TopbarComponent.vue";
+import { registerListeners, unregisterListeners } from "@/listeners";
+import { useAppStore } from "@/stores/app";
+import { useDialogStore } from "@/stores/dialogs";
+import { useProjectStore } from "@/stores/project";
+import { TauriCommands } from "@/types/tauri";
+import { invoke } from "@tauri-apps/api/core";
+import { storeToRefs } from "pinia";
+import { onMounted, onUnmounted } from "vue";
+
+const { isNavbarOpen } = storeToRefs(useAppStore());
+const { snackbar } = storeToRefs(useDialogStore());
+
+onMounted(async () => {
+	try {
+		useProjectStore().setProjects(await invoke(TauriCommands.GetDatabaseProjects));
+	} catch (error) {
+		useDialogStore().showError(error);
+	}
+
+	registerListeners();
+});
+
+onUnmounted(() => unregisterListeners());
+</script>
+
 <template>
   <v-app>
     <SidebarComponent :is-open="isNavbarOpen" />
@@ -15,51 +44,6 @@
     <DialogComponent />
   </v-app>
 </template>
-
-<script lang="ts">
-import DialogComponent from "@/components/DialogComponent.vue";
-import SidebarComponent from "@/components/SidebarComponent.vue";
-import TopbarComponent from "@/components/TopbarComponent.vue";
-import { registerListeners, unregisterListeners } from "@/listeners";
-import { useAppStore } from "@/stores/app";
-import { useDialogStore } from "@/stores/dialogs";
-import { useProjectStore } from "@/stores/project";
-import { TauriCommands } from "@/types/tauri";
-import { invoke } from "@tauri-apps/api/core";
-import { UnlistenFn } from "@tauri-apps/api/event";
-import { mapState } from "pinia";
-import { defineComponent } from "vue";
-
-export default defineComponent({
-	name: "AppComponent",
-	components: {
-		SidebarComponent,
-		TopbarComponent,
-		DialogComponent
-	},
-	data() {
-		return {
-			listeners: [] as UnlistenFn[],
-		};
-	},
-	computed: {
-		...mapState(useAppStore, ["isNavbarOpen"]),
-		...mapState(useDialogStore, ["snackbar"]),
-	},
-	async mounted() {
-		try {
-			useProjectStore().setProjects(await invoke(TauriCommands.GetDatabaseProjects));
-		} catch (error) {
-			useDialogStore().showError(error);
-		}
-
-		registerListeners();
-	},
-	unmounted() {
-		unregisterListeners();
-	},
-});
-</script>
 
 <style>
 html {

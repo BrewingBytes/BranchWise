@@ -1,3 +1,19 @@
+<script setup lang="ts">
+import BranchesSidebar from "@/components/Project/BranchesSidebar.vue";
+import CommitDetails from "@/components/Project/Commit/CommitDetails.vue";
+import CommitHistory from "@/components/Project/CommitHistory.vue";
+import { useAppStore } from "@/stores/app";
+import { useProjectStore } from "@/stores/project";
+import { computed, defineComponent, onMounted } from "vue";
+import { onBeforeRouteUpdate } from "vue-router";
+
+const project = computed(() => useProjectStore().getSelectedProject);
+const projectName = computed(() => project.value?.directory.split("/").pop() || "");
+
+onMounted(() => useAppStore().setTitle(projectName.value));
+onBeforeRouteUpdate
+</script>
+
 <template>
   <v-row
     class="fill-height"
@@ -30,38 +46,13 @@
 </template>
 
 <script lang="ts">
-import BranchesSidebar from "@/components/Project/BranchesSidebar.vue";
-import CommitDetails from "@/components/Project/Commit/CommitDetails.vue";
-import CommitHistory from "@/components/Project/CommitHistory.vue";
-import { useAppStore } from "@/stores/app";
-import { useProjectStore } from "@/stores/project";
-import { mapState } from "pinia";
-import { defineComponent } from "vue";
-
 export default defineComponent({
-	name: "ProjectPage",
-	components: {
-		BranchesSidebar,
-		CommitHistory,
-		CommitDetails,
-	},
 	beforeRouteEnter(_to, _from, next) {
 		if (!useProjectStore().getSelectedProject) {
 			next("/");
 		} else {
 			next();
 		}
-	},
-	computed: {
-		projectName(): string {
-			return this.project?.directory.split("/").pop() || "";
-		},
-		...mapState(useProjectStore, {
-			project: "getSelectedProject",
-		}),
-	},
-	mounted() {
-		useAppStore().setTitle(this.projectName);
 	},
 });
 </script>

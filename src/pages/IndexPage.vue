@@ -1,3 +1,19 @@
+<script setup lang="ts">
+import { onMounted } from "vue";
+
+import AddProject from "@/components/AddProject.vue";
+import Project from "@/components/Project.vue";
+import { useAppStore } from "@/stores/app";
+import { useProjectStore } from "@/stores/project";
+import { storeToRefs } from "pinia";
+
+const { getProjects } = storeToRefs(useProjectStore());
+onMounted(() => {
+  useAppStore().setTitle("BranchWise");
+  useProjectStore().setCurrentProject(null);
+});
+</script>
+
 <template>
   <v-container>
     <v-row no-gutters>
@@ -22,28 +38,3 @@
     </v-row>
   </v-container>
 </template>
-
-<script lang="ts">
-import { defineComponent } from "vue";
-
-import AddProject from "@/components/AddProject.vue";
-import Project from "@/components/Project.vue";
-import { useAppStore } from "@/stores/app";
-import { useProjectStore } from "@/stores/project";
-import { mapState } from "pinia";
-
-export default defineComponent({
-	name: "IndexPage",
-	components: {
-		AddProject,
-		Project
-	},
-	computed: {
-		...mapState(useProjectStore, ["getProjects"])
-	},
-	mounted() {
-		useAppStore().setTitle("BranchWise");
-		useProjectStore().setCurrentProject(null);
-	}
-});
-</script>

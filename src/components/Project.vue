@@ -1,3 +1,25 @@
+<script setup lang="ts">
+import { useProjectStore } from "@/stores/project";
+import { IGitProject } from "@/types/gitProject";
+import { computed } from "vue";
+import { useRouter } from "vue-router";
+
+const props = defineProps({
+  project: {
+    type: Object as () => IGitProject,
+    required: true
+  }
+});
+
+const router = useRouter();
+const name = computed(() => props.project.directory.split("/").pop());
+
+function openProjectPage() {
+  useProjectStore().setCurrentProject(props.project);
+  router.push("/project");
+};
+</script>
+
 <template>
   <v-container
     @click="openProjectPage"
@@ -21,33 +43,6 @@
     </v-col>
   </v-container>
 </template>
-
-<script lang="ts">
-import { useProjectStore } from "@/stores/project";
-import { IGitProject } from "@/types/gitProject";
-import { defineComponent } from "vue";
-
-export default defineComponent({
-	name: "ProjectComponent",
-	props: {
-		project: {
-			type: Object as () => IGitProject,
-			required: true
-		}
-	},
-	computed: {
-		name() {
-			return this.project.directory.split("/").pop();
-		}
-	},
-	methods: {
-		openProjectPage() {
-			useProjectStore().setCurrentProject(this.project);
-			this.$router.push("/project");
-		}
-	}
-});
-</script>
 
 <style scoped>
 .v-container {

@@ -1,3 +1,25 @@
+<script setup lang="ts">
+import CommitDetailItem from "@/components/Project/Commit/CommitDetailItem.vue";
+import { useProjectStore } from "@/stores/project";
+import { getAuthorDate } from "@/types/gitAuthor";
+import { getHash, NO_COMMIT } from "@/types/gitCommit";
+import { storeToRefs } from "pinia";
+import { computed } from "vue";
+
+const { getCommit } = storeToRefs(useProjectStore());
+
+const commit = computed(() => getCommit.value ?? NO_COMMIT);
+const commitName = computed(() => getHash(commit.value));
+
+const authorName = computed(() => `${commit.value.author.user.name} <${commit.value.author.user.email}>`);
+const authorDate = computed(() => getAuthorDate(commit.value.author, true));
+
+const committerName = computed(() => `${commit.value.committer.user.name} <${commit.value.committer.user.email}>`);
+const committerDate = computed(() => getAuthorDate(commit.value.committer, true));
+
+const maxHeight = computed(() => window.innerHeight - 64 - 24);
+</script>
+
 <template>
   <v-container
     class="pa-0"
@@ -8,13 +30,13 @@
       no-gutters
     >
       <p class="text-blue-grey">
-        {{ getCommitName }}
+        {{ commitName }}
       </p>
       <v-divider />
     </v-col>
   </v-container>
   <v-container
-    :height="getMaxHeight"
+    :height="maxHeight"
     style="overflow-y: scroll;"
   >
     <v-row style="overflow-y: scroll;">
@@ -24,19 +46,19 @@
       >
         <CommitDetailItem
           tag="Author"
-          :value="getAuthorName"
+          :value="authorName"
         />
         <CommitDetailItem
           tag="Author Date"
-          :value="getAuthorDate"
+          :value="authorDate"
         />
         <CommitDetailItem
           tag="Committer"
-          :value="getCommitterName"
+          :value="committerName"
         />
         <CommitDetailItem
           tag="Committer Date"
-          :value="getCommitterDate"
+          :value="committerDate"
         />
         <CommitDetailItem
           tag="Hash"
@@ -63,53 +85,9 @@
           color="blue"
           class="text-white"
         >
-          {{ getAuthorName[0] }}
+          {{ authorName[0] }}
         </v-avatar>
       </v-col>
     </v-row>
   </v-container>
 </template>
-
-<script lang="ts">
-import { useProjectStore } from "@/stores/project";
-import { getHash, NO_COMMIT } from "@/types/gitCommit";
-import { mapState } from "pinia";
-import { defineComponent } from "vue";
-import CommitDetailItem from "@/components/Project/Commit/CommitDetailItem.vue";
-import { getAuthorDate } from "@/types/gitAuthor";
-
-export default defineComponent({
-	name: "CommitDetails",
-	components: {
-		CommitDetailItem,
-	},
-	computed: {
-		getCommitName() {
-			return getHash(this.commit);
-		},
-		getAuthorName() {
-			return this.commit.author.user.name + " <" + this.commit.author.user.email + ">";
-		},
-		getAuthorDate() {
-			return getAuthorDate(this.commit.author, true);
-		},
-		getCommitterName() {
-			return this.commit.committer.user.name + " <" + this.commit.committer.user.email + ">";
-		},
-		getCommitterDate() {
-			return getAuthorDate(this.commit.committer, true);
-		},
-		commit() {
-			if (this.getCommit) {
-				return this.getCommit;
-			}
-
-			return NO_COMMIT;
-		},
-		getMaxHeight() {
-			return window.innerHeight - 64 - 24;
-		},
-		...mapState(useProjectStore, ["getCommit"]),
-	},
-});
-</script>
