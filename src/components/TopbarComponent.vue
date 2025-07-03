@@ -4,6 +4,7 @@ import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { computed, onMounted, useTemplateRef } from "vue";
 
 const appWindow = getCurrentWebviewWindow();
+// @ts-ignore
 const titleRef = useTemplateRef("title");
 
 const title = computed(() => useAppStore().title);
