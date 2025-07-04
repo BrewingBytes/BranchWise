@@ -13,6 +13,22 @@ const HEADER_BYTES: [u8; 8] = [0xff, 0x74, 0x4f, 0x63, 0, 0, 0, 2];
  *
  * Returns a tuple with a boolean if the hash is in the index and the offset of the object in the pack
  */
+/// Checks if a given object hash exists in a Git pack index file and returns its offset if found.
+///
+/// Reads the specified pack index file, validates its header, and searches for the provided hash.
+/// If the hash is present, returns `(true, offset)` where `offset` is the object's offset in the pack file.
+/// If the hash is not found or the index file is invalid, returns `(false, 0)`.
+///
+/// # Examples
+///
+/// ```
+/// let (found, offset) = is_hash_in_index(&index_path, "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391");
+/// if found {
+///     println!("Object found at offset: {}", offset);
+/// } else {
+///     println!("Object not found in index.");
+/// }
+/// ```
 pub fn is_hash_in_index(index: &PathBuf, hash: &str) -> (bool, usize) {
     log::debug!("Checking {hash} is in pack-idx {}", index.to_string_lossy());
 

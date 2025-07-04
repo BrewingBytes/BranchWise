@@ -46,6 +46,20 @@ impl AsRef<str> for GitPackTypes {
     }
 }
 
+/// Retrieves the encoded data for a Git object with the specified hash from the project's pack files.
+///
+/// Searches all index files in the project's `.git/objects/pack` directory for the given object hash.
+/// If found, returns the encoded object data from the corresponding pack file. Returns an error if the hash is not found in any index or if an error occurs while accessing the pack files.
+///
+/// # Returns
+/// A vector of bytes containing the encoded Git object data on success, or a `GitObjectError::PackError` if the object is not found or an error occurs.
+///
+/// # Examples
+///
+/// ```
+/// let encoded = get_object_encoded_data(&project, "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391")?;
+/// assert!(!encoded.is_empty());
+/// ```
 pub fn get_object_encoded_data(
     project: &GitProject,
     hash: &str,

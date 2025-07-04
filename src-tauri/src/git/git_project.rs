@@ -51,6 +51,14 @@ impl GitProject {
      * Ok if the git project was updated successfully
      * Err if there was an error updating the git project
      */
+    /// Updates the state of the Git project by reloading all branches, remotes, tags, and HEAD information from the filesystem.
+    ///
+    /// Clears existing branch and remote data, then repopulates it by reading the relevant Git metadata files and directories. Sets the project state to valid if all required data is successfully loaded.
+    ///
+    /// # Returns
+    ///
+    /// - `Ok(())` if the project state is successfully updated.
+    /// - `Err(GitError)` if any required Git metadata cannot be read.
     pub fn update(&mut self) -> Result<(), GitError> {
         log::debug!("Updating the project {}", self.get_directory());
     
@@ -85,6 +93,14 @@ impl GitProject {
      * Ok if the remotes directories were fetched successfully
      * Err if there was an error fetching the remotes directories
      */
+    /// Scans the `.git/refs/remotes` directory and updates the list of remotes for the project.
+    ///
+    /// Returns an error and marks the project as invalid if required Git files are missing or if the remotes directory cannot be opened.
+    ///
+    /// # Returns
+    ///
+    /// - `Ok(())` if remotes are successfully fetched.
+    /// - `Err(GitError)` if required files are missing or the remotes directory cannot be accessed.
     pub fn fetch_remotes_directories(&mut self) -> Result<(), GitError> {
         log::debug!("Fetching remote directories");
 
@@ -122,6 +138,26 @@ impl GitProject {
     }
 
     // Fetch the branches for the git project
+    /// Fetches and updates the list of branches of the specified type from the Git repository.
+    ///
+    /// Recursively scans the appropriate refs directory for local branches, remote branches, or tags,
+    /// reads their commit hashes, and updates the corresponding branch list in the project. Marks the
+    /// project as invalid and returns an error if required Git files or directories are missing or if
+    /// a directory cannot be opened.
+    ///
+    /// # Parameters
+    /// - `branch_type`: The type of branches to fetch (local, remote, or tags).
+    ///
+    /// # Returns
+    /// - `Ok(())` if branches are successfully fetched and updated.
+    /// - `Err(GitError)` if required files are missing or a directory cannot be opened.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let mut project = GitProject::new("/path/to/repo");
+    /// project.fetch_branches(GitBranchType::Local)?;
+    /// ```
     pub fn fetch_branches(&mut self, branch_type: GitBranchType) -> Result<(), GitError> {
         log::debug!("Fetching {branch_type:?} branches");
 
@@ -228,6 +264,21 @@ impl GitProject {
      * Ok if the packed refs file was fetched successfully
      * Err if there was an error fetching the packed refs file
      */
+    /// Reads and parses the `.git/packed-refs` file, adding any branches or tags found to the project if they are not already present.
+    ///
+    /// This method updates the local branches, remote branches, and tags vectors with references found in the packed refs file. If the file does not exist or cannot be read, returns a `PackedRefsError`.
+    ///
+    /// # Returns
+    ///
+    /// - `Ok(())` if packed refs are successfully read and parsed, or if the file is missing.
+    /// - `Err(GitError::PackedRefsError)` if the file cannot be read for reasons other than non-existence.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let mut project = GitProject::new("/path/to/repo");
+    /// let _ = project.fetch_packed_refs();
+    /// ```
     pub fn fetch_packed_refs(&mut self) -> Result<(), GitError> {
         log::debug!("Fetching packed refs");
 

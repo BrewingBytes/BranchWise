@@ -17,6 +17,17 @@ use git::project_folder::{
 };
 use tauri::{AppHandle, Emitter, Manager};
 
+/// Initializes the application logger and sets up the app data directory and database path.
+///
+/// Creates the application data directory if it does not exist and configures the database to use this directory for storage. The logger is initialized in debug builds.
+///
+/// # Arguments
+///
+/// * `app` - The Tauri application handle used to access application-specific paths.
+///
+/// # Panics
+///
+/// Panics if the application data directory cannot be created.
 async fn setup(app: AppHandle) {
     // Init logger
     #[cfg(debug_assertions)]
@@ -35,6 +46,14 @@ async fn setup(app: AppHandle) {
         .set_path(app.path().app_data_dir().unwrap().display().to_string());
 }
 
+/// Periodically updates the current Git project and emits update events to the frontend.
+///
+/// Every 5 seconds, checks for a current project in the database. If one exists, attempts to update it:
+/// - On success, emits a `"project_update"` event with the updated project.
+/// - On failure, emits a `"project_update_error"` event with error details and the project.
+/// In both cases, the project is updated in the database after each attempt.
+///
+/// This function runs indefinitely as part of the application's background event loop.
 async fn event_loop(app: AppHandle) {
     // Create a new interval that ticks every 5 seconds to update the current project
     let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(5));

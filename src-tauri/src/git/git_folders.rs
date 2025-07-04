@@ -77,6 +77,19 @@ impl AsRef<str> for GitRefs {
 }
 
 impl fmt::Display for GitRefs {
+    /// Formats the `GitRefs` variant as its corresponding string representation.
+    ///
+    /// This method enables displaying a `GitRefs` value as "heads", "remotes", or "tags".
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use your_crate::GitRefs;
+    /// use std::fmt;
+    ///
+    /// let heads = GitRefs::HEADS;
+    /// assert_eq!(format!("{}", heads), "heads");
+    /// ```
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             GitRefs::HEADS => write!(f, "heads"),
