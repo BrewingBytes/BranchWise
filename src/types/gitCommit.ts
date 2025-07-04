@@ -18,10 +18,18 @@ export const NO_COMMIT: IGitCommit = {
 	message: "",
 };
 
-export function getHash(commit: IGitCommit | null): string {
+export function getShortHash(commit: IGitCommit | null): string {
 	if (commit === null) {
 		return "";
 	}
 
 	return commit.hash.substring(0, 7);
+}
+
+export function getFullHash(commit: IGitCommit | null): string {
+	if (commit === null) {
+		return "";
+	}
+
+	return commit.hash;
 }
