@@ -12,8 +12,7 @@ const height = computed(() => window.innerHeight - 64 - 24);
 async function fetchMore({ done }: { done: (status: InfiniteScrollStatus) => void }) {
 	try {
 		await useProjectStore().fetchCommitHistory(30, commits.value[commits.value.length - 1].hash);
-		return commits.value[commits.value.length - 1].parent_hashes.length > 0 ?
-			done("ok") : done("empty");
+		if(commits.value[commits.value.length - 1].parent_hashes.length > 0) done("ok"); else done("empty");
 	} catch (e) {
 		done("error");
 
