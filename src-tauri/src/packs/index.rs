@@ -14,8 +14,12 @@ const HEADER_BYTES: [u8; 8] = [0xff, 0x74, 0x4f, 0x63, 0, 0, 0, 2];
  * Returns a tuple with a boolean if the hash is in the index and the offset of the object in the pack
  */
 pub fn is_hash_in_index(index: &PathBuf, hash: &str) -> (bool, usize) {
+    log::debug!("Checking {hash} is in pack-idx {}", index.to_string_lossy());
+
     let data = fs::read(index);
     if data.is_err() || !is_header_valid(&data.as_ref().unwrap()[..8]) {
+        log::debug!("Invalid pack-idx");
+        
         return (false, 0);
     }
 
