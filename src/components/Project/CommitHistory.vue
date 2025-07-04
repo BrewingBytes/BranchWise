@@ -3,17 +3,18 @@ import CommitListItem from "@/components/Project/Commit/CommitListItem.vue";
 import { useDialogStore } from "@/stores/dialogs";
 import { useProjectStore } from "@/stores/project";
 import { computed } from "vue";
+import { InfiniteScrollStatus } from "vuetify/lib/components/VInfiniteScroll/VInfiniteScroll.mjs";
 
 const commits = computed(() => useProjectStore().getHistory);
 const branch = computed(() => useProjectStore().getBranch?.name);
 const height = computed(() => window.innerHeight - 64 - 24);
 
-async function fetchMore({ done }: { done: ((_: string) => void) }) {
+async function fetchMore({ done }: { done: (status: InfiniteScrollStatus) => void }) {
 	try {
 		await useProjectStore().fetchCommitHistory(30, commits.value[commits.value.length - 1].hash);
 		done("ok");
 	} catch (e) {
-		done("fail");
+		done("error");
 
 		useDialogStore().showError(e);
 	}
