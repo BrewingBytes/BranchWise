@@ -15,7 +15,23 @@ impl GitHead {
     /**
      * Parse the content of a HEAD file and return a GitHead object
      */
+    /// Parses the content of a Git HEAD file and returns a `GitHead` enum representing its state.
+    ///
+    /// The function supports HEAD files that point to a branch (e.g., `ref: refs/heads/main`)
+    /// or directly to a commit hash. Returns an error if the content is not a valid HEAD reference or hash.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let branch_head = GitHead::from("ref: refs/heads/main").unwrap();
+    /// assert!(branch_head.is_branch());
+    ///
+    /// let hash_head = GitHead::from("e69de29bb2d1d6434b8b29ae775ad8c2e48c5391").unwrap();
+    /// assert!(hash_head.is_hash());
+    /// ```
     pub fn from(content: &str) -> Result<GitHead, GitObjectError> {
+        log::debug!("Parse the HEAD file for the project");
+
         let content = content.trim();
 
         match content.split_once(" ") {
@@ -23,9 +39,13 @@ impl GitHead {
                 let (tag, value) = value.split_once("/").ok_or(GitObjectError::ParsingError)?;
 
                 if tag != GitFolders::REFS.as_ref() {
+                    log::debug!("Project does not have REFS folder");
+
                     Err(GitObjectError::ParsingError)
                 } else {
                     let (tag, value) = value.split_once("/").ok_or(GitObjectError::ParsingError)?;
+
+                    log::debug!("HEAD is set to {value}");
 
                     Ok(GitHead::Branch(
                         GitRefs::from(tag).ok_or(GitObjectError::ParsingError)?,
@@ -35,8 +55,12 @@ impl GitHead {
             }
             None => {
                 if content.len() == HASH_SIZE * 2 {
+                    log::debug!("HEAD is set to hash {content}");
+
                     Ok(GitHead::Hash(content.to_string()))
                 } else {
+                    log::debug!("HEAD hash is of invalid length");
+
                     Err(GitObjectError::ParsingError)
                 }
             }

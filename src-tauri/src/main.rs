@@ -4,7 +4,9 @@ pub mod database;
 pub mod errors;
 pub mod git;
 pub mod packs;
+pub mod log;
 
+use ::log::debug;
 use std::fs;
 
 use database::storage::DATABASE;
@@ -15,7 +17,24 @@ use git::project_folder::{
 };
 use tauri::{AppHandle, Emitter, Manager};
 
+/// Initializes the application logger and sets up the app data directory and database path.
+///
+/// Creates the application data directory if it does not exist and configures the database to use this directory for storage. The logger is initialized in debug builds.
+///
+/// # Arguments
+///
+/// * `app` - The Tauri application handle used to access application-specific paths.
+///
+/// # Panics
+///
+/// Panics if the application data directory cannot be created.
 async fn setup(app: AppHandle) {
+    // Init logger
+    #[cfg(debug_assertions)]
+    let _ = log::init();
+
+
+    debug!("Started app setup");
     // Create the app data directory if it doesn't exist
     fs::create_dir_all(app.path().app_data_dir().unwrap())
         .expect("Failed to create app data directory");
@@ -27,6 +46,14 @@ async fn setup(app: AppHandle) {
         .set_path(app.path().app_data_dir().unwrap().display().to_string());
 }
 
+/// Periodically updates the current Git project and emits update events to the frontend.
+///
+/// Every 5 seconds, checks for a current project in the database. If one exists, attempts to update it:
+/// - On success, emits a `"project_update"` event with the updated project.
+/// - On failure, emits a `"project_update_error"` event with error details and the project.
+///   In both cases, the project is updated in the database after each attempt.
+///
+/// This function runs indefinitely as part of the application's background event loop.
 async fn event_loop(app: AppHandle) {
     // Create a new interval that ticks every 5 seconds to update the current project
     let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(5));
@@ -41,12 +68,16 @@ async fn event_loop(app: AppHandle) {
             // Update the current project
             match project.update() {
                 Ok(_) => {
+                    debug!("Send project_update event for project {}", &project.get_directory());
+
                     // Emit the project update event and update the project in the database
                     app.emit("project_update", &project).unwrap();
 
                     _ = DATABASE.lock().unwrap().update_project(project.clone());
                 }
                 Err(e) => {
+                    debug!("Project_update event failed");
+
                     // Emit the project update error event and update the project in the database
                     app.emit(
                         "project_update_error",
