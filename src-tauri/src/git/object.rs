@@ -96,7 +96,11 @@ pub trait GitObject {
     where
         Self: Sized,
     {
+        log::debug!("Getting git object from hash {hash}");
+
         if hash.len() != HASH_SIZE * 2 {
+            log::debug!("Hash is of invalid size ({} != {})", hash.len(), HASH_SIZE * 2);
+
             return Err(GitObjectError::InvalidHash);
         }
 
@@ -142,6 +146,8 @@ pub trait GitObject {
      * project: The git project to write the object to
      */
     fn write_object(&self, project: &GitProject) -> Result<(), GitObjectError> {
+        log::debug!("Writing git object {}", self.get_hash());
+
         let encoded_data = self.get_encoded_data()?;
 
         // Get the hash of the object and create the file path

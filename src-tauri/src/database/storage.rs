@@ -42,12 +42,16 @@ impl Database {
     }
 
     pub fn add_project(&mut self, project: GitProject) -> Result<()> {
+        log::debug!("Adding project {} to the database", project.get_directory());
+
         // Check if the project already exists
         if self
             .projects
             .iter()
             .any(|p| p.get_directory() == project.get_directory())
         {
+            log::debug!("Project already exists in the database");
+
             // Return an error if the project already exists
             Err(LoadError::ProjectExists)
         } else {
@@ -60,6 +64,8 @@ impl Database {
     }
 
     pub fn remove_project(&mut self, project: GitProject) -> Result<()> {
+        log::debug!("Removing project {} from the database", project.get_directory());
+
         // Remove the project from the database and save it
         self.projects.retain(|p| p != &project);
         self.save()?;
@@ -72,6 +78,8 @@ impl Database {
     }
 
     fn save(&self) -> Result<()> {
+        log::debug!("Saving the database state");
+
         if self.test_mode {
             return Ok(());
         }
@@ -79,11 +87,14 @@ impl Database {
         // Serialize the database and write it to the file
         let data = serde_json::to_string(&self)?;
         std::fs::write(self.path.clone(), data)?;
+        log::debug!("Database saved to file: {}", self.path);
 
         Ok(())
     }
 
     fn load(&mut self) -> Result<()> {
+        log::debug!("Load the database from file");
+
         if self.test_mode {
             return Ok(());
         }
@@ -94,10 +105,13 @@ impl Database {
         let db: Database = serde_json::from_str(data)?;
         self.projects = db.projects.clone();
 
+        log::debug!("Database loaded");
         Ok(())
     }
 
     pub fn set_path(&mut self, path: String) -> Result<()> {
+        log::debug!("Setting database path to: {path}/database.json");
+
         // Set the path and load the database
         self.path = format!("{path}/database.json");
         self.load()?;
@@ -106,10 +120,18 @@ impl Database {
     }
 
     pub fn set_test_mode(&mut self, test_mode: bool) {
+        log::debug!("Setting database to test mode");
+
         self.test_mode = test_mode;
     }
 
     pub fn set_current_project(&mut self, project: Option<GitProject>) {
+        let project_dir = match &project {
+            Some(proj) => proj.get_directory(),
+            None => "null",
+        };
+        log::debug!("Set current project to {project_dir}");
+
         self.current_project = project;
     }
 
@@ -118,6 +140,8 @@ impl Database {
     }
 
     pub fn update_project(&mut self, project: GitProject) -> Result<()> {
+        log::debug!("Update the project {} in the database", project.get_directory());
+
         // Search for the project in the database and update it
         let index = self
             .projects

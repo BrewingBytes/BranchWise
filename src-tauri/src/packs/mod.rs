@@ -50,6 +50,8 @@ pub fn get_object_encoded_data(
     project: &GitProject,
     hash: &str,
 ) -> Result<Vec<u8>, GitObjectError> {
+    log::debug!("Getting git object from hash {hash} from packs");
+
     let path = PathBuf::from(&project.get_directory())
         .join(GIT_FOLDER)
         .join(GitFolders::OBJECTS.as_ref())

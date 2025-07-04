@@ -52,6 +52,8 @@ impl GitProject {
      * Err if there was an error updating the git project
      */
     pub fn update(&mut self) -> Result<(), GitError> {
+        log::debug!("Updating the project {}", self.get_directory());
+    
         // Clear the current branches and remotes
         self.local_branches.clear();
         self.remotes.clear();
@@ -84,6 +86,8 @@ impl GitProject {
      * Err if there was an error fetching the remotes directories
      */
     pub fn fetch_remotes_directories(&mut self) -> Result<(), GitError> {
+        log::debug!("Fetching remote directories");
+
         self.has_required_files().map_err(|_| {
             self.state = GitProjectState::Invalid;
             GitError::InvalidGitFolder
@@ -119,6 +123,8 @@ impl GitProject {
 
     // Fetch the branches for the git project
     pub fn fetch_branches(&mut self, branch_type: GitBranchType) -> Result<(), GitError> {
+        log::debug!("Fetching {branch_type:?} branches");
+
         // Check if the git project has the required files
         // If not return an error and set the state to invalid
         self.has_required_files().map_err(|_| {
@@ -223,6 +229,8 @@ impl GitProject {
      * Err if there was an error fetching the packed refs file
      */
     pub fn fetch_packed_refs(&mut self) -> Result<(), GitError> {
+        log::debug!("Fetching packed refs");
+
         // Read the packed refs file
         let packed_refs_path = PathBuf::from(self.get_directory())
             .join(GIT_FOLDER)

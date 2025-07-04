@@ -86,6 +86,7 @@ impl fmt::Display for GitRefs {
     }
 }
 
+#[derive(Debug)]
 pub enum GitBranchType {
     Local,
     Remote(String),

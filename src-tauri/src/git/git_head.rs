@@ -16,6 +16,8 @@ impl GitHead {
      * Parse the content of a HEAD file and return a GitHead object
      */
     pub fn from(content: &str) -> Result<GitHead, GitObjectError> {
+        log::debug!("Parse the HEAD file for the project");
+
         let content = content.trim();
 
         match content.split_once(" ") {
@@ -23,9 +25,13 @@ impl GitHead {
                 let (tag, value) = value.split_once("/").ok_or(GitObjectError::ParsingError)?;
 
                 if tag != GitFolders::REFS.as_ref() {
+                    log::debug!("Project does not have REFS folder");
+
                     Err(GitObjectError::ParsingError)
                 } else {
                     let (tag, value) = value.split_once("/").ok_or(GitObjectError::ParsingError)?;
+
+                    log::debug!("HEAD is set to {value}");
 
                     Ok(GitHead::Branch(
                         GitRefs::from(tag).ok_or(GitObjectError::ParsingError)?,
@@ -35,8 +41,12 @@ impl GitHead {
             }
             None => {
                 if content.len() == HASH_SIZE * 2 {
+                    log::debug!("HEAD is set to hash {content}");
+
                     Ok(GitHead::Hash(content.to_string()))
                 } else {
+                    log::debug!("HEAD hash is of invalid length");
+
                     Err(GitObjectError::ParsingError)
                 }
             }
