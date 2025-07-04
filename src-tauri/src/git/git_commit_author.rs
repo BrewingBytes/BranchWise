@@ -21,7 +21,7 @@ impl Display for GitCommitAuthorType {
             GitCommitAuthorType::Tagger => "tagger",
         };
 
-        write!(f, "{}", type_)
+        write!(f, "{type_}")
     }
 }
 

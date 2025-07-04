@@ -276,7 +276,7 @@ impl fmt::Display for GitCommit {
         let parent_hashes = self
             .parent_hashes
             .iter()
-            .map(|parent_hash| format!("parent {}\n", parent_hash))
+            .map(|parent_hash| format!("parent {parent_hash}\n"))
             .collect::<Vec<String>>()
             .join("");
 

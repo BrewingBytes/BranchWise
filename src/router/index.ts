@@ -1,6 +1,7 @@
 import IndexPage from "@/pages/IndexPage.vue";
 import ProjectPage from "@/pages/ProjectPage.vue";
-import { createMemoryHistory, createRouter } from "vue-router";
+import { useProjectStore } from "@/stores/project";
+import { createMemoryHistory, createRouter, NavigationGuardNext, RouteLocationNormalized } from "vue-router";
 
 const routes = [
 	{
@@ -9,7 +10,14 @@ const routes = [
 	},
 	{
 		path: "/project",
-		component: ProjectPage
+		component: ProjectPage,
+		beforeEnter: (_to: RouteLocationNormalized, _from: RouteLocationNormalized, next: NavigationGuardNext) => {
+			if (!useProjectStore().getSelectedProject) {
+				next("/");
+			} else {
+				next();
+			}
+		}
 	}
 ];
 

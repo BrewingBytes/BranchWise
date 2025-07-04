@@ -54,7 +54,7 @@ impl std::fmt::Display for Header {
             Header::Invalid => "invalid",
         };
 
-        write!(f, "{}", header)
+        write!(f, "{header}")
     }
 }
 

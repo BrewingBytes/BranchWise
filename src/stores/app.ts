@@ -14,7 +14,7 @@ export const useAppStore = defineStore("app", {
 			title: "BranchWise",
 			user: DEFAULT_USER,
 			isNavbarOpen: false,
-			appVersion: "0.0.9",
+			appVersion: "0.0.10",
 		}),
 	getters: {
 		getAppVersion(): string {

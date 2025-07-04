@@ -196,7 +196,7 @@ impl GitProject {
                                 .push(GitBranch::new(full_branch_name, commit_hash)),
                             GitBranchType::Remote(upstream) => {
                                 self.remote_branches.push(GitBranch::new(
-                                    format!("{}/{}", upstream, full_branch_name),
+                                    format!("{upstream}/{full_branch_name}"),
                                     commit_hash,
                                 ))
                             }
