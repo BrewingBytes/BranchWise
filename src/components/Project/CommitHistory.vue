@@ -12,7 +12,7 @@ const height = computed(() => window.innerHeight - 64 - 24);
 async function fetchMore({ done }: { done: (status: InfiniteScrollStatus) => void }) {
 	try {
 		await useProjectStore().fetchCommitHistory(30, commits.value[commits.value.length - 1].hash);
-		done("ok");
+		if(commits.value[commits.value.length - 1].parent_hashes.length > 0) done("ok"); else done("empty");
 	} catch (e) {
 		done("error");
 
@@ -22,30 +22,30 @@ async function fetchMore({ done }: { done: (status: InfiniteScrollStatus) => voi
 </script>
 
 <template>
-  <v-container
-    class="pa-0"
-    height="24px"
-  >
-    <v-col
-      class="pa-0"
-      no-gutters
-    >
-      <p class="text-blue-grey">
-        {{ branch }}
-      </p>
-      <v-divider />
-    </v-col>
-  </v-container>
-  <v-infinite-scroll
-    :height="height"
-    :items="commits"
-    @load="fetchMore"
-  >
-    <template
-      v-for="commit in commits"
-      :key="commit.hash"
-    >
-      <CommitListItem :commit="commit" />
-    </template>
-  </v-infinite-scroll>
+	<v-container
+		class="pa-0"
+		height="24px"
+	>
+		<v-col
+			class="pa-0"
+			no-gutters
+		>
+			<p class="text-blue-grey">
+				{{ branch }}
+			</p>
+			<v-divider />
+		</v-col>
+	</v-container>
+	<v-infinite-scroll
+		:height="height"
+		:items="commits"
+		@load="fetchMore"
+	>
+		<template
+			v-for="commit in commits"
+			:key="commit.hash"
+		>
+			<CommitListItem :commit="commit" />
+		</template>
+	</v-infinite-scroll>
 </template>

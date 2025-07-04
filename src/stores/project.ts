@@ -48,7 +48,7 @@ export const useProjectStore = defineStore("project", {
 		}
 	},
 	actions: {
-		async fetchCommitHistory (length = 30, fromHash = "") {
+		async fetchCommitHistory (length = 30, fromHash = ""): Promise<number> {
 			let hash = "";
 
 			if (this.branch !== null && fromHash === "") {
@@ -57,8 +57,9 @@ export const useProjectStore = defineStore("project", {
 				hash = fromHash;
 			}
 
+			let history: IGitCommit[];
 			try {
-				const history: IGitCommit[] = await invoke(TauriCommands.GetCommitHistory, { project: this.selectedProject, hash, length});
+				history = await invoke(TauriCommands.GetCommitHistory, { project: this.selectedProject, hash, length});
 
 				if (fromHash === "") {
 					this.history = history;
@@ -67,7 +68,11 @@ export const useProjectStore = defineStore("project", {
 				}
 			} catch (error) {
 				useDialogStore().showError(error);
+
+				return 0;
 			}
+
+			return history.length;
 		},
 		async setBranch(branch: IGitBranch | null) {
 			if (branch === null) {
