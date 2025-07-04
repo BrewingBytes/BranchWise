@@ -30,7 +30,7 @@ impl GitTreeMode {
             "120000" => GitTreeMode::Symlink,
             "040000" => GitTreeMode::Tree,
             "160000" => GitTreeMode::Submodule,
-            _ => panic!("Invalid mode: {}", mode),
+            _ => panic!("Invalid mode: {mode}"),
         }
     }
 

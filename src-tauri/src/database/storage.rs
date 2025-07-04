@@ -99,7 +99,7 @@ impl Database {
 
     pub fn set_path(&mut self, path: String) -> Result<()> {
         // Set the path and load the database
-        self.path = format!("{}/database.json", path);
+        self.path = format!("{path}/database.json");
         self.load()?;
 
         Ok(())

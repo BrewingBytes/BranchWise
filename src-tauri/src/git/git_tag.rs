@@ -176,7 +176,7 @@ impl fmt::Display for GitTag {
             self.object_hash, self.type_, self.tag, self.tagger, self.message
         );
 
-        write!(f, "{}", content)
+        write!(f, "{content}")
     }
 }
 
