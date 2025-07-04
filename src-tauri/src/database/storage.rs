@@ -32,6 +32,17 @@ pub struct Database {
 }
 
 impl Database {
+    /// Creates a new, empty `Database` instance with default values.
+    ///
+    /// The database will have no projects, no current project, an empty path, and test mode disabled.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let db = Database::new();
+    /// assert!(db.get_projects().is_empty());
+    /// assert_eq!(db.get_current_project(), None);
+    /// ```
     fn new() -> Self {
         Database {
             path: String::new(),
@@ -41,6 +52,16 @@ impl Database {
         }
     }
 
+    /// Adds a new Git project to the database if it does not already exist.
+    ///
+    /// Returns an error if a project with the same directory is already present.
+    /// On success, persists the updated project list to disk unless in test mode.
+    ///
+    /// # Returns
+    ///
+    /// - `Ok(())` if the project was added successfully.
+    /// - `Err(LoadError::ProjectExists)` if a duplicate project is detected.
+    /// - Other `Err(LoadError)` variants if saving fails.
     pub fn add_project(&mut self, project: GitProject) -> Result<()> {
         log::debug!("Adding project {} to the database", project.get_directory());
 
@@ -63,6 +84,19 @@ impl Database {
         }
     }
 
+    /// Removes a project from the database and persists the change.
+    ///
+    /// Returns an error if saving the updated database fails.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let mut db = Database::new();
+    /// let project = GitProject::new("my_project_dir".to_string());
+    /// db.add_project(project.clone()).unwrap();
+    /// db.remove_project(project).unwrap();
+    /// assert!(db.get_projects().is_empty());
+    /// ```
     pub fn remove_project(&mut self, project: GitProject) -> Result<()> {
         log::debug!("Removing project {} from the database", project.get_directory());
 
@@ -73,10 +107,35 @@ impl Database {
         Ok(())
     }
 
+    /// Returns a clone of the list of all projects currently stored in the database.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let db = Database::new();
+    /// let projects = db.get_projects();
+    /// assert!(projects.is_empty());
+    /// ```
     pub fn get_projects(&self) -> Vec<GitProject> {
         self.projects.clone()
     }
 
+    /// Persists the current database state to a JSON file, unless in test mode.
+    ///
+    /// If `test_mode` is enabled, this function performs no file I/O and returns immediately.
+    /// Otherwise, it serializes the database and writes it to the file specified by `path`.
+    ///
+    /// # Returns
+    ///
+    /// Returns `Ok(())` if the operation succeeds, or a `LoadError` if serialization or file writing fails.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let mut db = Database::new();
+    /// db.set_path("/tmp".to_string()).unwrap();
+    /// db.save().unwrap();
+    /// ```
     fn save(&self) -> Result<()> {
         log::debug!("Saving the database state");
 
@@ -92,6 +151,21 @@ impl Database {
         Ok(())
     }
 
+    /// Loads the database from the JSON file at the configured path, updating the in-memory project list.
+    ///
+    /// If `test_mode` is enabled, this function does nothing and returns immediately.
+    ///
+    /// # Returns
+    ///
+    /// Returns `Ok(())` if the database was loaded successfully, or a `LoadError` if reading or deserialization fails.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let mut db = Database::new();
+    /// db.set_path("/tmp".to_string()).unwrap();
+    /// db.load().unwrap();
+    /// ```
     fn load(&mut self) -> Result<()> {
         log::debug!("Load the database from file");
 
@@ -109,6 +183,11 @@ impl Database {
         Ok(())
     }
 
+    /// Sets the database file path and loads the database from the specified location.
+    ///
+    /// The path is set to `{path}/database.json`, and the database is loaded from this file.
+    /// Returns an error if loading fails.
+    #[allow(clippy::result_unit_err)]
     pub fn set_path(&mut self, path: String) -> Result<()> {
         log::debug!("Setting database path to: {path}/database.json");
 
@@ -119,12 +198,29 @@ impl Database {
         Ok(())
     }
 
+    /// Enables or disables test mode, which bypasses file I/O operations.
+    ///
+    /// When test mode is enabled, database save and load operations do not interact with the filesystem. This is useful for testing purposes.
     pub fn set_test_mode(&mut self, test_mode: bool) {
         log::debug!("Setting database to test mode");
 
         self.test_mode = test_mode;
     }
 
+    /// Sets the current active project.
+    ///
+    /// If `project` is `Some`, the specified project becomes the current project; if `None`, the current project is cleared.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let mut db = Database::new();
+    /// let project = GitProject::new("my_project", "/tmp/my_project");
+    /// db.set_current_project(Some(project.clone()));
+    /// assert_eq!(db.get_current_project(), Some(project));
+    /// db.set_current_project(None);
+    /// assert_eq!(db.get_current_project(), None);
+    /// ```
     pub fn set_current_project(&mut self, project: Option<GitProject>) {
         let project_dir = match &project {
             Some(proj) => proj.get_directory(),
@@ -135,10 +231,35 @@ impl Database {
         self.current_project = project;
     }
 
+    /// Returns a clone of the currently active project, if one is set.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let db = Database::new();
+    /// assert!(db.get_current_project().is_none());
+    /// ```
     pub fn get_current_project(&self) -> Option<GitProject> {
         self.current_project.clone()
     }
 
+    /// Updates an existing project in the database by replacing it with the provided project.
+    ///
+    /// The project to update is identified by its directory. Persists the updated state to disk unless in test mode.
+    ///
+    /// # Returns
+    ///
+    /// Returns `Ok(())` if the update and save succeed, or a `LoadError` if saving fails.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let mut db = Database::new();
+    /// let project = GitProject::new("my_dir".to_string());
+    /// db.add_project(project.clone()).unwrap();
+    /// let updated_project = GitProject::new("my_dir".to_string()); // with updated fields
+    /// db.update_project(updated_project).unwrap();
+    /// ```
     pub fn update_project(&mut self, project: GitProject) -> Result<()> {
         log::debug!("Update the project {} in the database", project.get_directory());
 
