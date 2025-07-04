@@ -45,7 +45,9 @@ export default ts.config(
         {
           "SwitchCase": 1
         }
-      ]
+      ],
+      "vue/html-indent": "off",
+      "vue/multi-word-component-names": "off"
     }
   }
 )

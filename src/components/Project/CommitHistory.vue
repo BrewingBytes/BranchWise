@@ -4,11 +4,11 @@ import { useDialogStore } from "@/stores/dialogs";
 import { useProjectStore } from "@/stores/project";
 import { computed } from "vue";
 
-const commits = computed(() => useProjectStore().getHistory)
+const commits = computed(() => useProjectStore().getHistory);
 const branch = computed(() => useProjectStore().getBranch?.name);
 const height = computed(() => window.innerHeight - 64 - 24);
 
-async function fetchMore({ done }: { done: any }) {
+async function fetchMore({ done }: { done: ((_: string) => void) }) {
 	try {
 		await useProjectStore().fetchCommitHistory(30, commits.value[commits.value.length - 1].hash);
 		done("ok");
