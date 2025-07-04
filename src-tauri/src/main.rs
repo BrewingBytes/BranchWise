@@ -4,6 +4,7 @@ pub mod database;
 pub mod errors;
 pub mod git;
 pub mod packs;
+pub mod log;
 
 use std::fs;
 
@@ -16,6 +17,9 @@ use git::project_folder::{
 use tauri::{AppHandle, Emitter, Manager};
 
 async fn setup(app: AppHandle) {
+    // Init logger
+    let _ = log::init();
+
     // Create the app data directory if it doesn't exist
     fs::create_dir_all(app.path().app_data_dir().unwrap())
         .expect("Failed to create app data directory");

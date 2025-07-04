@@ -228,6 +228,7 @@ dependencies = [
  "flate2",
  "hex",
  "lazy_static",
+ "log",
  "serde",
  "serde_json",
  "sha-1",
