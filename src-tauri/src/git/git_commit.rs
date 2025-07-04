@@ -1,11 +1,15 @@
 use super::{
     git_commit_author::{GitCommitAuthor, GitCommitAuthorType},
+    git_files::GitFilesRequired,
+    git_folders::GIT_FOLDER,
     git_project::GitProject,
+    git_tree::GitTree,
     object::{GitObject, Header},
 };
 use crate::errors::git_object_error::{CommitError, GitObjectError};
 use core::fmt;
 use serde::{Deserialize, Serialize};
+use std::{fs::OpenOptions, io::Write, path::PathBuf};
 
 pub enum CommitPrefix {
     Tree,
@@ -148,6 +152,39 @@ impl GitCommit {
         }
 
         Ok(history)
+    }
+
+    /**
+     * Checkout all the files in a commit
+     */
+    pub fn checkout(&self, project: &GitProject) -> Result<(), GitObjectError> {
+        let files =
+            GitTree::from_hash(project, self.get_tree_hash())?.get_object_blobs(project, None);
+
+        files.iter().for_each(|file| {
+            let path = PathBuf::from(project.get_directory()).join(&file.0);
+            let file_in_fs = OpenOptions::new()
+                .write(true)
+                .truncate(true)
+                .create(true)
+                .open(path);
+
+            if let Ok(mut file_in_fs) = file_in_fs {
+                let _ = file_in_fs.write_all(file.1.data());
+            }
+        });
+
+        let head_path = PathBuf::from(project.get_directory())
+            .join(GIT_FOLDER)
+            .join(GitFilesRequired::HEAD.as_ref());
+        OpenOptions::new()
+            .write(true)
+            .open(head_path)
+            .map_err(|_| GitObjectError::InvalidCommitFile(CommitError::InvalidContent))?
+            .write_all(self.get_hash().as_bytes())
+            .map_err(|_| GitObjectError::InvalidHash)?;
+
+        Ok(())
     }
 }
 

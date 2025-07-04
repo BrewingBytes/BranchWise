@@ -13,7 +13,7 @@ use database::storage::DATABASE;
 use errors::git_error::GitErrorProject;
 use git::project_folder::{
     get_commit_history, get_database_projects, open_git_project, remove_database_project,
-    set_current_project,
+    set_current_project, checkout_branch, checkout_commit
 };
 use tauri::{AppHandle, Emitter, Manager};
 
@@ -120,6 +120,8 @@ fn main() {
             remove_database_project,
             set_current_project,
             get_commit_history,
+            checkout_branch,
+            checkout_commit
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
