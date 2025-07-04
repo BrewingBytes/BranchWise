@@ -92,11 +92,22 @@ pub trait GitObject {
      * project: The git project to get the object from
      * hash: The hash of the object
      */
+    /// Loads a Git object from the repository using its hash.
+    ///
+    /// Validates the hash length, locates the object file in the repository, and attempts to read and decode the object data. If the file is not found, retrieves the encoded data using an alternative method.
+    ///
+    /// # Errors
+    ///
+    /// Returns `GitObjectError::InvalidHash` if the hash is not the correct length, or other `GitObjectError` variants if reading or decoding fails.
     fn from_hash(project: &GitProject, hash: &str) -> Result<Self, GitObjectError>
     where
         Self: Sized,
     {
+        log::debug!("Getting git object from hash {hash}");
+
         if hash.len() != HASH_SIZE * 2 {
+            log::debug!("Hash is of invalid size ({} != {})", hash.len(), HASH_SIZE * 2);
+
             return Err(GitObjectError::InvalidHash);
         }
 
@@ -141,7 +152,16 @@ pub trait GitObject {
      *
      * project: The git project to write the object to
      */
+    /// Writes the Git object to the repository's object storage.
+    ///
+    /// Compresses and encodes the object, computes its hash, and writes it to the appropriate file in the `.git/objects` directory structure. Creates any necessary directories if they do not exist.
+    ///
+    /// # Errors
+    ///
+    /// Returns a `GitObjectError` if encoding, directory creation, or file writing fails.
     fn write_object(&self, project: &GitProject) -> Result<(), GitObjectError> {
+        log::debug!("Writing git object {}", self.get_hash());
+
         let encoded_data = self.get_encoded_data()?;
 
         // Get the hash of the object and create the file path

@@ -27,6 +27,7 @@ tauri-plugin-shell = "2.2.2"
 tauri-plugin-dialog = "2.2.2"
 tauri-plugin-process = "2.2.2"
 hex = "0.4.3"
+log = "0.4.27"
 
 [features]
 # This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!
