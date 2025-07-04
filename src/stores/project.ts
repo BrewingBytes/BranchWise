@@ -48,7 +48,7 @@ export const useProjectStore = defineStore("project", {
 		}
 	},
 	actions: {
-		async fetchCommitHistory (length = 30, fromHash = "") {
+		async fetchCommitHistory (length = 30, fromHash = ""): number {
 			let hash = "";
 
 			if (this.branch !== null && fromHash === "") {
@@ -67,7 +67,11 @@ export const useProjectStore = defineStore("project", {
 				}
 			} catch (error) {
 				useDialogStore().showError(error);
+
+				return 0;
 			}
+
+			return history.length;
 		},
 		async setBranch(branch: IGitBranch | null) {
 			if (branch === null) {
