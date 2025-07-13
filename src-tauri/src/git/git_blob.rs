@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::errors::git_object_error::GitObjectError;
+use crate::errors::git_object_error::{GitObjectError, ObjectError};
 
 use super::object::{GitObject, Header};
 
@@ -37,7 +37,9 @@ impl GitBlob {
                 }
             }
         }
-        Err(GitObjectError::InvalidTreeFile)
+        Err(GitObjectError::InvalidObjectFile(
+            ObjectError::InvalidHeader,
+        ))
     }
 }
 
@@ -107,7 +109,7 @@ mod tests {
 
     fn create_encoded_blob_file(data: Option<String>) -> Result<Vec<u8>, GitObjectError> {
         let file_content = data.unwrap_or_else(|| "test".to_string());
-        let file_content_to_encode = format!("blob {}\x00{}\n", file_content.len(), file_content);
+        let file_content_to_encode = format!("blob {}\x00{}", file_content.len(), file_content);
 
         let mut zlib = flate2::bufread::ZlibEncoder::new(
             file_content_to_encode.as_bytes(),
@@ -188,7 +190,7 @@ mod tests {
     fn test_already_decoded_data() {
         let data = vec![1, 2, 3, 4, 5];
         let blob = GitBlob::new(data.len(), data.clone());
-        let decoded_data = blob.get_data_string() + "\n";
+        let decoded_data = blob.get_data_string();
 
         let git_blob = GitBlob::from_encoded_data(decoded_data.as_bytes(), false).unwrap();
         assert_eq!(git_blob.get_hash(), blob.get_hash());

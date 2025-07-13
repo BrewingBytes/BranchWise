@@ -142,7 +142,7 @@ pub trait GitObject {
      */
     fn get_encoded_data(&self) -> Result<Vec<u8>, GitObjectError> {
         let data = self.get_data_string();
-        let file_to_hash = format!("{} {}\x00{}\n", self.get_type(), data.len(), data);
+        let file_to_hash = format!("{} {}\x00{}", self.get_type(), data.len(), data);
 
         let mut zlib = ZlibEncoder::new(Vec::new(), flate2::Compression::default());
         zlib.write_all(file_to_hash.as_bytes())
