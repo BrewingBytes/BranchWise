@@ -1,0 +1,32 @@
+name: "Build Tauri Builder"
+on:
+  workflow_dispatch:
+
+jobs:
+  build-and-tag:
+    name: "Build and Tag"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Docker image
+        run: docker build -t tauri-builder:latest -f Dockerfile .
+
+      - name: Tag Docker image
+        run: docker tag tauri-builder:latest ghcr.io/brewingbytes/tauri-builder:latest
+
+      - name: Push to GHCR
+        run: docker push ghcr.io/brewingbytes/tauri-builder:latest
