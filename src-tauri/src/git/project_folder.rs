@@ -116,7 +116,6 @@ mod tests {
             git_commit_author::{GitCommitAuthor, GitCommitAuthorType},
             git_files::{GitFilesOptional, GitFilesRequired},
             git_folders::{GitFolders, GitObjects, GitRefs, GIT_FOLDER},
-            git_tree::GitTreeEntry,
             git_user::GitUser,
             object::GitObject,
         },
