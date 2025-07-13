@@ -22,6 +22,23 @@ impl GitBlob {
     pub fn data(&self) -> &[u8] {
         &self.data
     }
+
+    fn check_header_valid_blob(data: &[u8]) -> Result<(&[u8], usize), GitObjectError> {
+        // Find the position of the first null byte
+        if let Some(null) = data.iter().position(|&b| b == 0) {
+            // Attempt to decode the header as UTF-8
+            if let Ok(header) = std::str::from_utf8(&data[..null]) {
+                // Header must start with blob
+                if let Some(size_str) = header.strip_prefix("blob ") {
+                    // The size part should be all digits
+                    if !size_str.is_empty() && size_str.chars().all(|c| c.is_ascii_digit()) {
+                        return Ok((&data[null + 1..], usize::from_str_radix(size_str, 10).unwrap_or(0)));
+                    }
+                }
+            }
+        }
+        Err(GitObjectError::InvalidTreeFile)
+    }
 }
 
 impl GitObject for GitBlob {
@@ -38,20 +55,18 @@ impl GitObject for GitBlob {
     ) -> Result<Self, GitObjectError> {
         // Decode the data and check if the header is valid
         let decoded_data = if needs_decoding {
-            Self::decode_data(encoded_data)?
+            &Self::decode_data(encoded_data)?
         } else {
-            String::from_utf8_lossy(encoded_data).to_string()
+            encoded_data
         };
 
         let (data, size) = if needs_decoding {
-            Self::check_header_valid_and_get_data(&decoded_data)?
+            Self::check_header_valid_blob(decoded_data)?
         } else {
-            (decoded_data.as_str(), decoded_data.len())
+            (decoded_data, decoded_data.len())
         };
 
-        let (data, _) = data.split_once("\n").ok_or(GitObjectError::ParsingError)?;
-
-        Ok(Self::new(size, data.as_bytes().to_vec()))
+        Ok(Self::new(size, data.to_vec()))
     }
 
     fn get_type(&self) -> Header {

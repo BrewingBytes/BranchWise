@@ -158,11 +158,16 @@ impl GitCommit {
      * Checkout all the files in a commit
      */
     pub fn checkout(&self, project: &GitProject) -> Result<(), GitObjectError> {
+        log::debug!("Checking commit {}", self.get_hash());
+        let tree = GitTree::from_hash(project, &self.get_tree_hash())?;
         let files =
             GitTree::from_hash(project, self.get_tree_hash())?.get_object_blobs(project, None);
+        let files = tree.get_object_blobs(project, None);
 
         files.iter().for_each(|file| {
             let path = PathBuf::from(project.get_directory()).join(&file.0);
+
+            std::fs::create_dir_all(path.parent().unwrap()).unwrap();
             let file_in_fs = OpenOptions::new()
                 .write(true)
                 .truncate(true)
@@ -202,7 +207,7 @@ impl GitObject for GitCommit {
     ) -> Result<Self, GitObjectError> {
         // Decode the data and check if the header is valid
         let decoded_data = if needs_decoding {
-            Self::decode_data(encoded_data)?
+            String::from_utf8_lossy(&Self::decode_data(encoded_data)?).to_string()
         } else {
             String::from_utf8_lossy(encoded_data).to_string()
         };

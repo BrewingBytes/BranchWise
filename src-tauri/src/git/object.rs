@@ -185,12 +185,12 @@ pub trait GitObject {
      *
      * Returns the decoded data as a string or an error
      */
-    fn decode_data(encoded_data: &[u8]) -> Result<String, GitObjectError> {
+    fn decode_data(encoded_data: &[u8]) -> Result<Vec<u8>, GitObjectError> {
         let mut zlib = ZlibDecoder::new(encoded_data);
-        let mut decoded_data = String::new();
+        let mut decoded_data = Vec::new();
 
         // Read the decoded data into a string from the zlib decoder
-        zlib.read_to_string(&mut decoded_data)
+        zlib.read_to_end(&mut decoded_data)
             .map_err(|_| GitObjectError::DecompressionError)?;
 
         Ok(decoded_data)
