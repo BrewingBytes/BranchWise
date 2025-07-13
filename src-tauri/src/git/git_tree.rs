@@ -243,13 +243,13 @@ impl GitObject for GitTree {
         let decoded_data = if needs_decoding {
             &Self::decode_data(encoded_data)?
         } else {
-           encoded_data
+            encoded_data
         };
 
         let data = if needs_decoding {
-            Self::check_header_valid_tree(&decoded_data)?
+            Self::check_header_valid_tree(decoded_data)?
         } else {
-            &decoded_data
+            decoded_data
         };
 
         // Parse the tree entries
@@ -257,14 +257,18 @@ impl GitObject for GitTree {
         let mut data = &data[..data.len()];
         while !data.is_empty() {
             // Find the space (mode delimiter)
-            let space_pos = data.iter().position(|&b| b == b' ')
+            let space_pos = data
+                .iter()
+                .position(|&b| b == b' ')
                 .ok_or(GitObjectError::InvalidTreeFile)?;
             let mode = std::str::from_utf8(&data[..space_pos])
                 .map_err(|_| GitObjectError::InvalidTreeFile)?;
 
             // Find the NULL (filename delimiter)
             let rest = &data[space_pos + 1..];
-            let null_pos = rest.iter().position(|&b| b == 0)
+            let null_pos = rest
+                .iter()
+                .position(|&b| b == 0)
                 .ok_or(GitObjectError::InvalidTreeFile)?;
             let name = std::str::from_utf8(&rest[..null_pos])
                 .map_err(|_| GitObjectError::InvalidTreeFile)?;
@@ -280,11 +284,7 @@ impl GitObject for GitTree {
             let hash = hash.iter().map(|b| format!("{b:02x}")).collect::<String>();
             data = &rest[sha_end..];
 
-            tree.add_entry(
-                GitTreeMode::from_mode_str(mode),
-                hash,
-                name.to_string(),
-            );
+            tree.add_entry(GitTreeMode::from_mode_str(mode), hash, name.to_string());
         }
 
         Ok(tree)

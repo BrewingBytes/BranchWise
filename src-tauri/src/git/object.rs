@@ -106,7 +106,11 @@ pub trait GitObject {
         log::debug!("Getting git object from hash {hash}");
 
         if hash.len() != HASH_SIZE * 2 {
-            log::debug!("Hash is of invalid size ({} != {})", hash.len(), HASH_SIZE * 2);
+            log::debug!(
+                "Hash is of invalid size ({} != {})",
+                hash.len(),
+                HASH_SIZE * 2
+            );
 
             return Err(GitObjectError::InvalidHash);
         }

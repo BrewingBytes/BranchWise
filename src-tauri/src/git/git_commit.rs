@@ -159,10 +159,8 @@ impl GitCommit {
      */
     pub fn checkout(&self, project: &GitProject) -> Result<(), GitObjectError> {
         log::debug!("Checking commit {}", self.get_hash());
-        let tree = GitTree::from_hash(project, &self.get_tree_hash())?;
         let files =
             GitTree::from_hash(project, self.get_tree_hash())?.get_object_blobs(project, None);
-        let files = tree.get_object_blobs(project, None);
 
         files.iter().for_each(|file| {
             let path = PathBuf::from(project.get_directory()).join(&file.0);

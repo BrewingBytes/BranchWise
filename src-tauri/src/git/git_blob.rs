@@ -32,7 +32,7 @@ impl GitBlob {
                 if let Some(size_str) = header.strip_prefix("blob ") {
                     // The size part should be all digits
                     if !size_str.is_empty() && size_str.chars().all(|c| c.is_ascii_digit()) {
-                        return Ok((&data[null + 1..], usize::from_str_radix(size_str, 10).unwrap_or(0)));
+                        return Ok((&data[null + 1..], str::parse(size_str).unwrap_or(0)));
                     }
                 }
             }
