@@ -61,7 +61,7 @@ impl GitProject {
     /// - `Err(GitError)` if any required Git metadata cannot be read.
     pub fn update(&mut self) -> Result<(), GitError> {
         log::debug!("Updating the project {}", self.get_directory());
-    
+
         // Clear the current branches and remotes
         self.local_branches.clear();
         self.remotes.clear();

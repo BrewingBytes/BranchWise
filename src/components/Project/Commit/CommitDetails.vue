@@ -2,14 +2,14 @@
 import CommitDetailItem from "@/components/Project/Commit/CommitDetailItem.vue";
 import { useProjectStore } from "@/stores/project";
 import { getAuthorDate } from "@/types/gitAuthor";
-import { getHash, NO_COMMIT } from "@/types/gitCommit";
+import { getShortHash, NO_COMMIT } from "@/types/gitCommit";
 import { storeToRefs } from "pinia";
 import { computed } from "vue";
 
 const { getCommit } = storeToRefs(useProjectStore());
 
 const commit = computed(() => getCommit.value ?? NO_COMMIT);
-const commitName = computed(() => getHash(commit.value));
+const commitName = computed(() => getShortHash(commit.value));
 
 const authorName = computed(() => `${commit.value.author.user.name} <${commit.value.author.user.email}>`);
 const authorDate = computed(() => getAuthorDate(commit.value.author, true));

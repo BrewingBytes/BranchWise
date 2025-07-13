@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ContextMenu from "@/components/Dialogs/ContextMenu.vue";
 import DialogComponent from "@/components/DialogComponent.vue";
 import SidebarComponent from "@/components/SidebarComponent.vue";
 import TopbarComponent from "@/components/TopbarComponent.vue";
@@ -42,19 +43,20 @@ onUnmounted(() => unregisterListeners());
       {{ snackbar.text }}
     </v-snackbar>
     <DialogComponent />
+    <ContextMenu />
   </v-app>
 </template>
 
 <style>
 html {
-    overflow: scroll;
-    overflow-x: hidden;
+	overflow: scroll;
+	overflow-x: hidden;
 	overflow-y: hidden;
 }
 
 ::-webkit-scrollbar {
-    width: 0;
-    background: transparent;
+	width: 0;
+	background: transparent;
 	display: none;
 }
 </style>

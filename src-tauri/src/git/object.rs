@@ -106,7 +106,11 @@ pub trait GitObject {
         log::debug!("Getting git object from hash {hash}");
 
         if hash.len() != HASH_SIZE * 2 {
-            log::debug!("Hash is of invalid size ({} != {})", hash.len(), HASH_SIZE * 2);
+            log::debug!(
+                "Hash is of invalid size ({} != {})",
+                hash.len(),
+                HASH_SIZE * 2
+            );
 
             return Err(GitObjectError::InvalidHash);
         }
@@ -138,7 +142,7 @@ pub trait GitObject {
      */
     fn get_encoded_data(&self) -> Result<Vec<u8>, GitObjectError> {
         let data = self.get_data_string();
-        let file_to_hash = format!("{} {}\x00{}\n", self.get_type(), data.len(), data);
+        let file_to_hash = format!("{} {}\x00{}", self.get_type(), data.len(), data);
 
         let mut zlib = ZlibEncoder::new(Vec::new(), flate2::Compression::default());
         zlib.write_all(file_to_hash.as_bytes())
@@ -185,12 +189,12 @@ pub trait GitObject {
      *
      * Returns the decoded data as a string or an error
      */
-    fn decode_data(encoded_data: &[u8]) -> Result<String, GitObjectError> {
+    fn decode_data(encoded_data: &[u8]) -> Result<Vec<u8>, GitObjectError> {
         let mut zlib = ZlibDecoder::new(encoded_data);
-        let mut decoded_data = String::new();
+        let mut decoded_data = Vec::new();
 
         // Read the decoded data into a string from the zlib decoder
-        zlib.read_to_string(&mut decoded_data)
+        zlib.read_to_end(&mut decoded_data)
             .map_err(|_| GitObjectError::DecompressionError)?;
 
         Ok(decoded_data)

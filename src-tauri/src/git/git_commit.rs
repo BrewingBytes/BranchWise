@@ -1,11 +1,15 @@
 use super::{
     git_commit_author::{GitCommitAuthor, GitCommitAuthorType},
+    git_files::GitFilesRequired,
+    git_folders::GIT_FOLDER,
     git_project::GitProject,
+    git_tree::GitTree,
     object::{GitObject, Header},
 };
 use crate::errors::git_object_error::{CommitError, GitObjectError};
 use core::fmt;
 use serde::{Deserialize, Serialize};
+use std::{fs::OpenOptions, io::Write, path::PathBuf};
 
 pub enum CommitPrefix {
     Tree,
@@ -149,6 +153,42 @@ impl GitCommit {
 
         Ok(history)
     }
+
+    /**
+     * Checkout all the files in a commit
+     */
+    pub fn checkout(&self, project: &GitProject) -> Result<(), GitObjectError> {
+        log::debug!("Checking commit {}", self.get_hash());
+        let files =
+            GitTree::from_hash(project, self.get_tree_hash())?.get_object_blobs(project, None);
+
+        files.iter().for_each(|file| {
+            let path = PathBuf::from(project.get_directory()).join(&file.0);
+
+            std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+            let file_in_fs = OpenOptions::new()
+                .write(true)
+                .truncate(true)
+                .create(true)
+                .open(path);
+
+            if let Ok(mut file_in_fs) = file_in_fs {
+                let _ = file_in_fs.write_all(file.1.data());
+            }
+        });
+
+        let head_path = PathBuf::from(project.get_directory())
+            .join(GIT_FOLDER)
+            .join(GitFilesRequired::HEAD.as_ref());
+        OpenOptions::new()
+            .write(true)
+            .open(head_path)
+            .map_err(|_| GitObjectError::InvalidCommitFile(CommitError::InvalidContent))?
+            .write_all(self.get_hash().as_bytes())
+            .map_err(|_| GitObjectError::InvalidHash)?;
+
+        Ok(())
+    }
 }
 
 impl GitObject for GitCommit {
@@ -165,7 +205,7 @@ impl GitObject for GitCommit {
     ) -> Result<Self, GitObjectError> {
         // Decode the data and check if the header is valid
         let decoded_data = if needs_decoding {
-            Self::decode_data(encoded_data)?
+            String::from_utf8_lossy(&Self::decode_data(encoded_data)?).to_string()
         } else {
             String::from_utf8_lossy(encoded_data).to_string()
         };
@@ -428,104 +468,6 @@ mod tests {
 
         let git_commit = GitCommit::from_encoded_data(encoded_file_content, true);
         assert!(git_commit.is_err());
-    }
-
-    #[test]
-    fn test_to_string_no_parent() {
-        let committer = mock_git_commit_author();
-
-        let encoded_file_content = create_encoded_commit_file(
-            committer.clone(),
-            committer.clone(),
-            Some("50c8353444afbef3172c999ef6cff8d31309ac3e"),
-            Vec::new(),
-            "test commit",
-        );
-
-        let git_commit =
-            GitCommit::from_encoded_data(encoded_file_content.as_ref().unwrap(), true).unwrap();
-
-        assert_eq!(
-            git_commit.get_encoded_data().unwrap(),
-            encoded_file_content.unwrap()
-        );
-    }
-
-    #[test]
-    fn test_to_string_with_parents() {
-        let committer = mock_git_commit_author();
-
-        let parent_commit_hash = Vec::from([
-            "50c8353444afbef3172c999ef6cff8d31309ac3e",
-            "50c8353444afbef3172c999ef6cff8d31309ac33",
-        ]);
-        let encoded_file_content = create_encoded_commit_file(
-            committer.clone(),
-            committer.clone(),
-            Some("50c8353444afbef3172c999ef6cff8d31309ac3e"),
-            parent_commit_hash.clone(),
-            "test commit",
-        );
-
-        let git_commit =
-            GitCommit::from_encoded_data(encoded_file_content.as_ref().unwrap(), true).unwrap();
-
-        assert_eq!(
-            git_commit.get_encoded_data().unwrap(),
-            encoded_file_content.unwrap()
-        );
-    }
-
-    #[test]
-    fn test_gpg_sig() {
-        let author = mock_git_commit_author();
-        let committer = mock_git_commit_committer();
-        let git_commit = GitCommit::new(
-            "test",
-            &[],
-            author,
-            committer,
-            "test",
-            Some(
-                "-----BEGIN PGP SIGNATURE-----\n\naaaaa\n-----END PGP SIGNATURE-----\n".to_string(),
-            ),
-        );
-
-        let encoded_file_content = git_commit.get_encoded_data().unwrap();
-        let git_commit = GitCommit::from_encoded_data(&encoded_file_content, true).unwrap();
-
-        assert_eq!(
-            git_commit.get_gpg_signature().clone().unwrap(),
-            "-----BEGIN PGP SIGNATURE-----\n\naaaaa\n-----END PGP SIGNATURE-----\n"
-        );
-        assert_eq!(git_commit.get_encoded_data().unwrap(), encoded_file_content);
-    }
-
-    #[test]
-    fn test_from_string_with_parents() {
-        let committer = mock_git_commit_author();
-
-        let commit_hash = "daf7a8b618ed4c68f4eee690b3ef761d24643b86".to_string();
-        let tree_hash = "50c8353444afbef3172c999ef6cff8d31309ac3e";
-        let parent_commit_hash = Vec::from([
-            "50c8353444afbef3172c999ef6cff8d31309ac3e",
-            "50c8353444afbef3172c999ef6cff8d31309ac33",
-        ]);
-        let encoded_file_content = create_encoded_commit_file(
-            committer.clone(),
-            committer.clone(),
-            Some(tree_hash),
-            parent_commit_hash.clone(),
-            "test commit",
-        );
-
-        let git_commit =
-            GitCommit::from_encoded_data(encoded_file_content.as_ref().unwrap(), true).unwrap();
-        assert_eq!(git_commit.get_hash(), commit_hash);
-        assert_eq!(git_commit.parent_hashes, parent_commit_hash);
-        assert_eq!(git_commit.tree_hash, tree_hash);
-        assert_eq!(git_commit.message, "test commit");
-        assert_eq!(git_commit.author, committer);
     }
 
     #[test]

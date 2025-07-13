@@ -3,8 +3,8 @@
 pub mod database;
 pub mod errors;
 pub mod git;
-pub mod packs;
 pub mod log;
+pub mod packs;
 
 use ::log::debug;
 use std::fs;
@@ -12,8 +12,8 @@ use std::fs;
 use database::storage::DATABASE;
 use errors::git_error::GitErrorProject;
 use git::project_folder::{
-    get_commit_history, get_database_projects, open_git_project, remove_database_project,
-    set_current_project,
+    checkout_branch, checkout_commit, get_commit_history, get_database_projects, open_git_project,
+    remove_database_project, set_current_project,
 };
 use tauri::{AppHandle, Emitter, Manager};
 
@@ -32,7 +32,6 @@ async fn setup(app: AppHandle) {
     // Init logger
     #[cfg(debug_assertions)]
     let _ = log::init();
-
 
     debug!("Started app setup");
     // Create the app data directory if it doesn't exist
@@ -68,7 +67,10 @@ async fn event_loop(app: AppHandle) {
             // Update the current project
             match project.update() {
                 Ok(_) => {
-                    debug!("Send project_update event for project {}", &project.get_directory());
+                    debug!(
+                        "Send project_update event for project {}",
+                        &project.get_directory()
+                    );
 
                     // Emit the project update event and update the project in the database
                     app.emit("project_update", &project).unwrap();
@@ -120,6 +122,8 @@ fn main() {
             remove_database_project,
             set_current_project,
             get_commit_history,
+            checkout_branch,
+            checkout_commit
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

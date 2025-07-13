@@ -35,7 +35,7 @@ pub fn is_hash_in_index(index: &PathBuf, hash: &str) -> (bool, usize) {
     let data = fs::read(index);
     if data.is_err() || !is_header_valid(&data.as_ref().unwrap()[..8]) {
         log::debug!("Invalid pack-idx");
-        
+
         return (false, 0);
     }
 

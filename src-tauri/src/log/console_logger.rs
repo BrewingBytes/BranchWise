@@ -46,7 +46,7 @@ impl log::Log for ConsoleLogger {
     }
 
     /// Flushes any buffered log records.
-///
-/// This implementation does nothing, as log messages are written directly to the console and require no flushing.
-fn flush(&self) {}
+    ///
+    /// This implementation does nothing, as log messages are written directly to the console and require no flushing.
+    fn flush(&self) {}
 }

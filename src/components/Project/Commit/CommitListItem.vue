@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import { useDialogStore } from "@/stores/dialogs";
 import { useProjectStore } from "@/stores/project";
 import { getAuthorDate } from "@/types/gitAuthor";
-import { getHash, IGitCommit } from "@/types/gitCommit";
+import { getFullHash, getShortHash, IGitCommit } from "@/types/gitCommit";
 import { computed } from "vue";
 
 const props = defineProps({
@@ -13,7 +14,7 @@ const props = defineProps({
 
 const authorName = computed(() => props.commit.author.user.name);
 const date = computed(() => getAuthorDate(props.commit.author));
-const hash = computed(() => getHash(props.commit));
+const hash = computed(() => getShortHash(props.commit));
 const message = computed(() => {
 	// Get the first line of the commit message based on the screen size
 	const message = props.commit.message.split("\n")[0];
@@ -32,9 +33,9 @@ const commitClass = computed(() => {
 	return className;
 });
 
-function setCommit() {
-	useProjectStore().setCommit(props.commit.hash);
-}
+const showContextMenu = (event: MouseEvent) =>
+	useDialogStore().showContextMenu(getFullHash(props.commit), event.clientX, event.clientY);
+const setCommit = () => useProjectStore().setCommit(props.commit.hash);
 </script>
 
 <template>
@@ -44,6 +45,7 @@ function setCommit() {
 		style="height: 10vh;"
 		:class="commitClass"
 		@click="setCommit"
+		@click.right="showContextMenu"
 	>
 		<v-col
 			style="height: 85%;"
@@ -81,7 +83,7 @@ function setCommit() {
 					{{ hash }}
 				</p>
 				<v-spacer />
-				
+
 				{{ message }}
 			</v-row>
 		</v-col>
@@ -93,6 +95,9 @@ function setCommit() {
 		background-color: black;
 		cursor: pointer;
 		border-radius: 25px;
+		background-color: black;
+		cursor: pointer;
+		border-radius: 25px;
 }
 
 .selected {
@@ -101,6 +106,8 @@ function setCommit() {
 }
 
 .selected:hover {
+		background-color: #112233;
+		cursor: default !important;
 		background-color: #112233;
 		cursor: default !important;
 }

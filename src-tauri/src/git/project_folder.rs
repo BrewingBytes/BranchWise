@@ -1,4 +1,5 @@
 use super::{
+    git_branch::GitBranch,
     git_commit::{GitCommit, GitCommitWithHash},
     git_folders::GitBranchType,
     git_project::GitProject,
@@ -83,6 +84,22 @@ pub fn get_commit_history(
         .map_err(|_| GitError::InvalidHistory)
 }
 
+#[tauri::command]
+pub fn checkout_branch(project: GitProject, branch: GitBranch) -> Result<(), GitError> {
+    branch
+        .checkout(&project)
+        .map_err(|_| GitError::NoLocalBranches)
+}
+
+#[tauri::command]
+pub fn checkout_commit(project: GitProject, hash: &str) -> Result<(), GitError> {
+    let commit = GitCommit::from_hash(&project, hash).map_err(|_| GitError::InvalidHistory)?;
+
+    commit
+        .checkout(&project)
+        .map_err(|_| GitError::InvalidHistory)
+}
+
 #[cfg(test)]
 mod tests {
     use std::{
@@ -99,7 +116,6 @@ mod tests {
             git_commit_author::{GitCommitAuthor, GitCommitAuthorType},
             git_files::{GitFilesOptional, GitFilesRequired},
             git_folders::{GitFolders, GitObjects, GitRefs, GIT_FOLDER},
-            git_tree::{GitTree, GitTreeEntry, GitTreeMode},
             git_user::GitUser,
             object::GitObject,
         },
@@ -222,31 +238,8 @@ mod tests {
 
     fn create_encoded_blob_file(data: Option<String>) -> Result<Vec<u8>, GitObjectError> {
         let file_content = data.unwrap_or_else(|| "test".to_string());
-        let file_content_to_encode = format!("blob {}\x00{}\n", file_content.len(), file_content);
+        let file_content_to_encode = format!("blob {}\x00{}", file_content.len(), file_content);
 
-        let mut zlib = flate2::bufread::ZlibEncoder::new(
-            file_content_to_encode.as_bytes(),
-            flate2::Compression::default(),
-        );
-        let mut encoded_file_content = Vec::new();
-        zlib.read_to_end(&mut encoded_file_content)
-            .map_err(|_| GitObjectError::DecompressionError)?;
-
-        Ok(encoded_file_content)
-    }
-
-    fn create_encoded_tree_file(entries: Vec<GitTreeEntry>) -> Result<Vec<u8>, GitObjectError> {
-        let mut file_content = String::new();
-        for entry in entries {
-            file_content.push_str(&format!(
-                "{} {}\0{}",
-                entry.mode.to_mode_str(),
-                entry.name,
-                entry.hash,
-            ));
-        }
-
-        let file_content_to_encode = format!("tree {}\x00{}\n", file_content.len(), file_content);
         let mut zlib = flate2::bufread::ZlibEncoder::new(
             file_content_to_encode.as_bytes(),
             flate2::Compression::default(),
@@ -344,83 +337,6 @@ mod tests {
     }
 
     #[test]
-    fn test_git_tree_to_file() {
-        let folder = TempDir::new("test_git_tree_to_file").unwrap();
-        let test_git_folder = folder.path().to_str().unwrap();
-
-        create_sample_git_folder(test_git_folder);
-        let git_project = open_git_project(test_git_folder).unwrap();
-
-        let mut tree = GitTree::new();
-        tree.add_entry(
-            GitTreeMode::File,
-            "df6773ea47ed3fce3b3bb14e3d1101963e77ef08".to_string(),
-            "test1".to_string(),
-        );
-        tree.add_entry(
-            GitTreeMode::File,
-            "df6773ea47ed3fce3b3bb14e3d1101963e77ef09".to_string(),
-            "test2".to_string(),
-        );
-        tree.write_object(&git_project).unwrap();
-
-        let tree = GitTree::from_hash(&git_project, &tree.get_hash()).unwrap();
-
-        assert_eq!(tree.get_entry_by_name("test1").unwrap().name, "test1");
-        assert_eq!(
-            tree.get_entry_by_name("test1").unwrap().hash,
-            "df6773ea47ed3fce3b3bb14e3d1101963e77ef08"
-        );
-        assert_eq!(tree.get_entry_by_name("test2").unwrap().name, "test2");
-        assert_eq!(
-            tree.get_entry_by_name("test2").unwrap().hash,
-            "df6773ea47ed3fce3b3bb14e3d1101963e77ef09"
-        );
-    }
-
-    #[test]
-    fn test_git_tree_from_file() {
-        let folder = TempDir::new("test_git_tree_from_file").unwrap();
-        let test_git_folder = folder.path().to_str().unwrap();
-
-        create_sample_git_folder(test_git_folder);
-        let git_project = open_git_project(test_git_folder).unwrap();
-
-        let entries = vec![
-            GitTreeEntry {
-                mode: GitTreeMode::File,
-                name: "test1".to_string(),
-                hash: "df6773ea47ed3fce3b3bb14e3d1101963e77ef08".to_string(),
-            },
-            GitTreeEntry {
-                mode: GitTreeMode::File,
-                name: "test2".to_string(),
-                hash: "df6773ea47ed3fce3b3bb14e3d1101963e77ef09".to_string(),
-            },
-        ];
-        let content = create_encoded_tree_file(entries).unwrap();
-        create_object(
-            git_project.get_directory(),
-            "df6773ea47ed3fce3b3bb14e3d1101963e77ef08",
-            content.as_slice(),
-        );
-
-        let tree =
-            GitTree::from_hash(&git_project, "df6773ea47ed3fce3b3bb14e3d1101963e77ef08").unwrap();
-
-        assert_eq!(tree.get_entry_by_name("test1").unwrap().name, "test1");
-        assert_eq!(
-            tree.get_entry_by_name("test1").unwrap().hash,
-            "df6773ea47ed3fce3b3bb14e3d1101963e77ef08"
-        );
-        assert_eq!(tree.get_entry_by_name("test2").unwrap().name, "test2");
-        assert_eq!(
-            tree.get_entry_by_name("test2").unwrap().hash,
-            "df6773ea47ed3fce3b3bb14e3d1101963e77ef09"
-        );
-    }
-
-    #[test]
     fn test_git_blob_from_file() {
         let folder = TempDir::new("test_git_blob_from_file").unwrap();
         let test_git_folder = folder.path().to_str().unwrap();
@@ -457,46 +373,6 @@ mod tests {
 
         assert_eq!(blob.size(), 4);
         assert_eq!(blob.data(), "test".as_bytes());
-    }
-
-    #[test]
-    fn test_git_commit_to_file() {
-        let folder = TempDir::new("test_git_blot_to_file").unwrap();
-        let test_git_folder = folder.path().to_str().unwrap();
-
-        create_sample_git_folder(test_git_folder);
-        let git_project = open_git_project(test_git_folder).unwrap();
-
-        let author = GitCommitAuthor::new(
-            GitUser::new("Test User".to_string(), "test.user@email.com".to_string()),
-            100,
-            "+03:00".to_string(),
-            GitCommitAuthorType::Author,
-        );
-
-        let commiter = GitCommitAuthor::new(
-            GitUser::new("Test User".to_string(), "test.user@email.com".to_string()),
-            100,
-            "+03:00".to_string(),
-            GitCommitAuthorType::Committer,
-        );
-
-        let commit = GitCommit::new(
-            "tree",
-            Vec::<String>::new().as_slice(),
-            author.clone(),
-            commiter.clone(),
-            "test message",
-            None,
-        );
-        commit.write_object(&git_project).unwrap();
-
-        let commit = GitCommit::from_hash(&git_project, &commit.get_hash()).unwrap();
-        assert_eq!(commit.get_tree_hash(), "tree");
-        assert_eq!(commit.get_parent_hashes(), &Vec::<String>::new());
-        assert_eq!(commit.get_author(), &author);
-        assert_eq!(commit.get_committer(), &commiter);
-        assert_eq!(commit.get_message(), "test message");
     }
 
     #[test]

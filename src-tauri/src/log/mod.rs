@@ -19,6 +19,5 @@ lazy_static! {
 /// log::init().expect("Logger initialization failed");
 /// ```
 pub fn init() -> Result<(), SetLoggerError> {
-    log::set_logger(CONSOLE_LOGGER.as_ref())
-        .map(|()| log::set_max_level(log::LevelFilter::Debug))
+    log::set_logger(CONSOLE_LOGGER.as_ref()).map(|()| log::set_max_level(log::LevelFilter::Debug))
 }

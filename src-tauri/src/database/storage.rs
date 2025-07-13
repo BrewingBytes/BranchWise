@@ -98,7 +98,10 @@ impl Database {
     /// assert!(db.get_projects().is_empty());
     /// ```
     pub fn remove_project(&mut self, project: GitProject) -> Result<()> {
-        log::debug!("Removing project {} from the database", project.get_directory());
+        log::debug!(
+            "Removing project {} from the database",
+            project.get_directory()
+        );
 
         // Remove the project from the database and save it
         self.projects.retain(|p| p != &project);
@@ -261,7 +264,10 @@ impl Database {
     /// db.update_project(updated_project).unwrap();
     /// ```
     pub fn update_project(&mut self, project: GitProject) -> Result<()> {
-        log::debug!("Update the project {} in the database", project.get_directory());
+        log::debug!(
+            "Update the project {} in the database",
+            project.get_directory()
+        );
 
         // Search for the project in the database and update it
         let index = self
