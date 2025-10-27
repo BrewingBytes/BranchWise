@@ -55,7 +55,7 @@ pub fn get_encoded_data_from_pack(path: &PathBuf, offset: usize) -> Vec<u8> {
     }
 
     match object_type {
-        GitPackType::ObjectOffsetDelta => parse_offset_delta(path, &data[1..], size, offset + header_bytes),
+        GitPackType::ObjectOffsetDelta => parse_offset_delta(path, &data[1..], size, offset + header_bytes + 1),
         GitPackType::ObjectReferenceDelta => parse_reference_delta(&data[1..], size),
         GitPackType::Invalid => panic!(),
         _ => {
