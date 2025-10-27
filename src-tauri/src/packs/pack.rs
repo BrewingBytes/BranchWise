@@ -39,20 +39,23 @@ pub fn get_encoded_data_from_pack(path: &PathBuf, offset: usize) -> Vec<u8> {
     }
 
     // Skip to the offset
-    let mut data = &data.unwrap()[offset..];
+    let full_data = data.unwrap();
+    let mut data = &full_data[offset..];
     let object_type: GitPackType = ((data[0] >> 4) & 0b0111).into();
     let mut size: usize = (data[0] & 0b0000_1111) as usize;
 
     let mut shift: usize = 4;
+    let mut header_bytes: usize = 1;
     while data[0] & 0b1000_0000 != 0 {
         data = &data[1..];
+        header_bytes += 1;
 
         size |= ((data[0] & 0b0111_1111) as usize) << shift;
         shift += 7;
     }
 
     match object_type {
-        GitPackType::ObjectOffsetDelta => parse_offset_delta(path, &data[1..], size),
+        GitPackType::ObjectOffsetDelta => parse_offset_delta(path, &data[1..], size, offset + header_bytes),
         GitPackType::ObjectReferenceDelta => parse_reference_delta(&data[1..], size),
         GitPackType::Invalid => panic!(),
         _ => {
@@ -66,8 +69,8 @@ pub fn get_encoded_data_from_pack(path: &PathBuf, offset: usize) -> Vec<u8> {
     }
 }
 
-fn parse_offset_delta(path: &PathBuf, data: &[u8], size: usize) -> Vec<u8> {
-    let (offset, offset_shift) = variable_length_int(data);
+fn parse_offset_delta(path: &PathBuf, data: &[u8], size: usize, current_offset: usize) -> Vec<u8> {
+    let (relative_offset, offset_shift) = variable_length_int(data);
     let (source_size, source_shift) = variable_length_int(&data[offset_shift..]);
     let (target_size, target_shift) = variable_length_int(&data[offset_shift + source_shift..]);
 
@@ -77,7 +80,9 @@ fn parse_offset_delta(path: &PathBuf, data: &[u8], size: usize) -> Vec<u8> {
         .read_exact(&mut delta_instructions)
         .unwrap();
 
-    let source = get_encoded_data_from_pack(path, offset);
+    // The offset is a negative offset from the current position
+    let base_offset = current_offset - relative_offset;
+    let source = get_encoded_data_from_pack(path, base_offset);
     if source.len() != source_size {
         panic!();
     }
@@ -113,7 +118,7 @@ fn parse_delta_instructions(
     let mut target = Vec::<u8>::new();
 
     let mut delta_instructions = delta_instructions;
-    while delta_instructions.is_empty() {
+    while !delta_instructions.is_empty() {
         let instruction = delta_instructions[0];
 
         if instruction & 0b1000_0000 != 0 {
