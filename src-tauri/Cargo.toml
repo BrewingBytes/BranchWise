@@ -8,10 +8,10 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [build-dependencies]
-tauri-build = { version = "2.5.4", features = [] }
+tauri-build = { version = "2.5.5", features = [] }
 
 [dependencies]
-tauri = { version = "2.9.5", features = [] }
+tauri = { version = "2.10.1", features = [] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1.0.149"
 strum = "0.27.2"
@@ -20,10 +20,10 @@ tempdir = "0.3.7"
 thiserror = "2.0.18"
 lazy_static = "1.5.0"
 tokio = "1.49.0"
-flate2 = { version = "1.1.8", features = ["zlib-ng"], default-features = false }
+flate2 = { version = "1.1.9", features = ["zlib-ng"], default-features = false }
 sha-1 = "0.10.1"
 tauri-plugin = "2.5.3"
-tauri-plugin-shell = "2.3.4"
+tauri-plugin-shell = "2.3.5"
 tauri-plugin-dialog = "2.6.0"
 tauri-plugin-process = "2.3.1"
 hex = "0.4.3"
@@ -42,4 +42,4 @@ codegen-units = 16
 codegen-units = 16
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
-tauri-plugin-updater = "2.8.1"
+tauri-plugin-updater = "2.10.0"
