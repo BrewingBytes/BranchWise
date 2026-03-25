@@ -15,7 +15,7 @@
     "@tauri-apps/plugin-dialog": "~2",
     "@tauri-apps/plugin-process": "~2",
     "@tauri-apps/plugin-shell": "~2",
-    "@tauri-apps/plugin-updater": "~2",
+    "@tauri-apps/plugin-updater": "2.10.0",
     "moment-timezone": "^0.6.0",
     "pinia": "^3.0.4",
     "pinia-plugin-persistedstate": "^4.7.1",

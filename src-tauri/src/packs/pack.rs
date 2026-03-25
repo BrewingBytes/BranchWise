@@ -52,7 +52,7 @@ pub fn get_encoded_data_from_pack(path: &PathBuf, offset: usize) -> Vec<u8> {
     }
 
     match object_type {
-        GitPackType::ObjectOffsetDelta => parse_offset_delta(path, &data[1..], size),
+        GitPackType::ObjectOffsetDelta => parse_offset_delta(path, &data[1..], size, offset),
         GitPackType::ObjectReferenceDelta => parse_reference_delta(&data[1..], size),
         GitPackType::Invalid => panic!(),
         _ => {
@@ -66,35 +66,41 @@ pub fn get_encoded_data_from_pack(path: &PathBuf, offset: usize) -> Vec<u8> {
     }
 }
 
-fn parse_offset_delta(path: &PathBuf, data: &[u8], size: usize) -> Vec<u8> {
-    let (offset, offset_shift) = variable_length_int(data);
-    let (source_size, source_shift) = variable_length_int(&data[offset_shift..]);
-    let (target_size, target_shift) = variable_length_int(&data[offset_shift + source_shift..]);
-
-    let mut delta_instructions: Vec<u8> =
-        vec![0; size - offset_shift - source_shift - target_shift];
-    ZlibDecoder::new(&data[offset_shift + source_shift + target_shift..])
-        .read_exact(&mut delta_instructions)
+fn parse_offset_delta(path: &PathBuf, data: &[u8], _size: usize, current_offset: usize) -> Vec<u8> {
+    let Some((relative_offset, offset_shift)) = offset_delta_base_distance(data) else {
+        panic!("pack: truncated offset-delta distance encoding");
+    };
+    if relative_offset == 0 {
+        panic!("pack: offset-delta base distance is zero (would recurse into same object)");
+    }
+    let mut delta_data = Vec::new();
+    ZlibDecoder::new(&data[offset_shift..])
+        .read_to_end(&mut delta_data)
         .unwrap();
+    let (source_size, source_shift) = variable_length_int(&delta_data);
+    let (target_size, target_shift) = variable_length_int(&delta_data[source_shift..]);
+    let delta_instructions = &delta_data[source_shift + target_shift..];
 
-    let source = get_encoded_data_from_pack(path, offset);
+    let Some(base_offset) = current_offset.checked_sub(relative_offset) else {
+        panic!("pack: offset-delta base offset underflow at object offset {current_offset}");
+    };
+    let source = get_encoded_data_from_pack(path, base_offset);
     if source.len() != source_size {
         panic!();
     }
 
-    parse_delta_instructions(&source, &delta_instructions, target_size)
+    parse_delta_instructions(&source, delta_instructions, target_size)
 }
 
 fn parse_reference_delta(data: &[u8], size: usize) -> Vec<u8> {
     let hash = &data[..HASH_SIZE];
-
-    let (source_size, source_shift) = variable_length_int(&data[HASH_SIZE..]);
-    let (target_size, target_shift) = variable_length_int(&data[HASH_SIZE + source_shift..]);
-
-    let mut delta_instructions: Vec<u8> = vec![0; size - source_shift - target_shift - HASH_SIZE];
-    ZlibDecoder::new(&data[HASH_SIZE + source_shift + target_shift..])
-        .read_exact(&mut delta_instructions)
+    let mut delta_data = Vec::with_capacity(size);
+    ZlibDecoder::new(&data[HASH_SIZE..])
+        .read_to_end(&mut delta_data)
         .unwrap();
+    let (source_size, source_shift) = variable_length_int(&delta_data);
+    let (target_size, target_shift) = variable_length_int(&delta_data[source_shift..]);
+    let delta_instructions = &delta_data[source_shift + target_shift..];
 
     let project = DATABASE.lock().unwrap().get_current_project().unwrap();
     let source = &get_object_encoded_data(&project, &hex::encode(hash)).unwrap_or_default();
@@ -102,7 +108,7 @@ fn parse_reference_delta(data: &[u8], size: usize) -> Vec<u8> {
         panic!();
     }
 
-    parse_delta_instructions(source, &delta_instructions, target_size)
+    parse_delta_instructions(source, delta_instructions, target_size)
 }
 
 fn parse_delta_instructions(
@@ -113,7 +119,7 @@ fn parse_delta_instructions(
     let mut target = Vec::<u8>::new();
 
     let mut delta_instructions = delta_instructions;
-    while delta_instructions.is_empty() {
+    while !delta_instructions.is_empty() {
         let instruction = delta_instructions[0];
 
         if instruction & 0b1000_0000 != 0 {
@@ -181,6 +187,9 @@ fn parse_delta_instructions(
             target.extend_from_slice(&delta_instructions[1..add_size + 1]);
 
             delta_instructions = &delta_instructions[add_size + 1..];
+        } else {
+            // instruction == 0 is reserved/invalid; advance to avoid infinite loop
+            delta_instructions = &delta_instructions[1..];
         }
     }
 
@@ -206,6 +215,25 @@ fn variable_length_int(data: &[u8]) -> (usize, usize) {
     (size, shift / 7)
 }
 
+fn offset_delta_base_distance(data: &[u8]) -> Option<(usize, usize)> {
+    if data.is_empty() {
+        return None;
+    }
+    let mut distance = (data[0] & 0b0111_1111) as usize;
+    let mut bytes_read = 1;
+
+    while data[bytes_read - 1] & 0b1000_0000 != 0 {
+        if bytes_read >= data.len() {
+            return None;
+        }
+        let byte = data[bytes_read];
+        distance = ((distance + 1) << 7) | (byte & 0b0111_1111) as usize;
+        bytes_read += 1;
+    }
+
+    Some((distance, bytes_read))
+}
+
 fn is_header_valid(header: &[u8]) -> bool {
     header == HEADER_BYTES_V2 || header == HEADER_BYTES_V3
 }
@@ -223,6 +251,22 @@ pub mod tests {
 
     fn mocked_header_v2() -> [u8; 8] {
         HEADER_BYTES_V2
+    }
+
+    #[test]
+    fn test_offset_delta_base_distance() {
+        assert_eq!(offset_delta_base_distance(&[0x01]), Some((1, 1)));
+        assert_eq!(offset_delta_base_distance(&[0x81, 0x00]), Some((256, 2)));
+        assert_eq!(offset_delta_base_distance(&[0x81, 0x01]), Some((257, 2)));
+        assert_eq!(offset_delta_base_distance(&[]), None);
+        assert_eq!(offset_delta_base_distance(&[0x81]), None); // truncated multi-byte
+    }
+
+    #[test]
+    fn test_parse_delta_instructions_insert_only() {
+        let source = b"ignored";
+        let delta = [3u8, b'a', b'b', b'c'];
+        assert_eq!(parse_delta_instructions(source, &delta, 3), b"abc");
     }
 
     fn mocked_commit(commit: &GitCommit) -> Vec<u8> {
@@ -263,5 +307,93 @@ pub mod tests {
         data.extend_from_slice(&mocked_commit(commit));
 
         file.write(&data).unwrap();
+    }
+
+    fn encode_size_varint(mut value: usize) -> Vec<u8> {
+        let mut bytes = Vec::new();
+        loop {
+            let mut byte = (value & 0b0111_1111) as u8;
+            value >>= 7;
+            if value != 0 {
+                byte |= 0b1000_0000;
+            }
+            bytes.push(byte);
+            if value == 0 {
+                return bytes;
+            }
+        }
+    }
+
+    fn encode_offset_delta_base_distance(mut distance: usize) -> Vec<u8> {
+        let mut bytes = vec![(distance & 0b0111_1111) as u8];
+        distance >>= 7;
+
+        while distance > 0 {
+            distance -= 1;
+            bytes.push((distance & 0b0111_1111) as u8 | 0b1000_0000);
+            distance >>= 7;
+        }
+
+        bytes.reverse();
+        bytes
+    }
+
+    #[test]
+    fn test_read_offset_delta_from_packfile() {
+        let path = std::env::temp_dir().join(format!(
+            "branchwise-pack-{}.pack",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+
+        let source = b"abcde";
+        let target = b"abXYe";
+
+        let mut base_object = vec![0b0011_0000 | source.len() as u8];
+        let mut source_encoder = ZlibEncoder::new(Vec::new(), flate2::Compression::default());
+        source_encoder.write_all(source).unwrap();
+        base_object.extend_from_slice(&source_encoder.finish().unwrap());
+
+        let delta_instructions = vec![
+            0b1001_0000,
+            2, // copy 2 bytes from source offset 0
+            2,
+            b'X',
+            b'Y', // insert "XY"
+            0b1001_0001,
+            4,
+            1, // copy 1 byte from source offset 4
+        ];
+
+        let mut delta_data = Vec::new();
+        delta_data.extend_from_slice(&encode_size_varint(source.len()));
+        delta_data.extend_from_slice(&encode_size_varint(target.len()));
+        delta_data.extend_from_slice(&delta_instructions);
+
+        let mut delta_encoder = ZlibEncoder::new(Vec::new(), flate2::Compression::default());
+        delta_encoder.write_all(&delta_data).unwrap();
+        let compressed_delta = delta_encoder.finish().unwrap();
+
+        let base_offset = 8usize;
+        let delta_offset = base_offset + base_object.len();
+        let base_distance = delta_offset - base_offset;
+        let encoded_distance = encode_offset_delta_base_distance(base_distance);
+
+        let mut delta_object = vec![0b0110_0000 | target.len() as u8];
+        delta_object.extend_from_slice(&encoded_distance);
+        delta_object.extend_from_slice(&compressed_delta);
+
+        let mut file = File::create(&path).unwrap();
+        file.write_all(&mocked_header_v2()).unwrap();
+        file.write_all(&base_object).unwrap();
+        file.write_all(&delta_object).unwrap();
+        drop(file);
+
+        let decoded = get_encoded_data_from_pack(&path, delta_offset);
+        assert_eq!(decoded, target);
+
+        fs::remove_file(path).unwrap();
     }
 }
